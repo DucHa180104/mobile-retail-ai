@@ -6,8 +6,8 @@ Project MERN don gian cho do an ban dien thoai.
 
 ```text
 mobile-retail-ai/
+  backend/  Backend Node.js + Express
   client/   Frontend React + Vite
-  server/   Backend Node.js + Express
 ```
 
 ## Yeu cau
@@ -18,9 +18,8 @@ mobile-retail-ai/
 ## Chay backend
 
 ```bash
-cd server
+cd backend
 npm install
-copy .env.example .env
 npm run dev
 ```
 
@@ -30,7 +29,7 @@ Backend chay tai:
 http://localhost:5000
 ```
 
-Neu chua co MongoDB, backend van chay nhung se bao thieu `MONGODB_URI`.
+Can tao file `.env` trong thu muc `backend` va cung cap `MONGODB_URI` hop le.
 
 ## Chay frontend
 
@@ -50,4 +49,4 @@ http://localhost:5173
 
 ## Ghi chu
 
-Thu muc `backend` cu van duoc giu nguyen. Project moi theo yeu cau nam trong `client` va `server`.
+Project hien tai su dung `backend` cho Express API va `client` cho React frontend.
