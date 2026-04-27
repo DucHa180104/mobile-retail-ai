@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { useCart } from "../context/CartContext.jsx";
 
 function ProductDetailPage() {
   const { id } = useParams();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     async function fetchProduct() {
@@ -54,9 +57,23 @@ function ProductDetailPage() {
 
   const specs = product.specs || {};
 
+  function handleAddToCart() {
+    addToCart(product);
+    setMessage("Da them vao gio hang");
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-10">
       <div className="mx-auto max-w-6xl">
+        <div className="mb-6 flex justify-end">
+          <Link
+            to="/cart"
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          >
+            Gio hang
+          </Link>
+        </div>
+
         <div className="grid gap-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:grid-cols-2">
           <img
             src={product.images?.[0] || "https://via.placeholder.com/600x450?text=No+Image"}
@@ -76,6 +93,20 @@ function ProductDetailPage() {
             <p className="mt-6 text-gray-700">
               {product.description || "Chua co mo ta."}
             </p>
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="rounded bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700"
+              >
+                Them vao gio hang
+              </button>
+
+              {message && (
+                <p className="mt-3 text-sm text-green-600">{message}</p>
+              )}
+            </div>
 
             <div className="mt-8">
               <h2 className="text-xl font-semibold text-gray-900">

@@ -46,9 +46,18 @@ function ProductListPage() {
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-10">
       <div className="mx-auto max-w-6xl">
-        <h1 className="mb-8 text-3xl font-bold text-gray-900">
-          Danh sach san pham
-        </h1>
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Danh sach san pham
+          </h1>
+
+          <Link
+            to="/cart"
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          >
+            Gio hang
+          </Link>
+        </div>
 
         {products.length === 0 ? (
           <p className="text-gray-600">Chua co san pham nao.</p>
