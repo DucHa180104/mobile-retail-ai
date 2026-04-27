@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 
 function CartPage() {
@@ -105,6 +106,13 @@ function CartPage() {
                 {totalPrice.toLocaleString("vi-VN")} VND
               </span>
             </div>
+
+            <Link
+              to="/checkout"
+              className="mt-6 inline-block rounded bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700"
+            >
+              Tien hanh dat hang
+            </Link>
           </div>
         </div>
       </div>
