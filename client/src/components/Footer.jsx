@@ -2,73 +2,63 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-white">
+    <footer className="mt-12 border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1.1fr]">
           <section>
-            <div className="flex items-center gap-2 text-lg font-extrabold text-blue-700">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm text-white">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white">
                 M
               </span>
-              <span>Manh Huong</span>
+              <div>
+                <p className="text-base font-black text-slate-900">MẠNH HƯƠNG</p>
+                <p className="text-xs text-slate-400">Điện thoại chính hãng</p>
+              </div>
             </div>
 
             <p className="mt-4 max-w-xs text-sm leading-6 text-slate-500">
-              Manh Huong la diem den cho nguoi yeu cong nghe voi dien thoai
-              chinh hang, gia tot va dich vu ho tro tan tam moi ngay.
+              Chuyên cung cấp điện thoại, phụ kiện và giải pháp mua sắm công nghệ
+              đáng tin cậy với dịch vụ hỗ trợ tận tâm mỗi ngày.
             </p>
 
             <div className="mt-5 flex gap-3">
-              <SocialIcon label="F" />
-              <SocialIcon label="Z" />
-              <SocialIcon label="T" />
-              <SocialIcon label="Y" />
+              <SocialIcon label="f" />
+              <SocialIcon label="z" />
+              <SocialIcon label="t" />
             </div>
           </section>
 
           <FooterColumn
-            title="Danh muc"
-            items={[
-              "iPhone",
-              "Samsung",
-              "Xiaomi",
-              "Oppo",
-              "Phu kien"
-            ]}
+            title="Danh mục"
+            items={["iPhone", "Samsung", "Xiaomi", "Oppo", "Phụ kiện"]}
           />
 
           <FooterColumn
-            title="Chinh sach"
+            title="Chính sách"
             items={[
-              "Chinh sach bao hanh",
-              "Chinh sach doi tra",
-              "Giao hang & Thanh toan",
-              "Bao mat thong tin"
+              "Chính sách bảo hành",
+              "Chính sách đổi trả",
+              "Giao hàng & thanh toán",
+              "Bảo mật thông tin"
             ]}
           />
 
           <section>
             <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-900">
-              Lien he
+              Liên hệ
             </h3>
 
             <div className="mt-5 space-y-4 text-sm text-slate-500">
-              <ContactRow
-                title="123 Duong Le Dai Hanh, TP. Ho Chi Minh"
-                icon={<PinIcon />}
-              />
+              <ContactRow title="123 Lê Đại Hành, Quận 11, TP.HCM" icon={<PinIcon />} />
               <ContactRow title="0909 123 456" icon={<PhoneIcon />} />
-              <ContactRow
-                title="contact@manhhuongmobile.vn"
-                icon={<MailIcon />}
-              />
+              <ContactRow title="contact@manhhuongmobile.vn" icon={<MailIcon />} />
             </div>
           </section>
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-          <p>(c) 2026 Manh Huong Mobile. All rights reserved.</p>
-          <p>Trusted and UX/UI Designed</p>
+          <p>© 2026 MẠNH HƯƠNG. Bảo lưu mọi quyền.</p>
+          <p>Thiết kế tối ưu cho trải nghiệm mua sắm trực tuyến.</p>
         </div>
       </div>
     </footer>
@@ -108,7 +98,7 @@ function SocialIcon({ label }) {
   return (
     <Link
       to="/"
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-sm font-bold text-slate-500 transition hover:border-blue-200 hover:text-blue-700"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-sm font-bold uppercase text-slate-500 transition hover:border-blue-200 hover:text-blue-700"
     >
       {label}
     </Link>

@@ -17,7 +17,7 @@ function ProductDetailPage() {
         const response = await fetch(`http://localhost:5000/api/products/${id}`);
 
         if (!response.ok) {
-          throw new Error("Khong the tai thong tin san pham");
+          throw new Error("Không thể tải thông tin sản phẩm");
         }
 
         const data = await response.json();
@@ -35,7 +35,7 @@ function ProductDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-100 px-6 py-10">
-        <p className="text-center text-gray-600">Dang tai san pham...</p>
+        <p className="text-center text-gray-600">Đang tải sản phẩm...</p>
       </main>
     );
   }
@@ -51,7 +51,7 @@ function ProductDetailPage() {
   if (!product) {
     return (
       <main className="min-h-screen bg-slate-100 px-6 py-10">
-        <p className="text-center text-gray-600">Khong tim thay san pham.</p>
+        <p className="text-center text-gray-600">Không tìm thấy sản phẩm.</p>
       </main>
     );
   }
@@ -60,7 +60,7 @@ function ProductDetailPage() {
 
   function handleAddToCart() {
     addToCart(product);
-    setMessage("Da them vao gio hang");
+    setMessage("Đã thêm vào giỏ hàng");
   }
 
   function handleBuyNow() {
@@ -74,11 +74,11 @@ function ProductDetailPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <Link to="/" className="transition hover:text-blue-700">
-              Trang chu
+              Trang chủ
             </Link>
             <span>/</span>
             <Link to="/" className="transition hover:text-blue-700">
-              Dien thoai
+              Điện thoại
             </Link>
             <span>/</span>
             <span className="font-medium text-slate-700">{product.name}</span>
@@ -88,7 +88,7 @@ function ProductDetailPage() {
             to="/cart"
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
           >
-            Xem gio hang
+            Xem giỏ hàng
           </Link>
         </div>
 
@@ -96,7 +96,7 @@ function ProductDetailPage() {
           <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
             <div className="overflow-hidden rounded-[1.5rem] bg-slate-100">
               <img
-                src={product.images?.[0] || "https://via.placeholder.com/700x560?text=No+Image"}
+                src={product.images?.[0] || "https://via.placeholder.com/700x560?text=Khong+co+anh"}
                 alt={product.name}
                 className="h-[360px] w-full object-cover sm:h-[500px]"
               />
@@ -107,10 +107,10 @@ function ProductDetailPage() {
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
-                  San pham noi bat
+                  Sản phẩm nổi bật
                 </span>
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Con hang
+                  Còn hàng
                 </span>
               </div>
 
@@ -120,15 +120,15 @@ function ProductDetailPage() {
 
               <div className="mt-5 rounded-2xl bg-slate-50 p-5">
                 <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">
-                  Gia ban
+                  Giá bán
                 </p>
                 <p className="mt-2 text-3xl font-black text-blue-700 sm:text-4xl">
-                  {product.price?.toLocaleString("vi-VN")} VND
+                  {product.price?.toLocaleString("vi-VN")} đ
                 </p>
               </div>
 
               <p className="mt-6 text-base leading-7 text-slate-600">
-                {product.description || "Chua co mo ta."}
+                {product.description || "Chưa có mô tả."}
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -137,7 +137,7 @@ function ProductDetailPage() {
                   onClick={handleAddToCart}
                   className="rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700"
                 >
-                  Them vao gio
+                  Thêm vào giỏ
                 </button>
 
                 <button
@@ -163,19 +163,19 @@ function ProductDetailPage() {
                 </span>
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">
-                    Thong so ky thuat
+                    Thông số kỹ thuật
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Tong hop thong tin co ban cua san pham
+                    Tổng hợp thông tin cơ bản của sản phẩm
                   </p>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <SpecCard label="Man hinh" value={specs.screen} />
+                <SpecCard label="Màn hình" value={specs.screen} />
                 <SpecCard label="Chip" value={specs.chip} />
                 <SpecCard label="RAM" value={specs.ram} />
-                <SpecCard label="Bo nho" value={specs.storage} />
+                <SpecCard label="Bộ nhớ" value={specs.storage} />
                 <SpecCard label="Pin" value={specs.battery} />
                 <SpecCard label="Camera" value={specs.camera} />
               </div>
@@ -194,7 +194,7 @@ function SpecCard({ label, value }) {
         {label}
       </p>
       <p className="mt-3 text-sm font-semibold leading-6 text-slate-900">
-        {value || "Dang cap nhat"}
+        {value || "Đang cập nhật"}
       </p>
     </article>
   );

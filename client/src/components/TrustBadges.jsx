@@ -1,18 +1,18 @@
 const badges = [
   {
-    title: "Hang chinh hang",
-    description: "Cam ket chat luong 100%",
+    title: "Hàng chính hãng",
+    description: "Cam kết sản phẩm rõ nguồn gốc, bảo đảm chất lượng.",
     icon: ShieldIcon
   },
   {
-    title: "Giao hang nhanh",
-    description: "Mien phi noi thanh tu 500K",
+    title: "Giao hàng nhanh",
+    description: "Hỗ trợ giao nhanh nội thành và toàn quốc đúng hẹn.",
     icon: TruckIcon
   },
   {
-    title: "Bao hanh 12 thang",
-    description: "Doi tra trong 30 ngay dau",
-    icon: BadgeIcon
+    title: "Uy tín đảm bảo",
+    description: "Tư vấn rõ ràng, hỗ trợ tận tâm trước và sau mua hàng.",
+    icon: MedalIcon
   }
 ];
 
@@ -25,7 +25,7 @@ function TrustBadges() {
         return (
           <article
             key={badge.title}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"
           >
             <div className="flex items-start gap-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
@@ -34,7 +34,7 @@ function TrustBadges() {
 
               <div>
                 <h3 className="font-bold text-slate-900">{badge.title}</h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm leading-6 text-slate-500">
                   {badge.description}
                 </p>
               </div>
@@ -80,7 +80,7 @@ function TruckIcon() {
   );
 }
 
-function BadgeIcon() {
+function MedalIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +90,8 @@ function BadgeIcon() {
       strokeWidth="2"
       className="h-5 w-5"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a5 5 0 0 0-5 5v3.5L5 14l2 7 5-3 5 3 2-7-2-2.5V8a5 5 0 0 0-5-5z" />
+      <circle cx="12" cy="8" r="5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m8.5 13.5-1 7 4.5-2 4.5 2-1-7" />
     </svg>
   );
 }

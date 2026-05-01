@@ -60,7 +60,7 @@ function CheckoutPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Dat hang that bai");
+        throw new Error(data.message || "Đặt hàng thất bại");
       }
 
       clearCart();
@@ -82,19 +82,19 @@ function CheckoutPage() {
             </div>
 
             <h1 className="mt-6 text-3xl font-black text-slate-900">
-              Chua the thanh toan
+              Chưa thể thanh toán
             </h1>
 
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-500">
-              Gio hang cua ban dang trong. Hay quay lai trang chu de tiep tuc
-              lua chon san pham truoc khi dat hang.
+              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa
+              chọn sản phẩm trước khi đặt hàng.
             </p>
 
             <Link
               to="/"
               className="mt-8 inline-block rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
             >
-              Quay lai mua hang
+              Quay lại mua hàng
             </Link>
           </section>
         </div>
@@ -108,13 +108,13 @@ function CheckoutPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
-              Checkout
+              Thanh toán
             </p>
             <h1 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
-              Thong tin dat hang
+              Thông tin đặt hàng
             </h1>
             <p className="mt-2 text-sm text-slate-500">
-              Dien thong tin nguoi nhan va kiem tra lai don hang cua ban.
+              Điền thông tin người nhận và kiểm tra lại đơn hàng của bạn.
             </p>
           </div>
 
@@ -122,7 +122,7 @@ function CheckoutPage() {
             to="/cart"
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
           >
-            Quay lai gio hang
+            Quay lại giỏ hàng
           </Link>
         </div>
 
@@ -134,10 +134,10 @@ function CheckoutPage() {
               </span>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">
-                  Thong tin khach hang
+                  Thông tin khách hàng
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Cua hang se lien he xac nhan don hang voi thong tin nay
+                  Cửa hàng sẽ liên hệ xác nhận đơn hàng với thông tin này
                 </p>
               </div>
             </div>
@@ -150,19 +150,19 @@ function CheckoutPage() {
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <FormField
-                label="Ho va ten"
+                label="Họ và tên"
                 name="customerName"
                 value={formData.customerName}
                 onChange={handleChange}
               />
               <FormField
-                label="So dien thoai"
+                label="Số điện thoại"
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
               />
               <FormField
-                label="Dia chi"
+                label="Địa chỉ"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
@@ -170,7 +170,7 @@ function CheckoutPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Ghi chu
+                  Ghi chú
                 </label>
                 <textarea
                   name="note"
@@ -178,7 +178,7 @@ function CheckoutPage() {
                   onChange={handleChange}
                   rows="4"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
-                  placeholder="Vi du: giao gio hanh chinh, goi truoc khi giao..."
+                  placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."
                 />
               </div>
 
@@ -187,7 +187,7 @@ function CheckoutPage() {
                 disabled={submitting || cartItems.length === 0}
                 className="w-full rounded-xl bg-blue-600 px-5 py-3.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
               >
-                {submitting ? "Dang dat hang..." : "Dat hang"}
+                {submitting ? "Đang đặt hàng..." : "Đặt hàng"}
               </button>
             </form>
           </section>
@@ -199,10 +199,10 @@ function CheckoutPage() {
               </span>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">
-                  Tom tat don hang
+                  Tóm tắt đơn hàng
                 </h2>
                 <p className="text-sm text-slate-500">
-                  {cartItems.length} san pham dang cho thanh toan
+                  {cartItems.length} sản phẩm đang chờ thanh toán
                 </p>
               </div>
             </div>
@@ -214,7 +214,7 @@ function CheckoutPage() {
                   className="flex gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
                 >
                   <img
-                    src={item.images?.[0] || "https://via.placeholder.com/240x180?text=No+Image"}
+                    src={item.images?.[0] || "https://via.placeholder.com/240x180?text=Khong+co+anh"}
                     alt={item.name}
                     className="h-20 w-20 rounded-xl object-cover"
                   />
@@ -222,13 +222,13 @@ function CheckoutPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{item.name}</h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      So luong: {item.quantity}
+                      Số lượng: {item.quantity}
                     </p>
                     <p className="mt-2 text-sm font-semibold text-slate-700">
-                      Don gia: {item.price?.toLocaleString("vi-VN")} VND
+                      Đơn giá: {item.price?.toLocaleString("vi-VN")} đ
                     </p>
                     <p className="mt-2 text-lg font-bold text-blue-700">
-                      {(item.price * item.quantity).toLocaleString("vi-VN")} VND
+                      {(item.price * item.quantity).toLocaleString("vi-VN")} đ
                     </p>
                   </div>
                 </article>
@@ -237,12 +237,12 @@ function CheckoutPage() {
 
             <div className="mt-6 rounded-2xl bg-slate-50 p-5">
               <SummaryRow
-                label="Tong so luong"
-                value={`${cartItems.reduce((total, item) => total + item.quantity, 0)} mon`}
+                label="Tổng số lượng"
+                value={`${cartItems.reduce((total, item) => total + item.quantity, 0)} món`}
               />
               <SummaryRow
-                label="Phi van chuyen"
-                value="Se tinh khi xac nhan"
+                label="Phí vận chuyển"
+                value="Sẽ tính khi xác nhận"
               />
             </div>
 
@@ -250,11 +250,11 @@ function CheckoutPage() {
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Tong thanh toan
+                    Tổng thanh toán
                   </p>
                 </div>
                 <span className="text-3xl font-black text-blue-700">
-                  {totalPrice.toLocaleString("vi-VN")} VND
+                  {totalPrice.toLocaleString("vi-VN")} đ
                 </span>
               </div>
             </div>

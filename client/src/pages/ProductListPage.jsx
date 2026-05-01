@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import CategorySection from "../components/CategorySection.jsx";
 import HeroBanner from "../components/HeroBanner.jsx";
@@ -8,10 +8,11 @@ import { useCart } from "../context/CartContext.jsx";
 
 function ProductListPage() {
   const { addToCart } = useCart();
-  const { searchTerm, activeCategory, handleCategoryChange } = useOutletContext();
+  const { searchTerm } = useOutletContext();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeCategory, setActiveCategory] = useState("");
 
   useEffect(() => {
     async function fetchProducts() {
@@ -19,7 +20,7 @@ function ProductListPage() {
         const response = await fetch("http://localhost:5000/api/products");
 
         if (!response.ok) {
-          throw new Error("Khong the tai danh sach san pham");
+          throw new Error("Không thể tải danh sách sản phẩm");
         }
 
         const data = await response.json();
@@ -34,138 +35,134 @@ function ProductListPage() {
     fetchProducts();
   }, []);
 
-  const featuredProduct =
-    products.find((product) =>
-      product.name?.toLowerCase().includes("iphone 15 pro max")
-    ) || products[0];
+  const featuredProduct = products[0];
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = useMemo(() => {
     const normalizedQuery = searchTerm.trim().toLowerCase();
-    const normalizedName = product.name?.toLowerCase() || "";
-    const normalizedBrand = product.brand?.toLowerCase() || "";
 
-    const matchesSearch =
-      !normalizedQuery ||
-      normalizedName.includes(normalizedQuery) ||
-      normalizedBrand.includes(normalizedQuery);
+    return products.filter((product) => {
+      const name = product.name?.toLowerCase() || "";
+      const brand = product.brand?.toLowerCase() || "";
 
-    const normalizedCategory = activeCategory.toLowerCase();
-    const matchesCategory =
-      !activeCategory ||
-      normalizedName.includes(normalizedCategory) ||
-      normalizedBrand.includes(normalizedCategory);
+      const matchesSearch =
+        !normalizedQuery ||
+        name.includes(normalizedQuery) ||
+        brand.includes(normalizedQuery);
 
-    return matchesSearch && matchesCategory;
-  });
+      if (!activeCategory) {
+        return matchesSearch;
+      }
+
+      const categoryQuery =
+        activeCategory === "Phụ kiện" ? "phụ kiện" : activeCategory.toLowerCase();
+
+      const matchesCategory =
+        name.includes(categoryQuery) ||
+        brand.includes(categoryQuery) ||
+        (activeCategory === "iPhone" && name.includes("iphone"));
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [activeCategory, products, searchTerm]);
 
   if (loading) {
     return (
-        <main className="px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-          <p className="text-center text-slate-600">Dang tai san pham...</p>
-          </div>
-        </main>
+      <main className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+          <p className="text-slate-600">Đang tải sản phẩm...</p>
+        </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-        <main className="px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-          <p className="text-center text-red-600">{error}</p>
-          </div>
-        </main>
+      <main className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+          <p className="text-red-600">{error}</p>
+        </div>
+      </main>
     );
   }
 
   return (
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl space-y-12">
-          <HeroBanner featuredProduct={featuredProduct} />
+    <main className="px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-10">
+        <HeroBanner featuredProduct={featuredProduct} />
 
-          <CategorySection
-            activeCategory={activeCategory}
-            onCategoryChange={handleCategoryChange}
-          />
+        <CategorySection
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+        />
 
-          <section id="new-arrivals">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="h-4 w-4"
-                  >
-                    <path d="M12 2 9.2 8.6 2 9.3l5.4 4.7L5.8 21 12 17.3 18.2 21l-1.6-7 5.4-4.7-7.2-.7z" />
-                  </svg>
-                </span>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900">
-                    Dien thoai moi ve
-                  </h2>
-                  <p className="text-sm text-slate-500">
-                    San pham duoc lay truc tiep tu API hien tai
-                  </p>
-                </div>
-              </div>
-
-              <span className="text-sm font-semibold text-blue-700">
-                {filteredProducts.length} san pham
-              </span>
+        <section id="new-arrivals" className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-900 sm:text-2xl">
+                Điện thoại mới về
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {activeCategory
+                  ? `Đang hiển thị sản phẩm thuộc nhóm ${activeCategory}.`
+                  : "Đang hiển thị toàn bộ danh sách điện thoại hiện có."}
+              </p>
             </div>
 
-            {products.length === 0 ? (
-              <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500">
-                Chua co san pham nao.
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500">
-                Khong tim thay san pham phu hop.
-              </div>
-            ) : (
-              <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-                {filteredProducts.map((product, index) => (
-                  <ProductCard
-                    key={product._id}
-                    product={product}
-                    badge={getProductBadge(product, index)}
-                    rating={getProductRating(index)}
-                    onAddToCart={addToCart}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+            <div className="flex items-center gap-3">
+              {activeCategory && (
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory("")}
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
+                >
+                  Xem tất cả
+                </button>
+              )}
 
-          <TrustBadges />
-        </div>
-      </main>
+              <span className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+                {filteredProducts.length} sản phẩm
+              </span>
+            </div>
+          </div>
+
+          {products.length === 0 ? (
+            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 shadow-sm">
+              Chưa có sản phẩm nào.
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 shadow-sm">
+              Không tìm thấy sản phẩm phù hợp.
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {filteredProducts.map((product, index) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  badge={getProductBadge(product, index)}
+                  onAddToCart={addToCart}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <TrustBadges />
+      </div>
+    </main>
   );
 }
 
 function getProductBadge(product, index) {
   if ((product.stock || 0) <= 5) {
-    return "Sap het";
-  }
-
-  const brandName = product.brand?.toLowerCase() || "";
-
-  if (brandName.includes("apple")) {
-    return "Ban chay";
+    return "Nổi bật";
   }
 
   if (index % 2 === 0) {
-    return "Moi";
+    return "Mới";
   }
 
-  return "Noi bat";
-}
-
-function getProductRating(index) {
-  const ratings = ["4.9", "4.8", "4.7", "4.9", "4.8"];
-  return ratings[index % ratings.length];
+  return "";
 }
 
 export default ProductListPage;
