@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import tradeInRoutes from "./routes/tradeInRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/tradein", tradeInRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello backend");

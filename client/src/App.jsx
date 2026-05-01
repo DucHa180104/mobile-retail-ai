@@ -5,6 +5,8 @@ import CheckoutPage from "./pages/CheckoutPage.jsx";
 import OrderSuccessPage from "./pages/OrderSuccessPage.jsx";
 import ProductDetailPage from "./pages/ProductDetailPage.jsx";
 import ProductListPage from "./pages/ProductListPage.jsx";
+import PhonesPage from "./pages/PhonesPage.jsx";
+import TradeInPage from "./pages/TradeInPage.jsx";
 
 function App() {
   return (
@@ -12,6 +14,9 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/" element={<ProductListPage />} />
+            <Route path="/phones" element={<PhonesPage />} />
+            <Route path="/products" element={<PhonesPage />} />
+            <Route path="/trade-in" element={<TradeInPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-success" element={<OrderSuccessPage />} />
