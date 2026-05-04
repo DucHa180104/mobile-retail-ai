@@ -7,8 +7,8 @@ function HeroBanner({ featuredProduct }) {
     "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=1200&q=80";
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[2fr_0.85fr]">
-      <article className="relative overflow-hidden rounded-[1.75rem] bg-[linear-gradient(135deg,#2853f6_0%,#1736b8_58%,#0b1f71_100%)] px-6 py-8 text-white sm:px-8 sm:py-10">
+    <section className="grid gap-3 lg:grid-cols-[2.1fr_1fr]">
+      <article className="relative overflow-hidden rounded-[1.5rem] bg-[linear-gradient(135deg,#2853f6_0%,#1736b8_58%,#0b1f71_100%)] px-7 py-8 text-white sm:px-8 sm:py-9">
         <img
           src={imageUrl}
           alt={featuredProduct?.name || "iPhone 15 Pro Max"}
@@ -17,17 +17,17 @@ function HeroBanner({ featuredProduct }) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_35%)]" />
 
         <div className="relative max-w-lg">
-          <span className="inline-flex rounded-full bg-orange-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
-            Ưu đãi hot
+          <span className="inline-flex rounded-full bg-orange-500 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white">
+            Hot Deal
           </span>
-          <h1 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
+          <h1 className="mt-4 text-3xl font-black leading-tight sm:text-[3rem]">
             iPhone 15 Pro Max
           </h1>
-          <p className="mt-4 max-w-md text-sm leading-7 text-blue-50 sm:text-base">
-            Thiết kế titan bền bỉ, camera cao cấp và hiệu năng mạnh mẽ cho trải nghiệm hằng ngày.
+          <p className="mt-3 max-w-md text-sm leading-6 text-blue-50">
+            Thiết kế Titanium bền bỉ. Camera 48MP đỉnh cao. Mạnh mẽ vượt trội với chip A17 Pro.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="#new-arrivals"
               className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
@@ -47,14 +47,14 @@ function HeroBanner({ featuredProduct }) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         <SidePromoCard
           title="Thu cũ đổi mới"
-          description="Trợ giá lên đời nhanh, thủ tục gọn trong ngày."
-          accentClass="from-orange-600 to-amber-600"
+          description="Trợ giá lên đến 2.000.000đ. Thủ tục nhanh gọn trong ngày."
+          accentClass="from-orange-700 to-amber-700"
           icon={<TradeIcon />}
           subtle={false}
         />
         <SidePromoCard
           title="Bảo hành tận tâm"
-          description="Hỗ trợ nhanh và chính sách rõ ràng."
+          description="12 tháng bảo hành chính hãng. Lỗi 1 đổi 1 trong 30 ngày đầu."
           accentClass="from-slate-100 to-slate-50"
           textClass="text-slate-800"
           icon={<ShieldIcon />}
@@ -75,7 +75,7 @@ function SidePromoCard({
 }) {
   return (
     <article
-      className={`overflow-hidden rounded-[1.5rem] bg-gradient-to-br ${accentClass} px-5 py-5 shadow-sm`}
+      className={`overflow-hidden rounded-[1.25rem] bg-gradient-to-br ${accentClass} px-5 py-5 shadow-sm`}
     >
       <div className={`flex h-full flex-col justify-between gap-4 ${textClass}`}>
         <span
@@ -86,7 +86,7 @@ function SidePromoCard({
           {icon}
         </span>
         <div>
-          <h2 className="text-lg font-black">{title}</h2>
+          <h2 className="text-[1.65rem] font-black leading-tight">{title}</h2>
           <p className={`mt-2 text-sm leading-6 ${subtle ? "text-slate-500" : "text-white/85"}`}>
             {description}
           </p>

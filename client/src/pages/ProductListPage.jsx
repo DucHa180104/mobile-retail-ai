@@ -67,8 +67,8 @@ function ProductListPage() {
 
   if (loading) {
     return (
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[2rem] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+      <main className="px-4 py-5 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1180px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
           <p className="text-slate-600">Đang tải sản phẩm...</p>
         </div>
       </main>
@@ -77,8 +77,8 @@ function ProductListPage() {
 
   if (error) {
     return (
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[2rem] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+      <main className="px-4 py-5 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1180px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
           <p className="text-red-600">{error}</p>
         </div>
       </main>
@@ -86,8 +86,8 @@ function ProductListPage() {
   }
 
   return (
-    <main className="px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-10">
+    <main className="px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1180px] space-y-8">
         <HeroBanner featuredProduct={featuredProduct} />
 
         <CategorySection
@@ -95,13 +95,13 @@ function ProductListPage() {
           onCategoryChange={setActiveCategory}
         />
 
-        <section id="new-arrivals" className="space-y-5">
+        <section id="new-arrivals" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-black text-slate-900 sm:text-2xl">
+              <h2 className="text-lg font-black text-slate-900 sm:text-[1.75rem]">
                 Điện thoại mới về
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-[13px] text-slate-500">
                 {activeCategory
                   ? `Đang hiển thị sản phẩm thuộc nhóm ${activeCategory}.`
                   : "Đang hiển thị toàn bộ danh sách điện thoại hiện có."}
@@ -113,28 +113,28 @@ function ProductListPage() {
                 <button
                   type="button"
                   onClick={() => setActiveCategory("")}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[13px] font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
                 >
                   Xem tất cả
                 </button>
               )}
 
-              <span className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+              <span className="rounded-full bg-blue-50 px-4 py-2 text-[13px] font-semibold text-blue-700">
                 {filteredProducts.length} sản phẩm
               </span>
             </div>
           </div>
 
           {products.length === 0 ? (
-            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 shadow-sm">
+            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
               Chưa có sản phẩm nào.
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 shadow-sm">
+            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
               Không tìm thấy sản phẩm phù hợp.
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {filteredProducts.map((product, index) => (
                 <ProductCard
                   key={product._id}

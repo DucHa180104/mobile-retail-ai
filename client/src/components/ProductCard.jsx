@@ -5,11 +5,11 @@ function ProductCard({ product, badge, onAddToCart }) {
     product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
   return (
-    <article className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-      <div className="relative overflow-hidden rounded-2xl bg-slate-100">
+    <article className="group overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+      <div className="relative overflow-hidden rounded-[1rem] bg-slate-100">
         {badge && (
           <span
-            className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[11px] font-bold uppercase text-white shadow-sm ${
+            className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-bold uppercase text-white shadow-sm ${
               badge === "Nổi bật" ? "bg-red-500" : "bg-blue-600"
             }`}
           >
@@ -21,34 +21,34 @@ function ProductCard({ product, badge, onAddToCart }) {
           <img
             src={imageUrl}
             alt={product.name}
-            className="h-52 w-full object-cover transition duration-300 group-hover:scale-105"
+            className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
           />
         </Link>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-3">
         <Link to={`/products/${product._id}`}>
-          <h3 className="line-clamp-2 min-h-[48px] text-sm font-bold leading-6 text-slate-900 transition hover:text-blue-700 sm:text-base">
+          <h3 className="line-clamp-2 min-h-[42px] text-sm font-bold leading-5 text-slate-900 transition hover:text-blue-700">
             {product.name}
           </h3>
         </Link>
 
-        <p className="mt-3 text-xl font-black text-red-500 sm:text-2xl">
+        <p className="mt-2 text-lg font-black text-red-500">
           {product.price?.toLocaleString("vi-VN")} đ
         </p>
 
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-3 flex items-center gap-2">
           <button
             type="button"
             onClick={() => onAddToCart(product)}
-            className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
+            className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
           >
             Mua ngay
           </button>
 
           <Link
             to={`/products/${product._id}`}
-            className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             aria-label={`Chi tiết ${product.name}`}
           >
             <ArrowIcon />
