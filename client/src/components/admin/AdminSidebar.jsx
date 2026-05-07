@@ -2,8 +2,8 @@ import { NavLink } from "react-router-dom";
 
 const menuItems = [
   { label: "Dashboard", to: "/admin/dashboard", icon: <DashboardIcon /> },
-  { label: "Products", to: "/admin/dashboard", icon: <ProductIcon /> },
-  { label: "Orders", to: "/admin/dashboard", icon: <OrderIcon /> },
+  { label: "Products", to: "/admin/products", icon: <ProductIcon /> },
+  { label: "Orders", to: "/admin/orders", icon: <OrderIcon /> },
   { label: "Trade-in", to: "/admin/dashboard", icon: <TradeInIcon /> },
   { label: "Settings", to: "/admin/dashboard", icon: <SettingsIcon /> }
 ];
