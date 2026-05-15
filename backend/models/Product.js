@@ -21,6 +21,11 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: 0
     },
+    condition: {
+      type: String,
+      enum: ["new", "used_99", "used_good", "used_fair"],
+      default: "new"
+    },
     images: [
       {
         type: String
@@ -29,6 +34,17 @@ const productSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true
+    },
+    usedDetails: {
+      color: { type: String, trim: true, default: "" },
+      batteryHealth: { type: String, trim: true, default: "" },
+      warranty: { type: String, trim: true, default: "" },
+      screenStatus: { type: String, trim: true, default: "" },
+      bodyStatus: { type: String, trim: true, default: "" },
+      faceIdStatus: { type: String, trim: true, default: "" },
+      accessories: { type: String, trim: true, default: "" },
+      repairHistory: { type: String, trim: true, default: "" },
+      note: { type: String, trim: true, default: "" }
     },
     specs: {
       screen: { type: String, default: "" },

@@ -1,16 +1,47 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 
-const brandOptions = ["Tất cả", "Apple", "Samsung", "Xiaomi", "Oppo"];
-const conditionOptions = ["Tất cả", "New", "Cũ 99%", "Cũ đẹp"];
-const priceOptions = ["Mọi giá", "Dưới 10 triệu", "10 - 20 triệu", "Trên 20 triệu"];
+const brandOptions = ["all", "Apple", "Samsung", "Xiaomi", "Oppo"];
+const conditionFilterOptions = [
+  { label: "Tất cả", value: "all" },
+  { label: "Máy mới", value: "new" },
+  { label: "Cũ 99%", value: "used_99" },
+  { label: "Cũ đẹp", value: "used_good" },
+  { label: "Cũ dùng tốt", value: "used_fair" }
+];
+const priceOptions = [
+  { label: "Mọi giá", value: "all" },
+  { label: "Dưới 10 triệu", value: "under_10m" },
+  { label: "10 - 20 triệu", value: "10m_20m" },
+  { label: "Trên 20 triệu", value: "over_20m" }
+];
+const formBrandOptions = ["Apple", "Samsung", "Xiaomi", "Oppo"];
+const formConditionOptions = [
+  { label: "Máy mới", value: "new" },
+  { label: "Cũ 99%", value: "used_99" },
+  { label: "Cũ đẹp", value: "used_good" },
+  { label: "Cũ dùng tốt", value: "used_fair" }
+];
 
 const emptyForm = {
   name: "",
   brand: "Apple",
+  condition: "used_good",
   price: "",
   stock: "",
   images: "",
   description: "",
+  usedDetails: {
+    color: "",
+    batteryHealth: "",
+    warranty: "",
+    screenStatus: "",
+    bodyStatus: "",
+    faceIdStatus: "",
+    accessories: "",
+    repairHistory: "",
+    note: ""
+  },
   specs: {
     screen: "",
     chip: "",
@@ -22,29 +53,32 @@ const emptyForm = {
 };
 
 function AdminProductsPage() {
+  const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [brandFilter, setBrandFilter] = useState("Tất cả");
-  const [conditionFilter, setConditionFilter] = useState("Tất cả");
-  const [priceFilter, setPriceFilter] = useState("Mọi giá");
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [conditionFilter, setConditionFilter] = useState("all");
+  const [priceFilter, setPriceFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
-  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [token]);
 
   async function fetchProducts() {
     try {
       setLoading(true);
       setError("");
 
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch("http://localhost:5000/api/products", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
 
       if (!response.ok) {
         throw new Error("Không thể tải danh sách sản phẩm");
@@ -62,20 +96,24 @@ function AdminProductsPage() {
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const query = searchTerm.trim().toLowerCase();
-      const name = product.name?.toLowerCase() || "";
-      const displayBrand = getDisplayBrand(product).toLowerCase();
-      const condition = getConditionLabel(product);
-      const price = Number(product.price) || 0;
+      const productName = product.name?.toLowerCase() || "";
+      const productBrand = normalizeBrand(product.brand).toLowerCase();
+      const productCondition = product.condition || "new";
+      const productPrice = Number(product.price) || 0;
 
-      const matchesSearch = !query || name.includes(query) || displayBrand.includes(query);
-      const matchesBrand = brandFilter === "Tất cả" || displayBrand === brandFilter.toLowerCase();
+      const matchesSearch =
+        !query || productName.includes(query) || productBrand.includes(query);
+      const matchesBrand =
+        brandFilter === "all" || normalizeBrand(product.brand) === brandFilter;
       const matchesCondition =
-        conditionFilter === "Tất cả" || condition === conditionFilter;
+        conditionFilter === "all" || productCondition === conditionFilter;
       const matchesPrice =
-        priceFilter === "Mọi giá" ||
-        (priceFilter === "Dưới 10 triệu" && price < 10000000) ||
-        (priceFilter === "10 - 20 triệu" && price >= 10000000 && price <= 20000000) ||
-        (priceFilter === "Trên 20 triệu" && price > 20000000);
+        priceFilter === "all" ||
+        (priceFilter === "under_10m" && productPrice < 10000000) ||
+        (priceFilter === "10m_20m" &&
+          productPrice >= 10000000 &&
+          productPrice <= 20000000) ||
+        (priceFilter === "over_20m" && productPrice > 20000000);
 
       return matchesSearch && matchesBrand && matchesCondition && matchesPrice;
     });
@@ -92,11 +130,23 @@ function AdminProductsPage() {
     setEditingProduct(product);
     setFormData({
       name: product.name || "",
-      brand: getDisplayBrand(product),
+      brand: normalizeBrand(product.brand),
+      condition: product.condition || "used_good",
       price: product.price ?? "",
       stock: product.stock ?? "",
       images: Array.isArray(product.images) ? product.images.join("\n") : "",
       description: product.description || "",
+      usedDetails: {
+        color: product.usedDetails?.color || "",
+        batteryHealth: product.usedDetails?.batteryHealth || "",
+        warranty: product.usedDetails?.warranty || "",
+        screenStatus: product.usedDetails?.screenStatus || "",
+        bodyStatus: product.usedDetails?.bodyStatus || "",
+        faceIdStatus: product.usedDetails?.faceIdStatus || "",
+        accessories: product.usedDetails?.accessories || "",
+        repairHistory: product.usedDetails?.repairHistory || "",
+        note: product.usedDetails?.note || ""
+      },
       specs: {
         screen: product.specs?.screen || "",
         chip: product.specs?.chip || "",
@@ -111,10 +161,10 @@ function AdminProductsPage() {
   }
 
   function closeModal() {
-    setIsModalOpen(false);
     setEditingProduct(null);
     setFormData(emptyForm);
     setActionError("");
+    setIsModalOpen(false);
   }
 
   function handleFieldChange(event) {
@@ -133,22 +183,72 @@ function AdminProductsPage() {
     }));
   }
 
+  function handleUsedDetailChange(event) {
+    const { name, value } = event.target;
+    setFormData((current) => ({
+      ...current,
+      usedDetails: {
+        ...current.usedDetails,
+        [name]: value
+      }
+    }));
+  }
+
+  function validateForm() {
+    if (!formData.name.trim()) {
+      return "Tên sản phẩm là bắt buộc";
+    }
+
+    if (!formData.brand.trim()) {
+      return "Hãng là bắt buộc";
+    }
+
+    if (Number(formData.price) <= 0) {
+      return "Giá sản phẩm phải lớn hơn 0";
+    }
+
+    if (Number(formData.stock) < 0) {
+      return "Tồn kho không được nhỏ hơn 0";
+    }
+
+    return "";
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setSubmitting(true);
     setActionError("");
 
+    const validationError = validateForm();
+    if (validationError) {
+      setActionError(validationError);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const payload = {
         name: formData.name.trim(),
-        brand: normalizeBrandForApi(formData.brand),
-        price: Number(formData.price) || 0,
-        stock: Number(formData.stock) || 0,
+        brand: formData.brand.trim(),
+        condition: formData.condition,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
         images: formData.images
           .split("\n")
           .map((item) => item.trim())
           .filter(Boolean),
         description: formData.description.trim(),
+        usedDetails: {
+          color: formData.usedDetails.color.trim(),
+          batteryHealth: formData.usedDetails.batteryHealth.trim(),
+          warranty: formData.usedDetails.warranty.trim(),
+          screenStatus: formData.usedDetails.screenStatus.trim(),
+          bodyStatus: formData.usedDetails.bodyStatus.trim(),
+          faceIdStatus: formData.usedDetails.faceIdStatus.trim(),
+          accessories: formData.usedDetails.accessories.trim(),
+          repairHistory: formData.usedDetails.repairHistory.trim(),
+          note: formData.usedDetails.note.trim()
+        },
         specs: {
           screen: formData.specs.screen.trim(),
           chip: formData.specs.chip.trim(),
@@ -162,13 +262,13 @@ function AdminProductsPage() {
       const url = editingProduct
         ? `http://localhost:5000/api/products/${editingProduct._id}`
         : "http://localhost:5000/api/products";
-
       const method = editingProduct ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify(payload)
       });
@@ -176,7 +276,9 @@ function AdminProductsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Không thể lưu sản phẩm");
+        throw new Error(
+          getAdminApiErrorMessage(response.status, data.message || "Không thể lưu sản phẩm")
+        );
       }
 
       setProducts((current) => {
@@ -208,18 +310,19 @@ function AdminProductsPage() {
 
     try {
       const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Không thể xóa sản phẩm");
+        throw new Error(
+          getAdminApiErrorMessage(response.status, data.message || "Không thể xóa sản phẩm")
+        );
       }
 
-      setProducts((current) =>
-        current.filter((item) => item._id !== product._id)
-      );
+      setProducts((current) => current.filter((item) => item._id !== product._id));
     } catch (deleteError) {
       setActionError(deleteError.message || "Không thể xóa sản phẩm");
     }
@@ -299,6 +402,7 @@ function AdminProductsPage() {
           onSubmit={handleSubmit}
           onFieldChange={handleFieldChange}
           onSpecChange={handleSpecChange}
+          onUsedDetailChange={handleUsedDetailChange}
         />
       )}
     </div>
@@ -323,7 +427,7 @@ function ProductFilterBar({
             type="text"
             value={searchTerm}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Tên sản phẩm, mã SKU..."
+            placeholder="Tên sản phẩm, hãng..."
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
           />
         </FilterField>
@@ -336,7 +440,7 @@ function ProductFilterBar({
           >
             {brandOptions.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {option === "all" ? "Tất cả" : option}
               </option>
             ))}
           </select>
@@ -348,9 +452,9 @@ function ProductFilterBar({
             onChange={(event) => onConditionChange(event.target.value)}
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
           >
-            {conditionOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+            {conditionFilterOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -363,8 +467,8 @@ function ProductFilterBar({
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
           >
             {priceOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -404,10 +508,7 @@ function AdminProductTable({ products, onEdit, onDelete }) {
               <tr key={product._id} className="border-t border-slate-100">
                 <td className="px-5 py-4">
                   <img
-                    src={
-                      product.images?.[0] ||
-                      "https://via.placeholder.com/80x80?text=No+Image"
-                    }
+                    src={product.images?.[0] || "https://via.placeholder.com/80x80?text=No+Image"}
                     alt={product.name}
                     className="h-14 w-14 rounded-xl object-cover"
                   />
@@ -420,7 +521,7 @@ function AdminProductTable({ products, onEdit, onDelete }) {
                 </td>
                 <td className="px-5 py-4">
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                    {getDisplayBrand(product)}
+                    {normalizeBrand(product.brand)}
                   </span>
                 </td>
                 <td className="px-5 py-4 font-bold text-blue-700">
@@ -430,7 +531,7 @@ function AdminProductTable({ products, onEdit, onDelete }) {
                   {product.stock ?? 0}
                 </td>
                 <td className="px-5 py-4">
-                  <ConditionBadge product={product} />
+                  <ConditionBadge condition={product.condition} />
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
@@ -452,6 +553,7 @@ function AdminProductTable({ products, onEdit, onDelete }) {
                 </td>
               </tr>
             ))}
+
             {products.length === 0 && (
               <tr>
                 <td colSpan="7" className="px-5 py-10 text-center text-sm text-slate-500">
@@ -473,7 +575,8 @@ function ProductFormModal({
   onClose,
   onSubmit,
   onFieldChange,
-  onSpecChange
+  onSpecChange,
+  onUsedDetailChange
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 px-4 py-6">
@@ -512,8 +615,9 @@ function ProductFormModal({
                 value={formData.brand}
                 onChange={onFieldChange}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
+                required
               >
-                {brandOptions.slice(1).map((option) => (
+                {formBrandOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
@@ -528,6 +632,7 @@ function ProductFormModal({
                 value={formData.price}
                 onChange={onFieldChange}
                 placeholder="28990000"
+                min="1"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
                 required
               />
@@ -540,8 +645,25 @@ function ProductFormModal({
                 value={formData.stock}
                 onChange={onFieldChange}
                 placeholder="10"
+                min="0"
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
+                required
               />
+            </FormField>
+
+            <FormField label="Tình trạng">
+              <select
+                name="condition"
+                value={formData.condition}
+                onChange={onFieldChange}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
+              >
+                {formConditionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </FormField>
           </div>
 
@@ -569,14 +691,31 @@ function ProductFormModal({
 
           <div>
             <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
+              Thông tin máy cũ
+            </h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <SpecField label="Màu sắc" name="color" value={formData.usedDetails.color} onChange={onUsedDetailChange} />
+              <SpecField label="Pin còn" name="batteryHealth" value={formData.usedDetails.batteryHealth} onChange={onUsedDetailChange} />
+              <SpecField label="Bảo hành" name="warranty" value={formData.usedDetails.warranty} onChange={onUsedDetailChange} />
+              <SpecField label="Tình trạng màn hình" name="screenStatus" value={formData.usedDetails.screenStatus} onChange={onUsedDetailChange} />
+              <SpecField label="Ngoại hình" name="bodyStatus" value={formData.usedDetails.bodyStatus} onChange={onUsedDetailChange} />
+              <SpecField label="Face ID / Touch ID" name="faceIdStatus" value={formData.usedDetails.faceIdStatus} onChange={onUsedDetailChange} />
+              <SpecField label="Phụ kiện" name="accessories" value={formData.usedDetails.accessories} onChange={onUsedDetailChange} />
+              <SpecField label="Lịch sử sửa chữa" name="repairHistory" value={formData.usedDetails.repairHistory} onChange={onUsedDetailChange} />
+              <SpecField label="Ghi chú thêm" name="note" value={formData.usedDetails.note} onChange={onUsedDetailChange} />
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
               Thông số kỹ thuật
             </h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <SpecField label="Màn hình" name="screen" value={formData.specs.screen} onChange={onSpecChange} />
               <SpecField label="Chip" name="chip" value={formData.specs.chip} onChange={onSpecChange} />
               <SpecField label="RAM" name="ram" value={formData.specs.ram} onChange={onSpecChange} />
-              <SpecField label="Storage" name="storage" value={formData.specs.storage} onChange={onSpecChange} />
-              <SpecField label="Battery" name="battery" value={formData.specs.battery} onChange={onSpecChange} />
+              <SpecField label="Bộ nhớ" name="storage" value={formData.specs.storage} onChange={onSpecChange} />
+              <SpecField label="Pin" name="battery" value={formData.specs.battery} onChange={onSpecChange} />
               <SpecField label="Camera" name="camera" value={formData.specs.camera} onChange={onSpecChange} />
             </div>
           </div>
@@ -626,14 +765,16 @@ function SpecField({ label, name, value, onChange }) {
   );
 }
 
-function ConditionBadge({ product }) {
-  const label = getConditionLabel(product);
+function ConditionBadge({ condition }) {
+  const label = getConditionLabel(condition);
   const className =
-    label === "New"
+    condition === "new"
       ? "bg-emerald-100 text-emerald-700"
-      : label === "Cũ 99%"
+      : condition === "used_99"
         ? "bg-amber-100 text-amber-700"
-        : "bg-blue-100 text-blue-700";
+        : condition === "used_good"
+          ? "bg-blue-100 text-blue-700"
+          : "bg-slate-200 text-slate-700";
 
   return (
     <span className={`rounded-full px-3 py-1 text-xs font-bold ${className}`}>
@@ -642,45 +783,28 @@ function ConditionBadge({ product }) {
   );
 }
 
-function getConditionLabel(product) {
-  const text = `${product.name || ""} ${product.description || ""}`.toLowerCase();
-
-  if (text.includes("99")) {
+function getConditionLabel(condition) {
+  if (condition === "used_99") {
     return "Cũ 99%";
   }
 
-  if (text.includes("cũ đẹp")) {
+  if (condition === "used_good") {
     return "Cũ đẹp";
   }
 
-  return "New";
+  if (condition === "used_fair") {
+    return "Cũ dùng tốt";
+  }
+
+  return "Máy mới";
 }
 
-function getDisplayBrand(product) {
-  const brand = (product.brand || "").toLowerCase();
-  const name = (product.name || "").toLowerCase();
-
-  if (brand.includes("apple") || brand.includes("iphone") || name.includes("iphone")) {
+function normalizeBrand(brand) {
+  if (!brand) {
     return "Apple";
   }
 
-  if (brand.includes("samsung") || name.includes("galaxy")) {
-    return "Samsung";
-  }
-
-  if (brand.includes("xiaomi") || name.includes("redmi") || name.includes("poco")) {
-    return "Xiaomi";
-  }
-
-  if (brand.includes("oppo")) {
-    return "Oppo";
-  }
-
-  return product.brand || "Khác";
-}
-
-function normalizeBrandForApi(brand) {
-  if (brand === "Apple") {
+  if (brand.toLowerCase() === "iphone") {
     return "Apple";
   }
 
@@ -689,6 +813,18 @@ function normalizeBrandForApi(brand) {
 
 function formatCurrency(value) {
   return `${(Number(value) || 0).toLocaleString("vi-VN")}đ`;
+}
+
+function getAdminApiErrorMessage(status, fallbackMessage) {
+  if (status === 401) {
+    return "Phiên đăng nhập đã hết hạn hoặc thiếu token admin";
+  }
+
+  if (status === 403) {
+    return "Bạn không có quyền admin để thực hiện thao tác này";
+  }
+
+  return fallbackMessage;
 }
 
 export default AdminProductsPage;

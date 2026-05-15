@@ -1,14 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
-
-const storageOptions = ["256GB", "512GB", "1TB"];
-const colorOptions = [
-  { name: "Titan tự nhiên", value: "#b7ada1" },
-  { name: "Đen", value: "#1f2937" },
-  { name: "Xanh", value: "#4f6d8a" },
-  { name: "Trắng", value: "#e5e7eb" }
-];
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -19,8 +11,6 @@ function ProductDetailPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedStorage, setSelectedStorage] = useState("256GB");
-  const [selectedColor, setSelectedColor] = useState(colorOptions[0].name);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -33,8 +23,8 @@ function ProductDetailPage() {
 
         const data = await response.json();
         setProduct(data);
-      } catch (err) {
-        setError(err.message);
+      } catch (fetchError) {
+        setError(fetchError.message || "Không thể tải thông tin sản phẩm");
       } finally {
         setLoading(false);
       }
@@ -47,10 +37,12 @@ function ProductDetailPage() {
     setSelectedImageIndex(0);
   }, [product?._id]);
 
-  useEffect(() => {
-    if (product?.specs?.storage && storageOptions.includes(product.specs.storage)) {
-      setSelectedStorage(product.specs.storage);
+  const galleryImages = useMemo(() => {
+    if (!product?.images?.length) {
+      return ["https://via.placeholder.com/700x560?text=Khong+co+anh"];
     }
+
+    return product.images;
   }, [product]);
 
   if (loading) {
@@ -78,13 +70,10 @@ function ProductDetailPage() {
   }
 
   const specs = product.specs || {};
-  const galleryImages =
-    product.images?.length > 0
-      ? product.images
-      : ["https://via.placeholder.com/700x560?text=Khong+co+anh"];
+  const usedDetails = product.usedDetails || {};
   const selectedImage = galleryImages[selectedImageIndex] || galleryImages[0];
-  const oldPrice = product.oldPrice || null;
-
+  const conditionLabel = getConditionLabel(product.condition);
+  const conditionClassName = getConditionClassName(product.condition);
   const highlights = buildHighlights(product);
 
   function handleAddToCart() {
@@ -155,7 +144,7 @@ function ProductDetailPage() {
             </article>
 
             <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-black text-slate-900">Đặc điểm nổi bật</h2>
+              <h2 className="text-xl font-black text-slate-900">Tình trạng thực tế của máy</h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {highlights.map((item) => (
                   <div
@@ -179,25 +168,15 @@ function ProductDetailPage() {
             </article>
 
             <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-xl font-black text-slate-900">Đánh giá từ khách hàng</h2>
-                <span className="text-sm font-semibold text-blue-600">Xem tất cả</span>
-              </div>
-
-              <div className="mt-4 flex items-center gap-1 text-amber-400">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <StarIcon key={index} />
-                ))}
-                <span className="ml-2 text-sm font-semibold text-slate-700">5.0</span>
-              </div>
-
-              <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-                <p className="text-sm font-semibold text-slate-900">
-                  Nguyễn Văn A - 2 ngày trước
+              <h2 className="text-xl font-black text-slate-900">Lưu ý trước khi mua</h2>
+              <div className="mt-4 space-y-3 rounded-2xl bg-slate-50 p-4">
+                <p className="text-sm leading-6 text-slate-600">
+                  Đây là điện thoại cũ nên tình trạng máy, pin và ngoại hình sẽ khác nhau theo
+                  từng máy thực tế.
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Sản phẩm đúng mô tả, máy đẹp và hoạt động ổn định. Cửa hàng hỗ trợ
-                  nhanh và giao hàng cẩn thận.
+                <p className="text-sm leading-6 text-slate-600">
+                  Cửa hàng khuyến khích khách kiểm tra kỹ ảnh thật, tình trạng màn hình, pin,
+                  Face ID/Touch ID và phụ kiện trước khi chốt đơn.
                 </p>
               </div>
             </article>
@@ -206,11 +185,11 @@ function ProductDetailPage() {
           <aside className="space-y-6">
             <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7 xl:sticky xl:top-24">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase text-blue-700">
-                  NEW
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${conditionClassName}`}>
+                  {conditionLabel}
                 </span>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Chính hãng
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                  Máy cũ
                 </span>
               </div>
 
@@ -222,58 +201,36 @@ function ProductDetailPage() {
                 <p className="text-4xl font-black text-red-500">
                   {product.price?.toLocaleString("vi-VN")} đ
                 </p>
-                {oldPrice && (
-                  <p className="pb-1 text-base text-slate-400 line-through">
-                    {oldPrice.toLocaleString("vi-VN")} đ
-                  </p>
-                )}
               </div>
 
               <p className="mt-3 text-sm text-slate-500">
-                Bảo hành 12 tháng tại MẠNH HƯƠNG
+                Thông tin bên dưới được hiển thị theo đúng tình trạng máy đang có tại MẠNH HƯƠNG.
               </p>
 
-              <div className="mt-6">
-                <h2 className="text-sm font-bold text-slate-900">Dung lượng</h2>
-                <div className="mt-3 grid grid-cols-3 gap-3">
-                  {storageOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setSelectedStorage(option)}
-                      className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                        selectedStorage === option
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <h2 className="text-sm font-bold text-slate-900">Màu sắc</h2>
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.name}
-                      type="button"
-                      onClick={() => setSelectedColor(color.name)}
-                      className={`flex items-center gap-3 rounded-full border px-3 py-2 text-sm font-semibold transition ${
-                        selectedColor === color.name
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700"
-                      }`}
-                    >
-                      <span
-                        className="h-5 w-5 rounded-full border border-slate-200"
-                        style={{ backgroundColor: color.value }}
-                      />
-                      {color.name}
-                    </button>
-                  ))}
+              <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-900">
+                  Thông tin máy đang có
+                </h2>
+                <div className="mt-4 grid gap-3">
+                  <DetailRow label="Tình trạng máy" value={conditionLabel} />
+                  <DetailRow label="Màu sắc" value={usedDetails.color} />
+                  <DetailRow label="Dung lượng" value={specs.storage} />
+                  <DetailRow label="Pin còn" value={usedDetails.batteryHealth || specs.battery} />
+                  <DetailRow label="Tình trạng màn hình" value={usedDetails.screenStatus} />
+                  <DetailRow label="Ngoại hình" value={usedDetails.bodyStatus} />
+                  <DetailRow label="Face ID / Touch ID" value={usedDetails.faceIdStatus} />
+                  <DetailRow label="Lịch sử sửa chữa" value={usedDetails.repairHistory} />
+                  <DetailRow label="Phụ kiện đi kèm" value={usedDetails.accessories} />
+                  <DetailRow label="Bảo hành" value={usedDetails.warranty} />
+                  <DetailRow
+                    label="Tồn kho"
+                    value={
+                      Number(product.stock) > 0
+                        ? `${product.stock} máy sẵn có`
+                        : "Tạm hết hàng"
+                    }
+                  />
+                  <DetailRow label="Ghi chú thêm" value={usedDetails.note} />
                 </div>
               </div>
 
@@ -336,7 +293,7 @@ function ProductDetailPage() {
                 </span>
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">Thông số kỹ thuật</h2>
-                  <p className="text-sm text-slate-500">Thông tin cơ bản của sản phẩm</p>
+                  <p className="text-sm text-slate-500">Thông tin cấu hình cơ bản của máy</p>
                 </div>
               </div>
 
@@ -344,7 +301,7 @@ function ProductDetailPage() {
                 <SpecRow label="Màn hình" value={specs.screen} />
                 <SpecRow label="Chip" value={specs.chip} />
                 <SpecRow label="RAM" value={specs.ram} />
-                <SpecRow label="Bộ nhớ" value={specs.storage || selectedStorage} />
+                <SpecRow label="Bộ nhớ" value={specs.storage} />
                 <SpecRow label="Pin" value={specs.battery} />
                 <SpecRow label="Camera" value={specs.camera} />
               </div>
@@ -358,30 +315,49 @@ function ProductDetailPage() {
 
 function buildHighlights(product) {
   const specs = product.specs || {};
+  const usedDetails = product.usedDetails || {};
+  const conditionLabel = getConditionLabel(product.condition);
 
   return [
     {
-      title: "Hiệu năng nổi bật",
+      title: "Tình trạng tổng thể",
       description:
-        specs.chip
-          ? `Trang bị ${specs.chip}, đáp ứng tốt nhu cầu sử dụng hằng ngày và giải trí.`
-          : "Hiệu năng của sản phẩm đang được cập nhật chi tiết."
+        usedDetails.bodyStatus ||
+        `Máy thuộc nhóm ${conditionLabel.toLowerCase()}, thông tin được ghi theo đúng máy đang bán.`
     },
     {
-      title: "Màn hình chất lượng",
+      title: "Pin và sử dụng hằng ngày",
       description:
-        specs.screen
-          ? `Màn hình ${specs.screen} cho trải nghiệm hiển thị rõ nét và màu sắc hài hòa.`
-          : "Thông tin màn hình đang được cập nhật."
+        usedDetails.batteryHealth || specs.battery
+          ? `Pin còn ${usedDetails.batteryHealth || "đang cập nhật"}, ${specs.battery || "thông tin pin đang cập nhật"}.`
+          : "Thông tin pin đang được cập nhật."
     },
     {
-      title: "Pin và camera",
+      title: "Màn hình và bảo mật",
       description:
-        specs.battery || specs.camera
-          ? `${specs.battery || "Pin đang cập nhật"} - ${specs.camera || "Camera đang cập nhật"}.`
-          : "Thông tin pin và camera đang được cập nhật."
+        usedDetails.screenStatus || usedDetails.faceIdStatus
+          ? `${usedDetails.screenStatus || "Màn hình đang cập nhật"} - ${usedDetails.faceIdStatus || "Face ID / Touch ID đang cập nhật"}.`
+          : "Thông tin màn hình và bảo mật đang được cập nhật."
+    },
+    {
+      title: "Bảo hành và phụ kiện",
+      description:
+        usedDetails.warranty || usedDetails.accessories
+          ? `${usedDetails.warranty || "Bảo hành đang cập nhật"} - ${usedDetails.accessories || "Phụ kiện đang cập nhật"}.`
+          : "Thông tin bảo hành và phụ kiện đang được cập nhật."
     }
   ];
+}
+
+function DetailRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-2xl bg-white px-4 py-3">
+      <span className="text-sm font-semibold text-slate-500">{label}</span>
+      <span className="text-right text-sm font-semibold text-slate-900">
+        {value || "Đang cập nhật"}
+      </span>
+    </div>
+  );
 }
 
 function BenefitRow({ text }) {
@@ -406,17 +382,36 @@ function SpecRow({ label, value }) {
   );
 }
 
-function StarIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="h-4 w-4"
-    >
-      <path d="M12 2 9.2 8.6 2 9.3l5.4 4.7L5.8 21 12 17.3 18.2 21l-1.6-7 5.4-4.7-7.2-.7z" />
-    </svg>
-  );
+function getConditionLabel(condition) {
+  if (condition === "used_99") {
+    return "Cũ 99%";
+  }
+
+  if (condition === "used_good") {
+    return "Cũ đẹp";
+  }
+
+  if (condition === "used_fair") {
+    return "Cũ dùng tốt";
+  }
+
+  return "Máy mới";
+}
+
+function getConditionClassName(condition) {
+  if (condition === "used_99") {
+    return "bg-amber-100 text-amber-700";
+  }
+
+  if (condition === "used_good") {
+    return "bg-blue-100 text-blue-700";
+  }
+
+  if (condition === "used_fair") {
+    return "bg-slate-200 text-slate-700";
+  }
+
+  return "bg-emerald-100 text-emerald-700";
 }
 
 function CheckIcon() {

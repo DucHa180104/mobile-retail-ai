@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function AdminDashboardPage() {
+  const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,13 @@ function AdminDashboardPage() {
 
         const [productsResponse, ordersResponse] = await Promise.all([
           fetch("http://localhost:5000/api/products"),
-          fetch("http://localhost:5000/api/orders")
+          fetch("http://localhost:5000/api/orders", {
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`
+                }
+              : {}
+          })
         ]);
 
         if (!productsResponse.ok) {
@@ -22,7 +30,7 @@ function AdminDashboardPage() {
         }
 
         if (!ordersResponse.ok) {
-          throw new Error("Không thể tải dữ liệu đơn hàng");
+          throw new Error(getAdminApiErrorMessage(ordersResponse.status, "Không thể tải dữ liệu đơn hàng"));
         }
 
         const [productsData, ordersData] = await Promise.all([
@@ -40,7 +48,7 @@ function AdminDashboardPage() {
     }
 
     fetchDashboardData();
-  }, []);
+  }, [token]);
 
   const totalRevenue = useMemo(() => {
     return orders.reduce((sum, order) => sum + (Number(order.totalAmount) || 0), 0);
@@ -111,7 +119,7 @@ function AdminDashboardPage() {
     },
     {
       title: "Doanh thu tạm tính",
-      value: formatCompactVnd(totalRevenue),
+      value: formatCurrency(totalRevenue),
       meta: "Tính từ toàn bộ đơn hàng",
       tone: "text-amber-600",
       icon: "payments"
@@ -219,9 +227,7 @@ function AdminDashboardPage() {
           <div className="mt-5">
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold text-slate-500">Tỷ lệ hoàn thành</span>
-              <span className="font-black text-slate-900">
-                {getCompletionRate(orders)}%
-              </span>
+              <span className="font-black text-slate-900">{getCompletionRate(orders)}%</span>
             </div>
             <div className="mt-3 h-3 rounded-full bg-slate-100">
               <div
@@ -284,10 +290,7 @@ function AdminDashboardPage() {
               ))}
               {recentOrders.length === 0 && (
                 <tr>
-                  <td
-                    colSpan="6"
-                    className="px-5 py-10 text-center text-sm text-slate-500"
-                  >
+                  <td colSpan="6" className="px-5 py-10 text-center text-sm text-slate-500">
                     Chưa có đơn hàng nào để hiển thị.
                   </td>
                 </tr>
@@ -301,10 +304,6 @@ function AdminDashboardPage() {
 }
 
 function formatCurrency(value) {
-  return `${(Number(value) || 0).toLocaleString("vi-VN")}đ`;
-}
-
-function formatCompactVnd(value) {
   return `${(Number(value) || 0).toLocaleString("vi-VN")}đ`;
 }
 
@@ -364,6 +363,18 @@ function getCompletionRate(orders) {
 
   const completedOrders = orders.filter((order) => order.status === "confirmed").length;
   return Math.round((completedOrders / orders.length) * 100);
+}
+
+function getAdminApiErrorMessage(status, fallbackMessage) {
+  if (status === 401) {
+    return "Phiên đăng nhập đã hết hạn hoặc thiếu token admin";
+  }
+
+  if (status === 403) {
+    return "Bạn không có quyền admin để truy cập dữ liệu này";
+  }
+
+  return fallbackMessage;
 }
 
 export default AdminDashboardPage;

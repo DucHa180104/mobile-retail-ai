@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const statusTabs = [
   { label: "Tất cả", value: "all" },
@@ -14,6 +15,7 @@ const statusOptions = [
 ];
 
 function AdminOrdersPage() {
+  const { token } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,10 +29,18 @@ function AdminOrdersPage() {
         setLoading(true);
         setError("");
 
-        const response = await fetch("http://localhost:5000/api/orders");
+        const response = await fetch("http://localhost:5000/api/orders", {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`
+              }
+            : {}
+        });
 
         if (!response.ok) {
-          throw new Error("Không thể tải danh sách đơn hàng");
+          throw new Error(
+            getAdminApiErrorMessage(response.status, "Không thể tải danh sách đơn hàng")
+          );
         }
 
         const data = await response.json();
@@ -44,7 +54,7 @@ function AdminOrdersPage() {
     }
 
     fetchOrders();
-  }, []);
+  }, [token]);
 
   const filteredOrders = useMemo(() => {
     if (activeTab === "all") {
@@ -88,7 +98,8 @@ function AdminOrdersPage() {
       const response = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           status: nextStatus
@@ -98,7 +109,12 @@ function AdminOrdersPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Không thể cập nhật trạng thái đơn hàng");
+        throw new Error(
+          getAdminApiErrorMessage(
+            response.status,
+            data.message || "Không thể cập nhật trạng thái đơn hàng"
+          )
+        );
       }
 
       setOrders((current) =>
@@ -226,7 +242,8 @@ function OrdersTable({
               <th className="px-5 py-4">Khách hàng</th>
               <th className="px-5 py-4">Số điện thoại</th>
               <th className="px-5 py-4">Tổng tiền</th>
-              <th className="px-5 py-4">Trạng thái</th>
+              <th className="px-5 py-4">Thanh toán</th>
+              <th className="px-5 py-4">Trạng thái đơn</th>
               <th className="px-5 py-4">Ngày đặt</th>
               <th className="px-5 py-4">Hành động</th>
             </tr>
@@ -243,13 +260,21 @@ function OrdersTable({
                   #{String(order._id).slice(-6).toUpperCase()}
                 </td>
                 <td className="px-5 py-4 text-sm font-semibold text-slate-900">
-                  {order.customerName || "Khách hàng"}
+                  {getOrderFullName(order) || "Khách hàng"}
                 </td>
                 <td className="px-5 py-4 text-sm text-slate-600">
-                  {order.phoneNumber || "Đang cập nhật"}
+                  {getOrderPhoneNumber(order) || "Đang cập nhật"}
                 </td>
                 <td className="px-5 py-4 text-sm font-bold text-slate-900">
                   {formatCurrency(order.totalAmount)}
+                </td>
+                <td className="px-5 py-4">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-500">
+                      {formatPaymentMethod(order.paymentMethod)}
+                    </p>
+                    <PaymentBadge paymentStatus={order.paymentStatus} />
+                  </div>
                 </td>
                 <td className="px-5 py-4">
                   <select
@@ -281,7 +306,7 @@ function OrdersTable({
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan="7" className="px-5 py-10 text-center text-sm text-slate-500">
+                <td colSpan="8" className="px-5 py-10 text-center text-sm text-slate-500">
                   Không có đơn hàng nào trong trạng thái này.
                 </td>
               </tr>
@@ -342,15 +367,30 @@ function OrderDetailPanel({ order, updatingOrderId, onStatusChange }) {
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
             <InfoCard title="Thông tin khách hàng">
-              <InfoRow label="Khách hàng" value={order.customerName || "Đang cập nhật"} />
-              <InfoRow label="Số điện thoại" value={order.phoneNumber || "Đang cập nhật"} />
-              <InfoRow label="Địa chỉ" value={order.address || "Đang cập nhật"} />
+              <InfoRow label="Khách hàng" value={getOrderFullName(order) || "Đang cập nhật"} />
+              <InfoRow
+                label="Số điện thoại"
+                value={getOrderPhoneNumber(order) || "Đang cập nhật"}
+              />
+              <InfoRow label="Địa chỉ giao hàng" value={formatOrderAddress(order)} />
+              <InfoRow
+                label="Ghi chú giao hàng"
+                value={order.shippingInfo?.note || order.note || "Không có ghi chú"}
+              />
             </InfoCard>
 
             <InfoCard title="Thanh toán & ghi chú">
               <InfoRow label="Ngày đặt" value={formatDateTime(order.createdAt)} />
-              <InfoRow label="Trạng thái" value={mapStatus(order.status)} />
-              <InfoRow label="Ghi chú" value={order.note || "Không có ghi chú"} />
+              <InfoRow label="Trạng thái đơn" value={mapStatus(order.status)} />
+              <InfoRow
+                label="Phương thức thanh toán"
+                value={formatPaymentMethod(order.paymentMethod)}
+              />
+              <InfoRow
+                label="Trạng thái thanh toán"
+                value={formatPaymentStatus(order.paymentStatus)}
+              />
+              <InfoRow label="Mã giao dịch" value={order.transactionId || "Không có"} />
             </InfoCard>
           </div>
 
@@ -367,9 +407,7 @@ function OrderDetailPanel({ order, updatingOrderId, onStatusChange }) {
                 >
                   <div>
                     <p className="font-semibold text-slate-900">{item.name || "Sản phẩm"}</p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Số lượng: {item.quantity || 0}
-                    </p>
+                    <p className="mt-1 text-sm text-slate-500">Số lượng: {item.quantity || 0}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-slate-500">
@@ -446,6 +484,55 @@ function StatusBadge({ status }) {
   );
 }
 
+function PaymentBadge({ paymentStatus }) {
+  const badgeMap = {
+    unpaid: {
+      label: "Chưa thanh toán",
+      className: "bg-slate-200 text-slate-700"
+    },
+    pending: {
+      label: "Chờ xác nhận thanh toán",
+      className: "bg-amber-100 text-amber-700"
+    },
+    paid: {
+      label: "Đã thanh toán",
+      className: "bg-emerald-100 text-emerald-700"
+    },
+    failed: {
+      label: "Thanh toán thất bại",
+      className: "bg-rose-100 text-rose-700"
+    }
+  };
+
+  const badge = badgeMap[paymentStatus] || badgeMap.unpaid;
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>
+      {badge.label}
+    </span>
+  );
+}
+
+function getOrderFullName(order) {
+  return order.shippingInfo?.fullName || order.customerName || "";
+}
+
+function getOrderPhoneNumber(order) {
+  return order.shippingInfo?.phoneNumber || order.phoneNumber || "";
+}
+
+function formatOrderAddress(order) {
+  const shippingInfo = order.shippingInfo || {};
+  const parts = [
+    shippingInfo.address || order.address,
+    shippingInfo.ward,
+    shippingInfo.district,
+    shippingInfo.city
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(", ") : "Đang cập nhật";
+}
+
 function mapStatus(status) {
   if (status === "confirmed") {
     return "Đã xác nhận";
@@ -497,6 +584,46 @@ function formatDateTime(value) {
     hour: "2-digit",
     minute: "2-digit"
   })} - ${date.toLocaleDateString("vi-VN")}`;
+}
+
+function formatPaymentMethod(paymentMethod) {
+  if (paymentMethod === "bank_transfer") {
+    return "Chuyển khoản ngân hàng";
+  }
+
+  if (paymentMethod === "online_mock") {
+    return "Thanh toán online giả lập";
+  }
+
+  return "Thanh toán khi nhận hàng";
+}
+
+function formatPaymentStatus(paymentStatus) {
+  if (paymentStatus === "paid") {
+    return "Đã thanh toán";
+  }
+
+  if (paymentStatus === "pending") {
+    return "Chờ xác nhận thanh toán";
+  }
+
+  if (paymentStatus === "failed") {
+    return "Thanh toán thất bại";
+  }
+
+  return "Chưa thanh toán";
+}
+
+function getAdminApiErrorMessage(status, fallbackMessage) {
+  if (status === 401) {
+    return "Phiên đăng nhập đã hết hạn hoặc thiếu token admin";
+  }
+
+  if (status === 403) {
+    return "Bạn không có quyền admin để thực hiện thao tác này";
+  }
+
+  return fallbackMessage;
 }
 
 export default AdminOrdersPage;

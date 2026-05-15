@@ -33,6 +33,48 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+    shippingInfo: {
+      fullName: {
+        type: String,
+        trim: true,
+        default: ""
+      },
+      phoneNumber: {
+        type: String,
+        trim: true,
+        default: ""
+      },
+      address: {
+        type: String,
+        trim: true,
+        default: ""
+      },
+      city: {
+        type: String,
+        trim: true,
+        default: ""
+      },
+      district: {
+        type: String,
+        trim: true,
+        default: ""
+      },
+      ward: {
+        type: String,
+        trim: true,
+        default: ""
+      },
+      note: {
+        type: String,
+        trim: true,
+        default: ""
+      }
+    },
     customerName: {
       type: String,
       required: true,
@@ -67,6 +109,25 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cod", "bank_transfer", "online_mock"],
+      default: "cod"
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "pending", "paid", "failed"],
+      default: "unpaid"
+    },
+    paidAt: {
+      type: Date,
+      default: null
+    },
+    transactionId: {
+      type: String,
+      trim: true,
+      default: ""
     },
     status: {
       type: String,

@@ -1,16 +1,42 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
+
+const paymentOptions = [
+  {
+    value: "cod",
+    title: "Thanh toán khi nhận hàng",
+    description: "Thanh toán trực tiếp cho nhân viên giao hàng."
+  },
+  {
+    value: "bank_transfer",
+    title: "Chuyển khoản ngân hàng",
+    description: "Chuyển khoản trước, cửa hàng xác nhận sau khi nhận tiền."
+  },
+  {
+    value: "online_mock",
+    title: "Thanh toán online giả lập",
+    description: "Dùng để demo trạng thái đã thanh toán ngay."
+  }
+];
+
+const initialShippingInfo = {
+  fullName: "",
+  phoneNumber: "",
+  address: "",
+  city: "",
+  district: "",
+  ward: "",
+  note: ""
+};
 
 function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
+  const { token } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    customerName: "",
-    phoneNumber: "",
-    address: "",
-    note: ""
-  });
+  const [shippingInfo, setShippingInfo] = useState(initialShippingInfo);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -19,26 +45,62 @@ function CheckoutPage() {
     0
   );
 
-  function handleChange(event) {
+  function handleShippingChange(event) {
     const { name, value } = event.target;
-    setFormData((currentData) => ({
-      ...currentData,
+    setShippingInfo((current) => ({
+      ...current,
       [name]: value
     }));
   }
 
+  function validateShippingInfo() {
+    if (!shippingInfo.fullName.trim()) {
+      return "Vui lòng nhập họ tên người nhận";
+    }
+
+    if (!shippingInfo.phoneNumber.trim()) {
+      return "Vui lòng nhập số điện thoại người nhận";
+    }
+
+    if (!shippingInfo.address.trim()) {
+      return "Vui lòng nhập địa chỉ giao hàng";
+    }
+
+    return "";
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
-
     setError("");
+
+    const validationError = validateShippingInfo();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      const headers = {
+        "Content-Type": "application/json"
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const orderData = {
-        customerName: formData.customerName,
-        phoneNumber: formData.phoneNumber,
-        address: formData.address,
-        note: formData.note,
+        shippingInfo: {
+          fullName: shippingInfo.fullName.trim(),
+          phoneNumber: shippingInfo.phoneNumber.trim(),
+          address: shippingInfo.address.trim(),
+          city: shippingInfo.city.trim(),
+          district: shippingInfo.district.trim(),
+          ward: shippingInfo.ward.trim(),
+          note: shippingInfo.note.trim()
+        },
+        paymentMethod,
         items: cartItems.map((item) => ({
           productId: item._id,
           name: item.name,
@@ -51,9 +113,7 @@ function CheckoutPage() {
 
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers,
         body: JSON.stringify(orderData)
       });
 
@@ -63,10 +123,20 @@ function CheckoutPage() {
         throw new Error(data.message || "Đặt hàng thất bại");
       }
 
+      const orderSummary = {
+        orderId: data._id,
+        paymentMethod: data.paymentMethod,
+        paymentStatus: data.paymentStatus,
+        shippingInfo: data.shippingInfo || orderData.shippingInfo
+      };
+
+      sessionStorage.setItem("latest-order-summary", JSON.stringify(orderSummary));
       clearCart();
-      navigate("/order-success");
+      navigate("/order-success", {
+        state: orderSummary
+      });
     } catch (submitError) {
-      setError(submitError.message);
+      setError(submitError.message || "Đặt hàng thất bại");
     } finally {
       setSubmitting(false);
     }
@@ -81,13 +151,11 @@ function CheckoutPage() {
               <CheckoutIcon />
             </div>
 
-            <h1 className="mt-6 text-3xl font-black text-slate-900">
-              Chưa thể thanh toán
-            </h1>
+            <h1 className="mt-6 text-3xl font-black text-slate-900">Chưa thể thanh toán</h1>
 
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-500">
-              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa
-              chọn sản phẩm trước khi đặt hàng.
+              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa chọn
+              sản phẩm trước khi đặt hàng.
             </p>
 
             <Link
@@ -114,7 +182,7 @@ function CheckoutPage() {
               Thông tin đặt hàng
             </h1>
             <p className="mt-2 text-sm text-slate-500">
-              Điền thông tin người nhận và kiểm tra lại đơn hàng của bạn.
+              Điền thông tin giao hàng và kiểm tra lại đơn trước khi xác nhận.
             </p>
           </div>
 
@@ -133,11 +201,9 @@ function CheckoutPage() {
                 <UserIcon />
               </span>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">
-                  Thông tin khách hàng
-                </h2>
+                <h2 className="text-2xl font-bold text-slate-900">Thông tin giao hàng</h2>
                 <p className="text-sm text-slate-500">
-                  Cửa hàng sẽ liên hệ xác nhận đơn hàng với thông tin này
+                  Cửa hàng sẽ liên hệ và giao hàng theo thông tin bên dưới
                 </p>
               </div>
             </div>
@@ -150,23 +216,44 @@ function CheckoutPage() {
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <FormField
-                label="Họ và tên"
-                name="customerName"
-                value={formData.customerName}
-                onChange={handleChange}
+                label="Họ tên người nhận"
+                name="fullName"
+                value={shippingInfo.fullName}
+                onChange={handleShippingChange}
               />
               <FormField
                 label="Số điện thoại"
                 name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
+                value={shippingInfo.phoneNumber}
+                onChange={handleShippingChange}
               />
               <FormField
                 label="Địa chỉ"
                 name="address"
-                value={formData.address}
-                onChange={handleChange}
+                value={shippingInfo.address}
+                onChange={handleShippingChange}
               />
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <FormField
+                  label="Thành phố"
+                  name="city"
+                  value={shippingInfo.city}
+                  onChange={handleShippingChange}
+                />
+                <FormField
+                  label="Quận/Huyện"
+                  name="district"
+                  value={shippingInfo.district}
+                  onChange={handleShippingChange}
+                />
+                <FormField
+                  label="Phường/Xã"
+                  name="ward"
+                  value={shippingInfo.ward}
+                  onChange={handleShippingChange}
+                />
+              </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -174,13 +261,58 @@ function CheckoutPage() {
                 </label>
                 <textarea
                   name="note"
-                  value={formData.note}
-                  onChange={handleChange}
+                  value={shippingInfo.note}
+                  onChange={handleShippingChange}
                   rows="4"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
                   placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."
                 />
               </div>
+
+              <div>
+                <p className="mb-3 text-sm font-semibold text-slate-700">
+                  Phương thức thanh toán
+                </p>
+                <div className="space-y-3">
+                  {paymentOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`block rounded-2xl border px-4 py-4 transition ${
+                        paymentMethod === option.value
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-slate-200 bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value={option.value}
+                          checked={paymentMethod === option.value}
+                          onChange={(event) => setPaymentMethod(event.target.value)}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-semibold text-slate-900">{option.title}</p>
+                          <p className="mt-1 text-sm text-slate-500">{option.description}</p>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {paymentMethod === "bank_transfer" && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 text-sm text-slate-700">
+                  <p className="font-semibold text-blue-700">Thông tin chuyển khoản demo</p>
+                  <p className="mt-2">Ngân hàng: Vietcombank</p>
+                  <p>Số tài khoản: 1234567890</p>
+                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯƠNG</p>
+                  <p className="mt-2 text-slate-500">
+                    Nội dung: Thanh toan don hang + số điện thoại của bạn
+                  </p>
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -198,9 +330,7 @@ function CheckoutPage() {
                 <ReceiptIcon />
               </span>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">
-                  Tóm tắt đơn hàng
-                </h2>
+                <h2 className="text-2xl font-bold text-slate-900">Tóm tắt đơn hàng</h2>
                 <p className="text-sm text-slate-500">
                   {cartItems.length} sản phẩm đang chờ thanh toán
                 </p>
@@ -221,9 +351,7 @@ function CheckoutPage() {
 
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{item.name}</h3>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Số lượng: {item.quantity}
-                    </p>
+                    <p className="mt-1 text-sm text-slate-500">Số lượng: {item.quantity}</p>
                     <p className="mt-2 text-sm font-semibold text-slate-700">
                       Đơn giá: {item.price?.toLocaleString("vi-VN")} đ
                     </p>
@@ -240,10 +368,8 @@ function CheckoutPage() {
                 label="Tổng số lượng"
                 value={`${cartItems.reduce((total, item) => total + item.quantity, 0)} món`}
               />
-              <SummaryRow
-                label="Phí vận chuyển"
-                value="Sẽ tính khi xác nhận"
-              />
+              <SummaryRow label="Phí vận chuyển" value="Sẽ tính khi xác nhận" />
+              <SummaryRow label="Thanh toán" value={formatPaymentMethod(paymentMethod)} />
             </div>
 
             <div className="mt-6 border-t border-slate-200 pt-6">
@@ -268,9 +394,7 @@ function CheckoutPage() {
 function FormField({ label, name, value, onChange }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-700">
-        {label}
-      </label>
+      <label className="mb-2 block text-sm font-semibold text-slate-700">{label}</label>
       <input
         type="text"
         name={name}
@@ -289,6 +413,18 @@ function SummaryRow({ label, value }) {
       <span className="font-semibold text-slate-900">{value}</span>
     </div>
   );
+}
+
+function formatPaymentMethod(value) {
+  if (value === "bank_transfer") {
+    return "Chuyển khoản ngân hàng";
+  }
+
+  if (value === "online_mock") {
+    return "Thanh toán online giả lập";
+  }
+
+  return "Thanh toán khi nhận hàng";
 }
 
 function CheckoutIcon() {
