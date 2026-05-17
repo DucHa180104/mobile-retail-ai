@@ -18,104 +18,106 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center gap-4 py-4 lg:flex-nowrap">
-          <Link to="/" className="flex shrink-0 items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white shadow-sm">
-              M
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-base font-black text-blue-700">MẠNH HƯỜNG</p>
-            </div>
-          </Link>
+        <div className="py-4">
+          <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
+            <Link to="/" className="flex shrink-0 items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white shadow-sm">
+                M
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-base font-black text-blue-700">MẠNH HƯƠNG</p>
+              </div>
+            </Link>
 
-          <nav className="order-2 hidden items-center gap-6 lg:flex">
+            <div className="order-3 w-full lg:order-2 lg:mx-6 lg:flex-1">
+              <label className="relative block">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                  <SearchIcon />
+                </span>
+                <input
+                  type="text"
+                  value={searchValue}
+                  onChange={onSearchChange}
+                  placeholder="Tìm kiếm sản phẩm..."
+                  className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-10 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
+                />
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
+                  <SearchMiniIcon />
+                </span>
+              </label>
+            </div>
+
+            <div className="order-2 ml-auto flex items-center gap-3 lg:order-3 lg:ml-0">
+              <Link
+                to="/cart"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-blue-700"
+                aria-label="Giỏ hàng"
+              >
+                <CartIcon />
+                {totalItems > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
+
+              {isAuthenticated ? (
+                <div className="hidden items-center gap-2 sm:flex">
+                  <Link
+                    to="/my-orders"
+                    className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
+                  >
+                    Đơn hàng của tôi
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin/dashboard"
+                      className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-black text-blue-700">
+                      {getInitial(user?.name)}
+                    </span>
+                    <span className="max-w-[120px] truncate font-semibold">{user?.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              ) : (
+                <div className="hidden items-center gap-2 sm:flex">
+                  <Link
+                    to="/login"
+                    className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
+                  >
+                    Đăng nhập
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="rounded-full bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                  >
+                    Đăng ký
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <nav className="mt-4 hidden items-center gap-6 border-t border-slate-100 pt-4 lg:flex">
             {menuItems.map((item) => (
               <MenuLink key={item.label} item={item} pathname={location.pathname} />
             ))}
           </nav>
-
-          <div className="order-3 w-full lg:order-3 lg:ml-auto lg:max-w-sm lg:flex-1">
-            <label className="relative block">
-              <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
-                <SearchIcon />
-              </span>
-              <input
-                type="text"
-                value={searchValue}
-                onChange={onSearchChange}
-                placeholder="Tìm kiếm sản phẩm..."
-                className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-10 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-              />
-              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-400">
-                <SearchMiniIcon />
-              </span>
-            </label>
-          </div>
-
-          <div className="order-4 ml-auto flex items-center gap-3 lg:ml-4">
-            <Link
-              to="/cart"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-blue-700"
-              aria-label="Giỏ hàng"
-            >
-              <CartIcon />
-              {totalItems > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-
-            {isAuthenticated ? (
-              <div className="hidden items-center gap-2 sm:flex">
-                <Link
-                  to="/my-orders"
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
-                >
-                  Đơn hàng của tôi
-                </Link>
-                {isAdmin && (
-                  <Link
-                    to="/admin/dashboard"
-                    className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
-                  >
-                    Admin Dashboard
-                  </Link>
-                )}
-                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-black text-blue-700">
-                    {getInitial(user?.name)}
-                  </span>
-                  <span className="max-w-[120px] truncate font-semibold">{user?.name}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
-                >
-                  Đăng xuất
-                </button>
-              </div>
-            ) : (
-              <div className="hidden items-center gap-2 sm:flex">
-                <Link
-                  to="/login"
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
-                >
-                  Đăng nhập
-                </Link>
-                <Link
-                  to="/register"
-                  className="rounded-full bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
-                >
-                  Đăng ký
-                </Link>
-              </div>
-            )}
-          </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-4 lg:hidden">
+        <div className="flex gap-2 overflow-x-auto border-t border-slate-100 pb-4 pt-4 lg:hidden">
           {menuItems.map((item) => (
             <MenuChip key={item.label} item={item} pathname={location.pathname} />
           ))}

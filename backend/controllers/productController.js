@@ -2,7 +2,26 @@ import Product from "../models/Product.js";
 
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const { keyword = "", brand = "", condition = "", sort = "newest" } = req.query;
+    const query = {};
+
+    if (keyword.trim()) {
+      query.$or = [
+        { name: { $regex: keyword.trim(), $options: "i" } },
+        { brand: { $regex: keyword.trim(), $options: "i" } }
+      ];
+    }
+
+    if (brand.trim()) {
+      query.brand = { $regex: `^${escapeRegex(brand.trim())}$`, $options: "i" };
+    }
+
+    if (condition.trim()) {
+      query.condition = condition.trim();
+    }
+
+    const sortOptions = getProductSort(sort);
+    const products = await Product.find(query).sort(sortOptions);
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -62,3 +81,19 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+function getProductSort(sort) {
+  if (sort === "price_asc") {
+    return { price: 1 };
+  }
+
+  if (sort === "price_desc") {
+    return { price: -1 };
+  }
+
+  return { createdAt: -1 };
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
