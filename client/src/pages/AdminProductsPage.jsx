@@ -29,7 +29,7 @@ const emptyForm = {
   condition: "used_good",
   price: "",
   stock: "",
-  images: "",
+  images: [],
   description: "",
   usedDetails: {
     color: "",
@@ -66,6 +66,7 @@ function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -76,7 +77,7 @@ function AdminProductsPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("http://localhost:5000/api/products", {
+      const response = await fetch("http://localhost:5000/api/products?page=1&limit=1000", {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
@@ -85,7 +86,8 @@ function AdminProductsPage() {
       }
 
       const data = await response.json();
-      setProducts(data);
+      const productList = Array.isArray(data) ? data : data.products || [];
+      setProducts(productList);
     } catch (fetchError) {
       setError(fetchError.message || "Không thể tải danh sách sản phẩm");
     } finally {
@@ -134,7 +136,7 @@ function AdminProductsPage() {
       condition: product.condition || "used_good",
       price: product.price ?? "",
       stock: product.stock ?? "",
-      images: Array.isArray(product.images) ? product.images.join("\n") : "",
+      images: Array.isArray(product.images) ? product.images : [],
       description: product.description || "",
       usedDetails: {
         color: product.usedDetails?.color || "",
@@ -194,6 +196,61 @@ function AdminProductsPage() {
     }));
   }
 
+  async function handleImageUpload(event) {
+    const files = Array.from(event.target.files || []);
+
+    if (!files.length) {
+      return;
+    }
+
+    setActionError("");
+    setUploadingImage(true);
+
+    try {
+      const uploadedImageUrls = [];
+
+      for (const file of files) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("image", file);
+
+        const response = await fetch("http://localhost:5000/api/uploads", {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: uploadFormData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            getAdminApiErrorMessage(response.status, data.message || "Không thể upload ảnh")
+          );
+        }
+
+        if (data.imageUrl) {
+          uploadedImageUrls.push(data.imageUrl);
+        }
+      }
+
+      setFormData((current) => ({
+        ...current,
+        images: [...current.images, ...uploadedImageUrls]
+      }));
+    } catch (uploadError) {
+      setActionError(uploadError.message || "Không thể upload ảnh");
+    } finally {
+      setUploadingImage(false);
+      event.target.value = "";
+    }
+  }
+
+  function handleRemoveImage(imageIndex) {
+    setFormData((current) => ({
+      ...current,
+      images: current.images.filter((_, index) => index !== imageIndex)
+    }));
+  }
+
   function validateForm() {
     if (!formData.name.trim()) {
       return "Tên sản phẩm là bắt buộc";
@@ -233,10 +290,7 @@ function AdminProductsPage() {
         condition: formData.condition,
         price: Number(formData.price),
         stock: Number(formData.stock),
-        images: formData.images
-          .split("\n")
-          .map((item) => item.trim())
-          .filter(Boolean),
+        images: formData.images.filter(Boolean),
         description: formData.description.trim(),
         usedDetails: {
           color: formData.usedDetails.color.trim(),
@@ -398,11 +452,14 @@ function AdminProductsPage() {
           formData={formData}
           editingProduct={editingProduct}
           submitting={submitting}
+          uploadingImage={uploadingImage}
           onClose={closeModal}
           onSubmit={handleSubmit}
           onFieldChange={handleFieldChange}
           onSpecChange={handleSpecChange}
           onUsedDetailChange={handleUsedDetailChange}
+          onImageUpload={handleImageUpload}
+          onRemoveImage={handleRemoveImage}
         />
       )}
     </div>
@@ -572,11 +629,14 @@ function ProductFormModal({
   formData,
   editingProduct,
   submitting,
+  uploadingImage,
   onClose,
   onSubmit,
   onFieldChange,
   onSpecChange,
-  onUsedDetailChange
+  onUsedDetailChange,
+  onImageUpload,
+  onRemoveImage
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 px-4 py-6">
@@ -668,14 +728,55 @@ function ProductFormModal({
           </div>
 
           <FormField label="Hình ảnh sản phẩm">
-            <textarea
-              name="images"
-              value={formData.images}
-              onChange={onFieldChange}
-              rows="4"
-              placeholder="Mỗi dòng là một URL ảnh"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
-            />
+            <div className="space-y-4">
+              <input
+                type="file"
+                multiple
+                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                onChange={onImageUpload}
+                className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-blue-700 focus:border-blue-500 focus:bg-white"
+              />
+
+              {uploadingImage && (
+                <p className="text-sm font-medium text-blue-600">Đang upload ảnh...</p>
+              )}
+
+              <p className="text-xs text-slate-500">
+                Bạn có thể chọn nhiều ảnh. Ảnh đầu tiên sẽ được dùng làm ảnh chính.
+              </p>
+
+              {formData.images.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {formData.images.map((imageUrl, index) => (
+                    <div
+                      key={`${imageUrl}-${index}`}
+                      className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={`Preview sản phẩm ${index + 1}`}
+                        className="h-40 w-full rounded-xl object-cover"
+                      />
+                      <div className="mt-3 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-700">
+                            {index === 0 ? "Ảnh chính" : `Ảnh ${index + 1}`}
+                          </p>
+                          <p className="mt-1 break-all text-xs text-slate-500">{imageUrl}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onRemoveImage(index)}
+                          className="shrink-0 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </FormField>
 
           <FormField label="Mô tả">
@@ -730,7 +831,7 @@ function ProductFormModal({
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || uploadingImage}
               className="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300"
             >
               {submitting ? "Đang lưu..." : editingProduct ? "Lưu thay đổi" : "Thêm sản phẩm"}

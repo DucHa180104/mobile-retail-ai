@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 
@@ -14,6 +14,13 @@ const sortOptions = [
   { label: "Giá thấp", value: "price_asc" },
   { label: "Giá cao", value: "price_desc" }
 ];
+const storageOptions = ["64GB", "128GB", "256GB", "512GB"];
+const priceRangeOptions = [
+  { label: "Dưới 10 triệu", value: "under_10m", minPrice: 0, maxPrice: 10000000 },
+  { label: "10 - 15 triệu", value: "10m_15m", minPrice: 10000000, maxPrice: 15000000 },
+  { label: "15 - 20 triệu", value: "15m_20m", minPrice: 15000000, maxPrice: 20000000 },
+  { label: "Trên 20 triệu", value: "above_20m", minPrice: 20000000, maxPrice: null }
+];
 const pageSize = 6;
 
 function PhonesPage() {
@@ -25,8 +32,12 @@ function PhonesPage() {
   const [error, setError] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedCondition, setSelectedCondition] = useState("");
+  const [selectedStorage, setSelectedStorage] = useState("");
+  const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedSort, setSelectedSort] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -35,6 +46,7 @@ function PhonesPage() {
         setError("");
 
         const params = new URLSearchParams();
+        const selectedPrice = priceRangeOptions.find((option) => option.value === selectedPriceRange);
 
         if (searchTerm.trim()) {
           params.set("keyword", searchTerm.trim());
@@ -48,7 +60,21 @@ function PhonesPage() {
           params.set("condition", selectedCondition);
         }
 
+        if (selectedStorage) {
+          params.set("storage", selectedStorage);
+        }
+
+        if (selectedPrice) {
+          params.set("minPrice", String(selectedPrice.minPrice));
+
+          if (selectedPrice.maxPrice !== null) {
+            params.set("maxPrice", String(selectedPrice.maxPrice));
+          }
+        }
+
         params.set("sort", selectedSort);
+        params.set("page", String(currentPage));
+        params.set("limit", String(pageSize));
 
         const queryString = params.toString();
         const url = queryString
@@ -62,7 +88,9 @@ function PhonesPage() {
         }
 
         const data = await response.json();
-        setProducts(data);
+        setProducts(data.products || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalProducts(data.totalProducts || 0);
       } catch (fetchError) {
         setError(fetchError.message || "Không thể tải danh sách sản phẩm");
       } finally {
@@ -71,16 +99,19 @@ function PhonesPage() {
     }
 
     fetchProducts();
-  }, [searchTerm, selectedBrand, selectedCondition, selectedSort]);
+  }, [
+    searchTerm,
+    selectedBrand,
+    selectedCondition,
+    selectedStorage,
+    selectedPriceRange,
+    selectedSort,
+    currentPage
+  ]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedBrand, selectedCondition, selectedSort]);
-
-  const totalPages = Math.max(1, Math.ceil(products.length / pageSize));
-  const paginatedProducts = useMemo(() => {
-    return products.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  }, [currentPage, products]);
+  }, [searchTerm, selectedBrand, selectedCondition, selectedStorage, selectedPriceRange, selectedSort]);
 
   if (loading) {
     return (
@@ -113,16 +144,22 @@ function PhonesPage() {
             onSelectBrand={setSelectedBrand}
             selectedCondition={selectedCondition}
             onSelectCondition={setSelectedCondition}
+            selectedStorage={selectedStorage}
+            onSelectStorage={setSelectedStorage}
+            selectedPriceRange={selectedPriceRange}
+            onSelectPriceRange={setSelectedPriceRange}
             onClearFilters={() => {
               setSelectedBrand("");
               setSelectedCondition("");
+              setSelectedStorage("");
+              setSelectedPriceRange("");
               setSelectedSort("newest");
             }}
           />
 
           <section className="space-y-5">
             <ProductSortBar
-              totalProducts={products.length}
+              totalProducts={totalProducts}
               selectedSort={selectedSort}
               onSelectSort={setSelectedSort}
             />
@@ -132,7 +169,7 @@ function PhonesPage() {
             ) : (
               <>
                 <ProductGrid
-                  products={paginatedProducts}
+                  products={products}
                   onAddToCart={addToCart}
                   onOpenProduct={(productId) => navigate(`/products/${productId}`)}
                 />
@@ -162,7 +199,7 @@ function CatalogBanner() {
           Danh sách điện thoại
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-          Tìm nhanh theo tên máy, hãng, tình trạng và sắp xếp theo giá phù hợp nhu cầu.
+          Tìm nhanh theo tên máy, hãng, tình trạng, dung lượng và khoảng giá phù hợp nhu cầu.
         </p>
       </div>
     </section>
@@ -174,6 +211,10 @@ function ProductFilterSidebar({
   onSelectBrand,
   selectedCondition,
   onSelectCondition,
+  selectedStorage,
+  onSelectStorage,
+  selectedPriceRange,
+  onSelectPriceRange,
   onClearFilters
 }) {
   return (
@@ -213,6 +254,30 @@ function ProductFilterSidebar({
             />
           ))}
         </FilterGroup>
+
+        <FilterGroup title="Dung lượng">
+          {storageOptions.map((storage) => (
+            <FilterCheckbox
+              key={storage}
+              label={storage}
+              checked={selectedStorage === storage}
+              onChange={() => onSelectStorage(selectedStorage === storage ? "" : storage)}
+            />
+          ))}
+        </FilterGroup>
+
+        <FilterGroup title="Khoảng giá">
+          {priceRangeOptions.map((range) => (
+            <FilterCheckbox
+              key={range.value}
+              label={range.label}
+              checked={selectedPriceRange === range.value}
+              onChange={() =>
+                onSelectPriceRange(selectedPriceRange === range.value ? "" : range.value)
+              }
+            />
+          ))}
+        </FilterGroup>
       </div>
     </aside>
   );
@@ -246,9 +311,7 @@ function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
     <div className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-xl font-black text-slate-900">Danh sách sản phẩm</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Đang hiển thị {totalProducts} sản phẩm
-        </p>
+        <p className="mt-1 text-sm text-slate-500">Đang hiển thị {totalProducts} sản phẩm</p>
       </div>
 
       <div className="flex items-center gap-3">

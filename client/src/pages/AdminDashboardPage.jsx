@@ -38,7 +38,11 @@ function AdminDashboardPage() {
           ordersResponse.json()
         ]);
 
-        setProducts(productsData);
+        const productList = Array.isArray(productsData)
+          ? productsData
+          : productsData.products || [];
+
+        setProducts(productList);
         setOrders(ordersData);
       } catch (fetchError) {
         setError(fetchError.message || "Không thể tải dữ liệu dashboard");

@@ -24,7 +24,8 @@ function ProductListPage() {
         }
 
         const data = await response.json();
-        setProducts(data);
+        const productList = Array.isArray(data) ? data : data.products || [];
+        setProducts(productList);
       } catch (err) {
         setError(err.message);
       } finally {
