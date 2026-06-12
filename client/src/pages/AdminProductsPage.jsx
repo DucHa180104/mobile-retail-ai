@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 const brandOptions = ["all", "Apple", "Samsung", "Xiaomi", "Oppo"];
 const conditionFilterOptions = [
@@ -77,7 +78,7 @@ function AdminProductsPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("http://localhost:5000/api/products?page=1&limit=1000", {
+      const response = await fetch(buildApiUrl("/api/products?page=1&limit=1000"), {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
@@ -213,7 +214,7 @@ function AdminProductsPage() {
         const uploadFormData = new FormData();
         uploadFormData.append("image", file);
 
-        const response = await fetch("http://localhost:5000/api/uploads", {
+        const response = await fetch(buildApiUrl("/api/uploads"), {
           method: "POST",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: uploadFormData
@@ -314,8 +315,8 @@ function AdminProductsPage() {
       };
 
       const url = editingProduct
-        ? `http://localhost:5000/api/products/${editingProduct._id}`
-        : "http://localhost:5000/api/products";
+        ? buildApiUrl(`/api/products/${editingProduct._id}`)
+        : buildApiUrl("/api/products");
       const method = editingProduct ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -363,7 +364,7 @@ function AdminProductsPage() {
     setActionError("");
 
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
+      const response = await fetch(buildApiUrl(`/api/products/${product._id}`), {
         method: "DELETE",
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });

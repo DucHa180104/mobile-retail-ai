@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 const brandOptions = ["Apple", "Samsung", "Xiaomi", "Oppo"];
 const conditionOptions = [
@@ -78,8 +79,8 @@ function PhonesPage() {
 
         const queryString = params.toString();
         const url = queryString
-          ? `http://localhost:5000/api/products?${queryString}`
-          : "http://localhost:5000/api/products";
+          ? buildApiUrl(`/api/products?${queryString}`)
+          : buildApiUrl("/api/products");
 
         const response = await fetch(url);
 

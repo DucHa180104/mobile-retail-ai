@@ -5,6 +5,7 @@ import HeroBanner from "../components/HeroBanner.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import TrustBadges from "../components/TrustBadges.jsx";
 import { useCart } from "../context/CartContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 function ProductListPage() {
   const { addToCart } = useCart();
@@ -17,7 +18,7 @@ function ProductListPage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const response = await fetch("http://localhost:5000/api/products");
+        const response = await fetch(buildApiUrl("/api/products"));
 
         if (!response.ok) {
           throw new Error("Không thể tải danh sách sản phẩm");

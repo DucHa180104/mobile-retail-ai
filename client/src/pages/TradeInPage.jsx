@@ -4,6 +4,7 @@ import {
   tradeInDevices,
   tradeInStorageOptions
 } from "../data/tradeInDevices.js";
+import { buildApiUrl } from "../lib/api.js";
 
 const imageFields = [
   "Mặt trước",
@@ -115,7 +116,7 @@ function TradeInPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/tradein/estimate", {
+      const response = await fetch(buildApiUrl("/api/tradein/estimate"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

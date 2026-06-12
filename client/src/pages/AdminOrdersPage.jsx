@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 const statusTabs = [
   { label: "Tất cả", value: "all" },
@@ -29,7 +30,7 @@ function AdminOrdersPage() {
         setLoading(true);
         setError("");
 
-        const response = await fetch("http://localhost:5000/api/orders", {
+        const response = await fetch(buildApiUrl("/api/orders"), {
           headers: token
             ? {
                 Authorization: `Bearer ${token}`
@@ -95,7 +96,7 @@ function AdminOrdersPage() {
     );
 
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+      const response = await fetch(buildApiUrl(`/api/orders/${orderId}/status`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

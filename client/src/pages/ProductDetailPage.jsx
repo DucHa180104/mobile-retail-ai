@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ function ProductDetailPage() {
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${id}`);
+        const response = await fetch(buildApiUrl(`/api/products/${id}`));
 
         if (!response.ok) {
           throw new Error("Không thể tải thông tin sản phẩm");

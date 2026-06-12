@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 function AdminDashboardPage() {
   const { token } = useAuth();
@@ -15,8 +16,8 @@ function AdminDashboardPage() {
         setError("");
 
         const [productsResponse, ordersResponse] = await Promise.all([
-          fetch("http://localhost:5000/api/products"),
-          fetch("http://localhost:5000/api/orders", {
+          fetch(buildApiUrl("/api/products")),
+          fetch(buildApiUrl("/api/orders"), {
             headers: token
               ? {
                   Authorization: `Bearer ${token}`

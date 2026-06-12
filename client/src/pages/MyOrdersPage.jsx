@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 function MyOrdersPage() {
   const { token, isAuthenticated } = useAuth();
@@ -21,7 +22,7 @@ function MyOrdersPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("http://localhost:5000/api/orders/my-orders", {
+      const response = await fetch(buildApiUrl("/api/orders/my-orders"), {
         headers: {
           Authorization: `Bearer ${token}`
         }

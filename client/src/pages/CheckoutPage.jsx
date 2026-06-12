@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
+import { buildApiUrl } from "../lib/api.js";
 
 const paymentOptions = [
   {
@@ -111,7 +112,7 @@ function CheckoutPage() {
         totalAmount: totalPrice
       };
 
-      const response = await fetch("http://localhost:5000/api/orders", {
+      const response = await fetch(buildApiUrl("/api/orders"), {
         method: "POST",
         headers,
         body: JSON.stringify(orderData)
