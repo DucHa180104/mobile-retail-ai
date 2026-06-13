@@ -1,5 +1,6 @@
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import { sendOrderConfirmationEmail } from "../services/emailService.js";
 
 const allowedOrderStatuses = ["pending", "confirmed", "cancelled"];
 
@@ -10,12 +11,16 @@ export const createOrder = async (req, res) => {
       phoneNumber,
       address,
       note,
+      contactEmail,
       shippingInfo,
       items,
       totalAmount,
       paymentMethod = "cod"
     } = req.body;
     const allowedPaymentMethods = ["cod", "bank_transfer", "online_mock"];
+    const normalizedEmail = String(contactEmail || req.user?.email || "")
+      .trim()
+      .toLowerCase();
     const normalizedShippingInfo = {
       fullName: shippingInfo?.fullName?.trim() || customerName?.trim() || "",
       phoneNumber: shippingInfo?.phoneNumber?.trim() || phoneNumber?.trim() || "",
@@ -25,6 +30,14 @@ export const createOrder = async (req, res) => {
       ward: shippingInfo?.ward?.trim() || "",
       note: shippingInfo?.note?.trim() || note?.trim() || ""
     };
+
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: "Contact email is required" });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ message: "Contact email is invalid" });
+    }
 
     if (!normalizedShippingInfo.fullName) {
       return res.status(400).json({ message: "Shipping full name is required" });
@@ -70,6 +83,7 @@ export const createOrder = async (req, res) => {
 
     const order = await Order.create({
       user: req.user?._id || null,
+      contactEmail: normalizedEmail,
       shippingInfo: normalizedShippingInfo,
       customerName: normalizedShippingInfo.fullName,
       phoneNumber: normalizedShippingInfo.phoneNumber,
@@ -87,6 +101,12 @@ export const createOrder = async (req, res) => {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { stock: -Number(item.quantity || 0) }
       });
+    }
+
+    try {
+      await sendOrderConfirmationEmail(order, order.contactEmail);
+    } catch (emailError) {
+      console.error("Order confirmation email error:", emailError.message);
     }
 
     res.status(201).json(order);
@@ -201,4 +221,8 @@ function buildStatusFilter(status) {
   }
 
   return { status };
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

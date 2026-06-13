@@ -44,6 +44,24 @@ const shippingInfoSchema = new mongoose.Schema(
   }
 );
 
+const cartItemSchema = new mongoose.Schema(
+  {
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true
+    },
+    quantity: {
+      type: Number,
+      min: 1,
+      default: 1
+    }
+  },
+  {
+    _id: false
+  }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -82,7 +100,11 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product"
       }
-    ]
+    ],
+    cart: {
+      type: [cartItemSchema],
+      default: []
+    }
   },
   {
     timestamps: true

@@ -80,6 +80,12 @@ const orderSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    contactEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true
+    },
     phoneNumber: {
       type: String,
       required: true,

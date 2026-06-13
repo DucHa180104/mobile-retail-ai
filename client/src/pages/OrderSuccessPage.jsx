@@ -45,6 +45,10 @@ function OrderSuccessPage() {
                     : "Đang cập nhật"
                 }
               />
+              <SummaryRow
+                label="Email nhận xác nhận"
+                value={orderSummary.contactEmail || "Đang cập nhật"}
+              />
               <SummaryRow label="Người nhận" value={shippingInfo.fullName || "Đang cập nhật"} />
               <SummaryRow
                 label="Số điện thoại"

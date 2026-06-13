@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
@@ -34,17 +34,21 @@ const initialShippingInfo = {
 
 function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
+  const [contactEmail, setContactEmail] = useState(user?.email || "");
   const [shippingInfo, setShippingInfo] = useState(initialShippingInfo);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const totalPrice = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  useEffect(() => {
+    if (user?.email) {
+      setContactEmail(user.email);
+    }
+  }, [user?.email]);
+
+  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   function handleShippingChange(event) {
     const { name, value } = event.target;
@@ -55,6 +59,14 @@ function CheckoutPage() {
   }
 
   function validateShippingInfo() {
+    if (!contactEmail.trim()) {
+      return "Vui lòng nhập email nhận xác nhận đơn hàng";
+    }
+
+    if (!isValidEmail(contactEmail.trim())) {
+      return "Email nhận xác nhận đơn hàng không hợp lệ";
+    }
+
     if (!shippingInfo.fullName.trim()) {
       return "Vui lòng nhập họ tên người nhận";
     }
@@ -92,6 +104,7 @@ function CheckoutPage() {
       }
 
       const orderData = {
+        contactEmail: contactEmail.trim(),
         shippingInfo: {
           fullName: shippingInfo.fullName.trim(),
           phoneNumber: shippingInfo.phoneNumber.trim(),
@@ -126,13 +139,14 @@ function CheckoutPage() {
 
       const orderSummary = {
         orderId: data._id,
+        contactEmail: data.contactEmail || orderData.contactEmail,
         paymentMethod: data.paymentMethod,
         paymentStatus: data.paymentStatus,
         shippingInfo: data.shippingInfo || orderData.shippingInfo
       };
 
       sessionStorage.setItem("latest-order-summary", JSON.stringify(orderSummary));
-      clearCart();
+      await clearCart();
       navigate("/order-success", {
         state: orderSummary
       });
@@ -155,8 +169,8 @@ function CheckoutPage() {
             <h1 className="mt-6 text-3xl font-black text-slate-900">Chưa thể thanh toán</h1>
 
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-500">
-              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa chọn
-              sản phẩm trước khi đặt hàng.
+              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa chọn sản phẩm trước
+              khi đặt hàng.
             </p>
 
             <Link
@@ -216,6 +230,19 @@ function CheckoutPage() {
             )}
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Email nhận xác nhận đơn hàng
+                </label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(event) => setContactEmail(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
+                  placeholder="example@email.com"
+                />
+              </div>
+
               <FormField
                 label="Họ tên người nhận"
                 name="fullName"
@@ -257,9 +284,7 @@ function CheckoutPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Ghi chú
-                </label>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Ghi chú</label>
                 <textarea
                   name="note"
                   value={shippingInfo.note}
@@ -271,9 +296,7 @@ function CheckoutPage() {
               </div>
 
               <div>
-                <p className="mb-3 text-sm font-semibold text-slate-700">
-                  Phương thức thanh toán
-                </p>
+                <p className="mb-3 text-sm font-semibold text-slate-700">Phương thức thanh toán</p>
                 <div className="space-y-3">
                   {paymentOptions.map((option) => (
                     <label
@@ -308,7 +331,7 @@ function CheckoutPage() {
                   <p className="font-semibold text-blue-700">Thông tin chuyển khoản demo</p>
                   <p className="mt-2">Ngân hàng: Vietcombank</p>
                   <p>Số tài khoản: 1234567890</p>
-                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯƠNG</p>
+                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯỜNG</p>
                   <p className="mt-2 text-slate-500">
                     Nội dung: Thanh toan don hang + số điện thoại của bạn
                   </p>
@@ -332,9 +355,7 @@ function CheckoutPage() {
               </span>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Tóm tắt đơn hàng</h2>
-                <p className="text-sm text-slate-500">
-                  {cartItems.length} sản phẩm đang chờ thanh toán
-                </p>
+                <p className="text-sm text-slate-500">{cartItems.length} sản phẩm đang chờ thanh toán</p>
               </div>
             </div>
 
@@ -426,6 +447,10 @@ function formatPaymentMethod(value) {
   }
 
   return "Thanh toán khi nhận hàng";
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function CheckoutIcon() {
