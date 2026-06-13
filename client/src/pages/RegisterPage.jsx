@@ -56,7 +56,7 @@ function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center px-4 py-10">
+    <div className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center px-4 py-8">
       <div className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">
@@ -68,11 +68,11 @@ function RegisterPage() {
           </p>
         </div>
 
-        {error && (
+        {error ? (
           <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}
           </div>
-        )}
+        ) : null}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <FormField label="Họ và tên">

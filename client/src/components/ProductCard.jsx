@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 
-function ProductCard({ product, badge, onAddToCart }) {
+function ProductCard({ product, badge, onAddToCart, isWishlisted = false, onToggleWishlist }) {
   const imageUrl =
     product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
   return (
-    <article className="group overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+    <article className="group overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
       <div className="relative overflow-hidden rounded-[1rem] bg-slate-100">
-        {badge && (
+        {badge ? (
           <span
             className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-bold uppercase text-white shadow-sm ${
               badge === "Nổi bật" ? "bg-red-500" : "bg-blue-600"
@@ -15,13 +15,26 @@ function ProductCard({ product, badge, onAddToCart }) {
           >
             {badge}
           </span>
-        )}
+        ) : null}
+
+        {onToggleWishlist ? (
+          <button
+            type="button"
+            onClick={() => onToggleWishlist(product)}
+            className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm transition ${
+              isWishlisted ? "text-red-500" : "text-slate-500 hover:text-red-500"
+            }`}
+            aria-label={`${isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"} ${product.name}`}
+          >
+            <HeartIcon isFilled={isWishlisted} />
+          </button>
+        ) : null}
 
         <Link to={`/products/${product._id}`} className="block">
           <img
             src={imageUrl}
             alt={product.name}
-            className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
+            className="h-40 w-full object-cover transition duration-300 group-hover:scale-105"
           />
         </Link>
       </div>
@@ -56,6 +69,25 @@ function ProductCard({ product, badge, onAddToCart }) {
         </div>
       </div>
     </article>
+  );
+}
+
+function HeartIcon({ isFilled }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill={isFilled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-4 w-4"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m12 20-1.4-1.3C5.4 14 2 10.9 2 7.2 2 4.4 4.2 2 7 2c1.6 0 3.2.7 4.2 1.9C12.8 2.7 14.4 2 16 2c2.8 0 5 2.4 5 5.2 0 3.7-3.4 6.8-8.6 11.5Z"
+      />
+    </svg>
   );
 }
 

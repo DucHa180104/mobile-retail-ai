@@ -1,28 +1,47 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import ReviewForm from "../components/ReviewForm.jsx";
+import ReviewList from "../components/ReviewList.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
 function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, token, isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+
   const [product, setProduct] = useState(null);
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState("");
+  const [reviewSubmitLoading, setReviewSubmitLoading] = useState(false);
+  const [reviewSubmitError, setReviewSubmitError] = useState("");
+  const [reviewSuccessMessage, setReviewSuccessMessage] = useState("");
+  const [purchaseCheckLoading, setPurchaseCheckLoading] = useState(false);
+  const [eligibleOrderId, setEligibleOrderId] = useState("");
+  const [editingReview, setEditingReview] = useState(null);
+
   useEffect(() => {
     async function fetchProduct() {
       try {
+        setLoading(true);
+        setError("");
+
         const response = await fetch(buildApiUrl(`/api/products/${id}`));
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error("Không thể tải thông tin sản phẩm");
+          throw new Error(data.message || "Không thể tải thông tin sản phẩm");
         }
 
-        const data = await response.json();
         setProduct(data);
       } catch (fetchError) {
         setError(fetchError.message || "Không thể tải thông tin sản phẩm");
@@ -35,8 +54,50 @@ function ProductDetailPage() {
   }, [id]);
 
   useEffect(() => {
+    fetchReviews();
+  }, [id]);
+
+  useEffect(() => {
     setSelectedImageIndex(0);
   }, [product?._id]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      setEligibleOrderId("");
+      setPurchaseCheckLoading(false);
+      return;
+    }
+
+    checkEligibleOrder();
+  }, [id, isAuthenticated, token]);
+
+  useEffect(() => {
+    async function fetchWishlist() {
+      if (!isAuthenticated || !token) {
+        setWishlist([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(buildApiUrl("/api/wishlist"), {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Khong the tai danh sach yeu thich");
+        }
+
+        const data = await response.json();
+        setWishlist(data.wishlist || []);
+      } catch {
+        setWishlist([]);
+      }
+    }
+
+    fetchWishlist();
+  }, [isAuthenticated, token]);
 
   const galleryImages = useMemo(() => {
     if (!product?.images?.length) {
@@ -45,6 +106,208 @@ function ProductDetailPage() {
 
     return product.images;
   }, [product]);
+
+  const currentUserId = user?._id || user?.id || "";
+
+  const currentUserReview = useMemo(() => {
+    if (!currentUserId) {
+      return null;
+    }
+
+    return reviews.find((review) => String(review.user?._id) === String(currentUserId)) || null;
+  }, [currentUserId, reviews]);
+
+  const hasUserReviewed = Boolean(currentUserReview);
+
+  const averageRating = useMemo(() => {
+    if (!reviews.length) {
+      return 0;
+    }
+
+    const totalRating = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0);
+    return totalRating / reviews.length;
+  }, [reviews]);
+
+  const wishlistIds = useMemo(
+    () => new Set(wishlist.map((wishlistProduct) => String(wishlistProduct._id))),
+    [wishlist]
+  );
+
+  async function fetchReviews() {
+    try {
+      setReviewsLoading(true);
+      setReviewsError("");
+
+      const response = await fetch(buildApiUrl(`/api/reviews/product/${id}`));
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể tải đánh giá sản phẩm");
+      }
+
+      setReviews(data);
+    } catch (fetchError) {
+      setReviewsError(fetchError.message || "Không thể tải đánh giá sản phẩm");
+    } finally {
+      setReviewsLoading(false);
+    }
+  }
+
+  async function checkEligibleOrder() {
+    try {
+      setPurchaseCheckLoading(true);
+
+      const response = await fetch(buildApiUrl("/api/orders/my-orders"), {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể kiểm tra lịch sử mua hàng");
+      }
+
+      const matchedOrder = data.find((order) => {
+        if (order.status !== "confirmed") {
+          return false;
+        }
+
+        return order.items?.some(
+          (item) => String(item.productId?._id || item.productId) === String(id)
+        );
+      });
+
+      setEligibleOrderId(matchedOrder?._id || "");
+    } catch {
+      setEligibleOrderId("");
+    } finally {
+      setPurchaseCheckLoading(false);
+    }
+  }
+
+  function handleAddToCart() {
+    addToCart(product);
+    setMessage("Đã thêm vào giỏ hàng");
+  }
+
+  function handleBuyNow() {
+    addToCart(product);
+    navigate("/checkout");
+  }
+
+  async function handleToggleWishlist() {
+    if (!isAuthenticated || !token) {
+      window.alert("Vui lòng đăng nhập để dùng danh sách yêu thích");
+      return;
+    }
+
+    try {
+      const response = await fetch(buildApiUrl("/api/wishlist/toggle"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Khong the cap nhat danh sach yeu thich");
+      }
+
+      setWishlist(data.wishlist || []);
+    } catch (toggleError) {
+      window.alert(toggleError.message || "Khong the cap nhat danh sach yeu thich");
+    }
+  }
+
+  async function handleSubmitReview({ rating, comment, images }) {
+    if (!token) {
+      setReviewSubmitError("Bạn cần đăng nhập để đánh giá sản phẩm này");
+      return false;
+    }
+
+    if (!editingReview && !eligibleOrderId) {
+      setReviewSubmitError("Bạn chưa mua sản phẩm này");
+      return false;
+    }
+
+    try {
+      setReviewSubmitLoading(true);
+      setReviewSubmitError("");
+      setReviewSuccessMessage("");
+
+      const response = await fetch(
+        editingReview
+          ? buildApiUrl(`/api/reviews/${editingReview._id}`)
+          : buildApiUrl("/api/reviews"),
+        {
+          method: editingReview ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            ...(editingReview
+              ? {}
+              : {
+                  productId: id,
+                  orderId: eligibleOrderId
+                }),
+            rating,
+            comment,
+            images
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.message === "You can only review products from your confirmed orders") {
+          throw new Error("Bạn chưa mua sản phẩm này");
+        }
+
+        if (data.message === "You have already reviewed this product") {
+          throw new Error("Bạn đã đánh giá sản phẩm này");
+        }
+
+        if (data.message === "You can only edit your own review") {
+          throw new Error("Bạn chỉ có thể sửa đánh giá của chính mình");
+        }
+
+        throw new Error(data.message || "Không thể gửi đánh giá");
+      }
+
+      setReviewSuccessMessage(
+        editingReview ? "Cập nhật đánh giá thành công" : "Gửi đánh giá thành công"
+      );
+      setEditingReview(null);
+      await fetchReviews();
+      return true;
+    } catch (submitError) {
+      setReviewSubmitError(submitError.message || "Không thể gửi đánh giá");
+      return false;
+    } finally {
+      setReviewSubmitLoading(false);
+    }
+  }
+
+  function handleStartEditReview(review) {
+    setEditingReview(review);
+    setReviewSubmitError("");
+    setReviewSuccessMessage("");
+  }
+
+  function handleCancelEditReview() {
+    setEditingReview(null);
+    setReviewSubmitError("");
+  }
 
   if (loading) {
     return (
@@ -76,16 +339,7 @@ function ProductDetailPage() {
   const conditionLabel = getConditionLabel(product.condition);
   const conditionClassName = getConditionClassName(product.condition);
   const highlights = buildHighlights(product);
-
-  function handleAddToCart() {
-    addToCart(product);
-    setMessage("Đã thêm vào giỏ hàng");
-  }
-
-  function handleBuyNow() {
-    addToCart(product);
-    navigate("/checkout");
-  }
+  const isWishlisted = wishlistIds.has(String(product._id));
 
   return (
     <main className="px-4 py-8 sm:px-6 lg:px-8">
@@ -114,7 +368,19 @@ function ProductDetailPage() {
         <div className="grid gap-8 xl:grid-cols-[1.18fr_0.82fr]">
           <section className="space-y-6">
             <article className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="overflow-hidden rounded-[1.5rem] border border-slate-100 bg-slate-50">
+              <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-100 bg-slate-50">
+                <button
+                  type="button"
+                  onClick={handleToggleWishlist}
+                  className={`absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-sm transition ${
+                    isWishlisted ? "text-red-500" : "text-slate-500 hover:text-red-500"
+                  }`}
+                  aria-label={`${
+                    isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"
+                  } ${product.name}`}
+                >
+                  <HeartIcon isFilled={isWishlisted} />
+                </button>
                 <img
                   src={selectedImage}
                   alt={product.name}
@@ -153,9 +419,7 @@ function ProductDetailPage() {
                     className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                   >
                     <h3 className="font-bold text-slate-900">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {item.description}
-                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -166,6 +430,94 @@ function ProductDetailPage() {
               <p className="mt-4 text-sm leading-7 text-slate-600">
                 {product.description || "Thông tin mô tả chi tiết đang được cập nhật."}
               </p>
+            </article>
+
+            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900">Đánh giá từ khách hàng</h2>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Chỉ người đã mua và có đơn đã xác nhận mới được đánh giá.
+                  </p>
+                </div>
+
+                <div className="rounded-3xl bg-amber-50 px-5 py-4 text-center">
+                  <p className="text-3xl font-black text-amber-500">
+                    {reviews.length ? averageRating.toFixed(1) : "0.0"} / 5
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-600">
+                    ({reviews.length} đánh giá)
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                {!isAuthenticated ? (
+                  <div className="rounded-3xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700">
+                    Vui lòng đăng nhập để đánh giá sản phẩm
+                  </div>
+                ) : purchaseCheckLoading ? (
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
+                    Đang kiểm tra điều kiện đánh giá...
+                  </div>
+                ) : reviewsLoading ? (
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
+                    Đang tải dữ liệu đánh giá...
+                  </div>
+                ) : editingReview ? (
+                  <ReviewForm
+                    onSubmit={handleSubmitReview}
+                    token={token}
+                    loading={reviewSubmitLoading}
+                    error={reviewSubmitError}
+                    initialValues={editingReview}
+                    isEditing
+                    onCancel={handleCancelEditReview}
+                  />
+                ) : hasUserReviewed ? (
+                  <div className="rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span>Bạn đã đánh giá sản phẩm này</span>
+                      {currentUserReview ? (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditReview(currentUserReview)}
+                          className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                        >
+                          Sửa đánh giá
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : eligibleOrderId ? (
+                  <ReviewForm
+                    onSubmit={handleSubmitReview}
+                    token={token}
+                    loading={reviewSubmitLoading}
+                    error={reviewSubmitError}
+                  />
+                ) : (
+                  <div className="rounded-3xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-700">
+                    Bạn chưa mua sản phẩm này
+                  </div>
+                )}
+
+                {reviewSuccessMessage ? (
+                  <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                    {reviewSuccessMessage}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="mt-6">
+                <ReviewList
+                  reviews={reviews}
+                  loading={reviewsLoading}
+                  error={reviewsError}
+                  currentUserId={currentUserId}
+                  onEditReview={handleStartEditReview}
+                />
+              </div>
             </article>
 
             <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -205,7 +557,7 @@ function ProductDetailPage() {
               </div>
 
               <p className="mt-3 text-sm text-slate-500">
-                Thông tin bên dưới được hiển thị theo đúng tình trạng máy đang có tại MẠNH HƯƠNG.
+                Thông tin bên dưới được hiển thị theo đúng tình trạng máy đang có tại MẠNH HƯỜNG.
               </p>
 
               <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
@@ -226,9 +578,7 @@ function ProductDetailPage() {
                   <DetailRow
                     label="Tồn kho"
                     value={
-                      Number(product.stock) > 0
-                        ? `${product.stock} máy sẵn có`
-                        : "Tạm hết hàng"
+                      Number(product.stock) > 0 ? `${product.stock} máy sẵn có` : "Tạm hết hàng"
                     }
                   />
                   <DetailRow label="Ghi chú thêm" value={usedDetails.note} />
@@ -269,11 +619,11 @@ function ProductDetailPage() {
                 </div>
               </div>
 
-              {message && (
+              {message ? (
                 <p className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                   {message}
                 </p>
-              )}
+              ) : null}
 
               <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
                 <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-900">
@@ -376,9 +726,7 @@ function SpecRow({ label, value }) {
   return (
     <div className="grid grid-cols-[120px_1fr] gap-4 border-b border-slate-200 px-4 py-3 last:border-b-0">
       <span className="text-sm font-semibold text-slate-500">{label}</span>
-      <span className="text-sm font-semibold text-slate-900">
-        {value || "Đang cập nhật"}
-      </span>
+      <span className="text-sm font-semibold text-slate-900">{value || "Đang cập nhật"}</span>
     </div>
   );
 }
@@ -413,6 +761,25 @@ function getConditionClassName(condition) {
   }
 
   return "bg-emerald-100 text-emerald-700";
+}
+
+function HeartIcon({ isFilled }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill={isFilled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-5 w-5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m12 20-1.4-1.3C5.4 14 2 10.9 2 7.2 2 4.4 4.2 2 7 2c1.6 0 3.2.7 4.2 1.9C12.8 2.7 14.4 2 16 2c2.8 0 5 2.4 5 5.2 0 3.7-3.4 6.8-8.6 11.5Z"
+      />
+    </svg>
+  );
 }
 
 function CheckIcon() {

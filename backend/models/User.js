@@ -1,6 +1,49 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
+const shippingInfoSchema = new mongoose.Schema(
+  {
+    fullName: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    address: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    city: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    district: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    ward: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    note: {
+      type: String,
+      trim: true,
+      default: ""
+    }
+  },
+  {
+    _id: false
+  }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -24,7 +67,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["user", "admin"],
       default: "user"
-    }
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    shippingInfo: {
+      type: shippingInfoSchema,
+      default: () => ({})
+    },
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product"
+      }
+    ]
   },
   {
     timestamps: true

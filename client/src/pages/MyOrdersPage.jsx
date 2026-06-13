@@ -47,8 +47,8 @@ function MyOrdersPage() {
   }
 
   return (
-    <main className="px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <main className="px-4 py-6 sm:px-5 lg:px-6">
+      <div className="mx-auto max-w-[1120px] space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
@@ -69,15 +69,15 @@ function MyOrdersPage() {
         </div>
 
         {loading ? (
-          <section className="rounded-[2rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+          <section className="rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
             <p className="text-slate-600">Đang tải lịch sử đơn hàng...</p>
           </section>
         ) : error ? (
-          <section className="rounded-[2rem] border border-red-200 bg-white px-6 py-14 text-center shadow-sm">
+          <section className="rounded-[2rem] border border-red-200 bg-white px-6 py-12 text-center shadow-sm">
             <p className="text-red-600">{error}</p>
           </section>
         ) : orders.length === 0 ? (
-          <section className="rounded-[2rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+          <section className="rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-600">
               <BoxIcon />
             </div>
@@ -91,25 +91,25 @@ function MyOrdersPage() {
             {orders.map((order) => (
               <article
                 key={order._id}
-                className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
+                className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
                   <div className="space-y-2">
                     <p className="text-sm text-slate-500">
-                      Mã đơn:{" "}
-                      <span className="font-semibold text-slate-900">
+                      Mã đơn:
+                      <span className="ml-2 font-semibold text-slate-900">
                         #{String(order._id).slice(-8).toUpperCase()}
                       </span>
                     </p>
                     <p className="text-sm text-slate-500">
-                      Ngày đặt:{" "}
-                      <span className="font-semibold text-slate-900">
+                      Ngày đặt:
+                      <span className="ml-2 font-semibold text-slate-900">
                         {formatDate(order.createdAt)}
                       </span>
                     </p>
                     <p className="text-sm text-slate-500">
-                      Thanh toán:{" "}
-                      <span className="font-semibold text-slate-900">
+                      Thanh toán:
+                      <span className="ml-2 font-semibold text-slate-900">
                         {formatPaymentMethod(order.paymentMethod)}
                       </span>
                     </p>
@@ -131,27 +131,35 @@ function MyOrdersPage() {
 
                 <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
                   <div className="space-y-3">
-                    {order.items?.map((item, index) => (
-                      <div
-                        key={`${item.productId}-${index}`}
-                        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                      >
-                        <img
-                          src={item.image || "https://via.placeholder.com/160x120?text=No+Image"}
-                          alt={item.name}
-                          className="h-16 w-16 rounded-xl object-cover"
-                        />
+                    {order.items?.map((item, index) => {
+                      const productId = getItemProductId(item);
 
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold text-slate-900">{item.name}</p>
-                          <p className="mt-1 text-sm text-slate-500">Số lượng: {item.quantity}</p>
-                        </div>
+                      return (
+                        <Link
+                          key={`${productId}-${index}`}
+                          to={productId ? `/products/${productId}` : "#"}
+                          className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 hover:bg-blue-50/50"
+                        >
+                          <img
+                            src={item.image || "https://via.placeholder.com/160x120?text=No+Image"}
+                            alt={item.name}
+                            className="h-16 w-16 rounded-xl object-cover"
+                          />
 
-                        <p className="text-sm font-bold text-slate-700">
-                          {formatCurrency(item.price)}
-                        </p>
-                      </div>
-                    ))}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-semibold text-slate-900">{item.name}</p>
+                            <p className="mt-1 text-sm text-slate-500">Số lượng: {item.quantity}</p>
+                            <p className="mt-1 text-xs font-medium text-blue-700">
+                              Xem chi tiết sản phẩm
+                            </p>
+                          </div>
+
+                          <p className="text-sm font-bold text-slate-700">
+                            {formatCurrency(item.price)}
+                          </p>
+                        </Link>
+                      );
+                    })}
                   </div>
 
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -159,18 +167,12 @@ function MyOrdersPage() {
                       Thông tin giao hàng
                     </h3>
                     <div className="mt-4 space-y-3">
-                      <InfoRow
-                        label="Người nhận"
-                        value={getOrderFullName(order) || "Đang cập nhật"}
-                      />
+                      <InfoRow label="Người nhận" value={getOrderFullName(order) || "Đang cập nhật"} />
                       <InfoRow
                         label="Số điện thoại"
                         value={getOrderPhoneNumber(order) || "Đang cập nhật"}
                       />
-                      <InfoRow
-                        label="Địa chỉ giao hàng"
-                        value={formatOrderAddress(order)}
-                      />
+                      <InfoRow label="Địa chỉ giao hàng" value={formatOrderAddress(order)} />
                       <InfoRow
                         label="Ghi chú"
                         value={order.shippingInfo?.note || order.note || "Không có ghi chú"}
@@ -198,56 +200,25 @@ function InfoRow({ label, value }) {
 
 function StatusBadge({ status }) {
   const badgeMap = {
-    pending: {
-      label: "Chờ xác nhận",
-      className: "bg-amber-100 text-amber-700"
-    },
-    confirmed: {
-      label: "Đã xác nhận",
-      className: "bg-emerald-100 text-emerald-700"
-    },
-    cancelled: {
-      label: "Đã hủy",
-      className: "bg-rose-100 text-rose-700"
-    }
+    pending: { label: "Chờ xác nhận", className: "bg-amber-100 text-amber-700" },
+    confirmed: { label: "Đã xác nhận", className: "bg-emerald-100 text-emerald-700" },
+    cancelled: { label: "Đã hủy", className: "bg-rose-100 text-rose-700" }
   };
 
   const badge = badgeMap[status] || badgeMap.pending;
-
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>
-      {badge.label}
-    </span>
-  );
+  return <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>{badge.label}</span>;
 }
 
 function PaymentBadge({ paymentStatus }) {
   const badgeMap = {
-    unpaid: {
-      label: "Chưa thanh toán",
-      className: "bg-slate-200 text-slate-700"
-    },
-    pending: {
-      label: "Chờ xác nhận thanh toán",
-      className: "bg-amber-100 text-amber-700"
-    },
-    paid: {
-      label: "Đã thanh toán",
-      className: "bg-emerald-100 text-emerald-700"
-    },
-    failed: {
-      label: "Thanh toán thất bại",
-      className: "bg-rose-100 text-rose-700"
-    }
+    unpaid: { label: "Chưa thanh toán", className: "bg-slate-200 text-slate-700" },
+    pending: { label: "Chờ xác nhận thanh toán", className: "bg-amber-100 text-amber-700" },
+    paid: { label: "Đã thanh toán", className: "bg-emerald-100 text-emerald-700" },
+    failed: { label: "Thanh toán thất bại", className: "bg-rose-100 text-rose-700" }
   };
 
   const badge = badgeMap[paymentStatus] || badgeMap.unpaid;
-
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>
-      {badge.label}
-    </span>
-  );
+  return <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>{badge.label}</span>;
 }
 
 function getOrderFullName(order) {
@@ -292,6 +263,10 @@ function formatPaymentMethod(paymentMethod) {
   }
 
   return "Thanh toán khi nhận hàng";
+}
+
+function getItemProductId(item) {
+  return item?.productId?._id || item?.productId || "";
 }
 
 function BoxIcon() {

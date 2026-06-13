@@ -10,7 +10,7 @@ const badges = [
     icon: TruckIcon
   },
   {
-    title: "Uy tín đảm bảo",
+    title: "Uy tín bảo đảm",
     description: "Tư vấn rõ ràng, hỗ trợ tận tâm trước và sau mua hàng.",
     icon: MedalIcon
   }
@@ -25,7 +25,7 @@ function TrustBadges() {
         return (
           <article
             key={badge.title}
-            className="rounded-[1.35rem] border border-slate-200 bg-white p-5 shadow-sm"
+            className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm"
           >
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
@@ -34,9 +34,7 @@ function TrustBadges() {
 
               <div>
                 <h3 className="font-bold text-slate-900">{badge.title}</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  {badge.description}
-                </p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{badge.description}</p>
               </div>
             </div>
           </article>

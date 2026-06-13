@@ -12,7 +12,17 @@ function formatUserResponse(user) {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: user.role
+    role: user.role,
+    phoneNumber: user.phoneNumber || "",
+    shippingInfo: {
+      fullName: user.shippingInfo?.fullName || "",
+      phoneNumber: user.shippingInfo?.phoneNumber || "",
+      address: user.shippingInfo?.address || "",
+      city: user.shippingInfo?.city || "",
+      district: user.shippingInfo?.district || "",
+      ward: user.shippingInfo?.ward || "",
+      note: user.shippingInfo?.note || ""
+    }
   };
 }
 
@@ -102,6 +112,103 @@ export const loginUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to login"
+    });
+  }
+};
+
+export const getMe = async (req, res) => {
+  return res.status(200).json({
+    user: formatUserResponse(req.user)
+  });
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, phoneNumber, shippingInfo } = req.body;
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    if (typeof name === "string" && name.trim()) {
+      user.name = name.trim();
+    }
+
+    if (typeof phoneNumber === "string") {
+      user.phoneNumber = phoneNumber.trim();
+    }
+
+    if (shippingInfo && typeof shippingInfo === "object") {
+      user.shippingInfo = {
+        fullName: typeof shippingInfo.fullName === "string" ? shippingInfo.fullName.trim() : "",
+        phoneNumber:
+          typeof shippingInfo.phoneNumber === "string" ? shippingInfo.phoneNumber.trim() : "",
+        address: typeof shippingInfo.address === "string" ? shippingInfo.address.trim() : "",
+        city: typeof shippingInfo.city === "string" ? shippingInfo.city.trim() : "",
+        district: typeof shippingInfo.district === "string" ? shippingInfo.district.trim() : "",
+        ward: typeof shippingInfo.ward === "string" ? shippingInfo.ward.trim() : "",
+        note: typeof shippingInfo.note === "string" ? shippingInfo.note.trim() : ""
+      };
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      user: formatUserResponse(user)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Failed to update profile"
+    });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required"
+      });
+    }
+
+    if (String(newPassword).trim().length < 6) {
+      return res.status(400).json({
+        message: "New password must be at least 6 characters"
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    const isPasswordValid = await user.comparePassword(currentPassword);
+
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        message: "Current password is incorrect"
+      });
+    }
+
+    user.password = String(newPassword).trim();
+    await user.save();
+
+    return res.status(200).json({
+      message: "Password changed successfully"
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Failed to change password"
     });
   }
 };

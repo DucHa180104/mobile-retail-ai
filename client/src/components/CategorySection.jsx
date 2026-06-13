@@ -8,7 +8,7 @@ const categories = [
 
 function CategorySection({ activeCategory, onCategoryChange }) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <SectionTitle title="Danh mục nổi bật" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -20,18 +20,16 @@ function CategorySection({ activeCategory, onCategoryChange }) {
               key={category.name}
               type="button"
               onClick={() => onCategoryChange(isActive ? "" : category.name)}
-              className={`rounded-[1.35rem] border px-4 py-5 text-center transition ${
+              className={`rounded-[1.25rem] border px-4 py-4 text-center transition ${
                 isActive
                   ? "border-blue-200 bg-blue-50 shadow-sm"
                   : "border-slate-200 bg-white hover:-translate-y-0.5 hover:shadow-sm"
               }`}
             >
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+              <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
                 {category.icon}
               </span>
-              <span className="mt-3 block text-sm font-bold text-slate-800">
-                {category.name}
-              </span>
+              <span className="mt-3 block text-sm font-bold text-slate-800">{category.name}</span>
             </button>
           );
         })}
@@ -43,7 +41,7 @@ function CategorySection({ activeCategory, onCategoryChange }) {
 function SectionTitle({ title }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h2 className="text-lg font-black text-slate-900 sm:text-[1.75rem]">{title}</h2>
+      <h2 className="text-lg font-black text-slate-900 sm:text-[1.55rem]">{title}</h2>
     </div>
   );
 }

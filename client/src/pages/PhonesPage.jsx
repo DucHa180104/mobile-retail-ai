@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
@@ -27,8 +28,10 @@ const pageSize = 6;
 function PhonesPage() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { token, isAuthenticated } = useAuth();
   const { searchTerm } = useOutletContext();
   const [products, setProducts] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
@@ -114,10 +117,73 @@ function PhonesPage() {
     setCurrentPage(1);
   }, [searchTerm, selectedBrand, selectedCondition, selectedStorage, selectedPriceRange, selectedSort]);
 
+  useEffect(() => {
+    async function fetchWishlist() {
+      if (!isAuthenticated || !token) {
+        setWishlist([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(buildApiUrl("/api/wishlist"), {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Không thể tải danh sách yêu thích");
+        }
+
+        const data = await response.json();
+        setWishlist(data.wishlist || []);
+      } catch {
+        setWishlist([]);
+      }
+    }
+
+    fetchWishlist();
+  }, [isAuthenticated, token]);
+
+  const wishlistIds = useMemo(
+    () => new Set(wishlist.map((product) => product._id)),
+    [wishlist]
+  );
+
+  async function handleToggleWishlist(product) {
+    if (!isAuthenticated || !token) {
+      window.alert("Vui lòng đăng nhập để dùng danh sách yêu thích");
+      return;
+    }
+
+    try {
+      const response = await fetch(buildApiUrl("/api/wishlist/toggle"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể cập nhật danh sách yêu thích");
+      }
+
+      setWishlist(data.wishlist || []);
+    } catch (toggleError) {
+      window.alert(toggleError.message || "Không thể cập nhật danh sách yêu thích");
+    }
+  }
+
   if (loading) {
     return (
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[1.75rem] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+      <main className="px-4 py-5 sm:px-5 lg:px-6">
+        <div className="mx-auto max-w-[1120px] rounded-[1.6rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
           <p className="text-slate-600">Đang tải sản phẩm...</p>
         </div>
       </main>
@@ -126,8 +192,8 @@ function PhonesPage() {
 
   if (error) {
     return (
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[1.75rem] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+      <main className="px-4 py-5 sm:px-5 lg:px-6">
+        <div className="mx-auto max-w-[1120px] rounded-[1.6rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
           <p className="text-red-600">{error}</p>
         </div>
       </main>
@@ -135,11 +201,11 @@ function PhonesPage() {
   }
 
   return (
-    <main className="px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="px-4 py-5 sm:px-5 lg:px-6">
+      <div className="mx-auto max-w-[1120px] space-y-5">
         <CatalogBanner />
 
-        <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
           <ProductFilterSidebar
             selectedBrand={selectedBrand}
             onSelectBrand={setSelectedBrand}
@@ -158,7 +224,7 @@ function PhonesPage() {
             }}
           />
 
-          <section className="space-y-5">
+          <section className="space-y-4">
             <ProductSortBar
               totalProducts={totalProducts}
               selectedSort={selectedSort}
@@ -171,8 +237,10 @@ function PhonesPage() {
               <>
                 <ProductGrid
                   products={products}
+                  wishlistIds={wishlistIds}
                   onAddToCart={addToCart}
                   onOpenProduct={(productId) => navigate(`/products/${productId}`)}
+                  onToggleWishlist={handleToggleWishlist}
                 />
 
                 <Pagination
@@ -191,15 +259,15 @@ function PhonesPage() {
 
 function CatalogBanner() {
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border border-blue-100 bg-[linear-gradient(135deg,#e8f2ff_0%,#dbeafe_45%,#eff6ff_100%)] px-6 py-8 shadow-sm sm:px-8">
+    <section className="overflow-hidden rounded-[1.6rem] border border-blue-100 bg-[linear-gradient(135deg,#e8f2ff_0%,#dbeafe_45%,#eff6ff_100%)] px-6 py-6 shadow-sm sm:px-7">
       <div className="max-w-2xl">
         <span className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
           Điện thoại cũ
         </span>
-        <h1 className="mt-4 text-3xl font-black text-slate-900 sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-black text-slate-900 sm:text-4xl">
           Danh sách điện thoại
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+        <p className="mt-2 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
           Tìm nhanh theo tên máy, hãng, tình trạng, dung lượng và khoảng giá phù hợp nhu cầu.
         </p>
       </div>
@@ -219,7 +287,7 @@ function ProductFilterSidebar({
   onClearFilters
 }) {
   return (
-    <aside className="h-fit rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+    <aside className="h-fit rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-black text-slate-900">Bộ lọc</h2>
         <button
@@ -231,7 +299,7 @@ function ProductFilterSidebar({
         </button>
       </div>
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-5 space-y-5">
         <FilterGroup title="Hãng">
           {brandOptions.map((brand) => (
             <FilterCheckbox
@@ -286,7 +354,7 @@ function ProductFilterSidebar({
 
 function FilterGroup({ title, children }) {
   return (
-    <section className="border-t border-slate-100 pt-5 first:border-t-0 first:pt-0">
+    <section className="border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
       <h3 className="text-sm font-bold text-slate-900">{title}</h3>
       <div className="mt-3 space-y-3">{children}</div>
     </section>
@@ -309,7 +377,7 @@ function FilterCheckbox({ label, checked, onChange }) {
 
 function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
   return (
-    <div className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4 rounded-[1.6rem] border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-xl font-black text-slate-900">Danh sách sản phẩm</h2>
         <p className="mt-1 text-sm text-slate-500">Đang hiển thị {totalProducts} sản phẩm</p>
@@ -333,63 +401,75 @@ function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
   );
 }
 
-function ProductGrid({ products, onAddToCart, onOpenProduct }) {
+function ProductGrid({ products, wishlistIds, onAddToCart, onOpenProduct, onToggleWishlist }) {
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {products.map((product) => (
         <CatalogProductCard
           key={product._id}
           product={product}
           badge={getProductBadge(product)}
+          isWishlisted={wishlistIds.has(product._id)}
           onAddToCart={onAddToCart}
           onOpenProduct={onOpenProduct}
+          onToggleWishlist={onToggleWishlist}
         />
       ))}
     </div>
   );
 }
 
-function CatalogProductCard({ product, badge, onAddToCart, onOpenProduct }) {
+function CatalogProductCard({
+  product,
+  badge,
+  isWishlisted,
+  onAddToCart,
+  onOpenProduct,
+  onToggleWishlist
+}) {
   const imageUrl =
     product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
   return (
     <article
       onClick={() => onOpenProduct(product._id)}
-      className="group cursor-pointer overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+      className="group cursor-pointer overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
     >
       <div className="relative overflow-hidden rounded-2xl bg-slate-100">
-        {badge && (
+        {badge ? (
           <span
             className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[11px] font-bold uppercase text-white ${
-              badge === "CŨ 99%"
+              badge === "Cũ 99%"
                 ? "bg-amber-500"
-                : badge === "CŨ ĐẸP"
+                : badge === "Cũ đẹp"
                   ? "bg-blue-600"
-                  : badge === "CŨ DÙNG TỐT"
+                  : badge === "Cũ dùng tốt"
                     ? "bg-slate-600"
                     : "bg-emerald-600"
             }`}
           >
             {badge}
           </span>
-        )}
+        ) : null}
 
         <button
           type="button"
           onClick={(event) => {
             event.stopPropagation();
+            onToggleWishlist(product);
           }}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-sm transition hover:text-red-500"
-          aria-label={`Yêu thích ${product.name}`}
+          className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm transition ${
+            isWishlisted ? "text-red-500" : "text-slate-500 hover:text-red-500"
+          }`}
+          aria-label={`${isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"} ${product.name}`}
         >
-          <HeartIcon />
+          <HeartIcon isFilled={isWishlisted} />
         </button>
 
         <img
           src={imageUrl}
           alt={product.name}
-          className="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+          className="h-52 w-full object-cover transition duration-300 group-hover:scale-105"
         />
       </div>
 
@@ -399,7 +479,7 @@ function CatalogProductCard({ product, badge, onAddToCart, onOpenProduct }) {
         </h3>
 
         <p className="mt-3 text-xl font-black text-red-500">
-          {product.price?.toLocaleString("vi-VN")} VND
+          {product.price?.toLocaleString("vi-VN")} đ
         </p>
 
         <div className="mt-4 flex items-center gap-3">
@@ -434,7 +514,7 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 pt-2">
+    <div className="flex items-center justify-center gap-2 pt-1">
       <button
         type="button"
         onClick={() => onChangePage(Math.max(1, currentPage - 1))}
@@ -473,7 +553,7 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-slate-500 shadow-sm">
+    <div className="rounded-[1.6rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
       {message}
     </div>
   );
@@ -481,26 +561,26 @@ function EmptyState({ message }) {
 
 function getProductBadge(product) {
   if (product.condition === "used_99") {
-    return "CŨ 99%";
+    return "Cũ 99%";
   }
 
   if (product.condition === "used_good") {
-    return "CŨ ĐẸP";
+    return "Cũ đẹp";
   }
 
   if (product.condition === "used_fair") {
-    return "CŨ DÙNG TỐT";
+    return "Cũ dùng tốt";
   }
 
-  return "MÁY MỚI";
+  return "Máy mới";
 }
 
-function HeartIcon() {
+function HeartIcon({ isFilled }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      fill="none"
+      fill={isFilled ? "currentColor" : "none"}
       stroke="currentColor"
       strokeWidth="2"
       className="h-4 w-4"

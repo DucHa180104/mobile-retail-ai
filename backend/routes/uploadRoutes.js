@@ -68,4 +68,25 @@ router.post("/", protect, protectAdmin, (req, res) => {
   });
 });
 
+router.post("/review", protect, (req, res) => {
+  upload.single("image")(req, res, (error) => {
+    if (error) {
+      res.status(400).json({ message: error.message || "Upload ảnh thất bại" });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ message: "Vui lòng chọn một file ảnh" });
+      return;
+    }
+
+    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
+    res.status(201).json({
+      message: "Upload ảnh review thành công",
+      imageUrl
+    });
+  });
+});
+
 export default router;

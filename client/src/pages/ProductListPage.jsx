@@ -4,13 +4,16 @@ import CategorySection from "../components/CategorySection.jsx";
 import HeroBanner from "../components/HeroBanner.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import TrustBadges from "../components/TrustBadges.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
 function ProductListPage() {
   const { addToCart } = useCart();
+  const { token, isAuthenticated } = useAuth();
   const { searchTerm } = useOutletContext();
   const [products, setProducts] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
@@ -27,8 +30,8 @@ function ProductListPage() {
         const data = await response.json();
         const productList = Array.isArray(data) ? data : data.products || [];
         setProducts(productList);
-      } catch (err) {
-        setError(err.message);
+      } catch (fetchError) {
+        setError(fetchError.message || "Không thể tải danh sách sản phẩm");
       } finally {
         setLoading(false);
       }
@@ -36,6 +39,34 @@ function ProductListPage() {
 
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    async function fetchWishlist() {
+      if (!isAuthenticated || !token) {
+        setWishlist([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(buildApiUrl("/api/wishlist"), {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Không thể tải danh sách yêu thích");
+        }
+
+        const data = await response.json();
+        setWishlist(data.wishlist || []);
+      } catch {
+        setWishlist([]);
+      }
+    }
+
+    fetchWishlist();
+  }, [isAuthenticated, token]);
 
   const featuredProduct = products[0];
 
@@ -67,10 +98,45 @@ function ProductListPage() {
     });
   }, [activeCategory, products, searchTerm]);
 
+  const wishlistIds = useMemo(
+    () => new Set(wishlist.map((product) => product._id)),
+    [wishlist]
+  );
+
+  async function handleToggleWishlist(product) {
+    if (!isAuthenticated || !token) {
+      window.alert("Vui lòng đăng nhập để dùng danh sách yêu thích");
+      return;
+    }
+
+    try {
+      const response = await fetch(buildApiUrl("/api/wishlist/toggle"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể cập nhật danh sách yêu thích");
+      }
+
+      setWishlist(data.wishlist || []);
+    } catch (toggleError) {
+      window.alert(toggleError.message || "Không thể cập nhật danh sách yêu thích");
+    }
+  }
+
   if (loading) {
     return (
-      <main className="px-4 py-5 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-[1180px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+      <main className="px-4 py-4 sm:px-5 lg:px-6">
+        <div className="mx-auto max-w-[1120px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
           <p className="text-slate-600">Đang tải sản phẩm...</p>
         </div>
       </main>
@@ -79,8 +145,8 @@ function ProductListPage() {
 
   if (error) {
     return (
-      <main className="px-4 py-5 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-[1180px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+      <main className="px-4 py-4 sm:px-5 lg:px-6">
+        <div className="mx-auto max-w-[1120px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
           <p className="text-red-600">{error}</p>
         </div>
       </main>
@@ -88,8 +154,8 @@ function ProductListPage() {
   }
 
   return (
-    <main className="px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-[1180px] space-y-8">
+    <main className="px-4 py-4 sm:px-5 lg:px-6">
+      <div className="mx-auto max-w-[1120px] space-y-6">
         <HeroBanner featuredProduct={featuredProduct} />
 
         <CategorySection
@@ -100,7 +166,7 @@ function ProductListPage() {
         <section id="new-arrivals" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-black text-slate-900 sm:text-[1.75rem]">
+              <h2 className="text-lg font-black text-slate-900 sm:text-[1.55rem]">
                 Điện thoại mới về
               </h2>
               <p className="mt-1 text-[13px] text-slate-500">
@@ -111,7 +177,7 @@ function ProductListPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              {activeCategory && (
+              {activeCategory ? (
                 <button
                   type="button"
                   onClick={() => setActiveCategory("")}
@@ -119,7 +185,7 @@ function ProductListPage() {
                 >
                   Xem tất cả
                 </button>
-              )}
+              ) : null}
 
               <span className="rounded-full bg-blue-50 px-4 py-2 text-[13px] font-semibold text-blue-700">
                 {filteredProducts.length} sản phẩm
@@ -128,11 +194,11 @@ function ProductListPage() {
           </div>
 
           {products.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
+            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500 shadow-sm">
               Chưa có sản phẩm nào.
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
+            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500 shadow-sm">
               Không tìm thấy sản phẩm phù hợp.
             </div>
           ) : (
@@ -143,6 +209,8 @@ function ProductListPage() {
                   product={product}
                   badge={getProductBadge(product, index)}
                   onAddToCart={addToCart}
+                  isWishlisted={wishlistIds.has(product._id)}
+                  onToggleWishlist={handleToggleWishlist}
                 />
               ))}
             </div>

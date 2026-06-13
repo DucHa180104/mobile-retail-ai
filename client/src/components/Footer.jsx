@@ -2,16 +2,16 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="mt-12 border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1.1fr]">
+    <footer className="mt-10 border-t border-slate-200 bg-white">
+      <div className="mx-auto max-w-[1360px] px-4 py-10 sm:px-5 lg:px-6">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1.1fr]">
           <section>
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white">
                 M
               </span>
               <div>
-                <p className="text-base font-black text-slate-900">MẠNH HƯƠNG</p>
+                <p className="text-base font-black text-slate-900">MẠNH HƯỜNG</p>
                 <p className="text-xs text-slate-400">Điện thoại chính hãng</p>
               </div>
             </div>
@@ -38,7 +38,7 @@ function Footer() {
             items={[
               "Chính sách bảo hành",
               "Chính sách đổi trả",
-              "Giao hàng & thanh toán",
+              "Giao hàng và thanh toán",
               "Bảo mật thông tin"
             ]}
           />
@@ -56,8 +56,8 @@ function Footer() {
           </section>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 MẠNH HƯƠNG. Bảo lưu mọi quyền.</p>
+        <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <p>© 2026 MẠNH HƯỜNG. Bảo lưu mọi quyền.</p>
           <p>Thiết kế tối ưu cho trải nghiệm mua sắm trực tuyến.</p>
         </div>
       </div>
@@ -68,9 +68,7 @@ function Footer() {
 function FooterColumn({ title, items }) {
   return (
     <section>
-      <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-900">
-        {title}
-      </h3>
+      <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-900">{title}</h3>
 
       <ul className="mt-5 space-y-3 text-sm text-slate-500">
         {items.map((item) => (

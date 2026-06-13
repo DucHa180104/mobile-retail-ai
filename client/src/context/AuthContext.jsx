@@ -41,6 +41,16 @@ export function AuthProvider({ children }) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextState));
   }
 
+  function updateUser(nextUser) {
+    const nextState = {
+      user: nextUser,
+      token
+    };
+
+    setAuthState(nextState);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextState));
+  }
+
   function logout() {
     setAuthState({
       user: null,
@@ -55,6 +65,7 @@ export function AuthProvider({ children }) {
       token,
       isAuthenticated: Boolean(user && token),
       login,
+      updateUser,
       logout
     }),
     [token, user]

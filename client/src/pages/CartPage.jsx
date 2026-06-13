@@ -10,18 +10,15 @@ function CartPage() {
     clearCart
   } = useCart();
 
-  const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-  const shippingFee = cartItems.length > 0 ? 0 : 0;
+  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const shippingFee = 0;
   const totalPrice = subtotal + shippingFee;
 
   if (cartItems.length === 0) {
     return (
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
+      <main className="px-4 py-6 sm:px-5 lg:px-6">
         <div className="mx-auto max-w-5xl">
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm sm:px-10">
+          <section className="rounded-[1.75rem] border border-slate-200 bg-white px-6 py-10 text-center shadow-sm sm:px-10">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600">
               <CartIcon />
             </div>
@@ -36,7 +33,7 @@ function CartPage() {
 
             <Link
               to="/"
-              className="mt-8 inline-flex rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+              className="mt-7 inline-flex rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
             >
               Tiếp tục mua sắm
             </Link>
@@ -47,15 +44,14 @@ function CartPage() {
   }
 
   return (
-    <main className="px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="px-4 py-6 sm:px-5 lg:px-6">
+      <div className="mx-auto max-w-[1120px] space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">
-              Giỏ hàng của bạn
-            </h1>
+            <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">Giỏ hàng của bạn</h1>
             <p className="mt-2 text-sm text-slate-500">
-              Hiện có {cartItems.reduce((total, item) => total + item.quantity, 0)} sản phẩm trong giỏ hàng
+              Hiện có {cartItems.reduce((total, item) => total + item.quantity, 0)} sản phẩm trong
+              giỏ hàng
             </p>
           </div>
 
@@ -68,7 +64,7 @@ function CartPage() {
           </button>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
           <section className="space-y-4">
             {cartItems.map((item) => (
               <article
@@ -91,7 +87,8 @@ function CartPage() {
                           {item.name}
                         </h2>
                         <p className="mt-2 text-sm leading-6 text-slate-500">
-                          {item.description || "Sản phẩm chính hãng, hỗ trợ bảo hành và giao hàng toàn quốc."}
+                          {item.description ||
+                            "Sản phẩm chính hãng, hỗ trợ bảo hành và giao hàng toàn quốc."}
                         </p>
                       </div>
 
@@ -158,7 +155,7 @@ function CartPage() {
 
               <div className="mt-4 space-y-3">
                 <SummaryRow label="Tạm tính" value={`${subtotal.toLocaleString("vi-VN")} đ`} />
-                <SummaryRow label="Phí vận chuyển" value={shippingFee === 0 ? "Miễn phí" : `${shippingFee.toLocaleString("vi-VN")} đ`} />
+                <SummaryRow label="Phí vận chuyển" value="Miễn phí" />
               </div>
 
               <div className="mt-4">
@@ -200,28 +197,8 @@ function CartPage() {
                 Tiến hành thanh toán
               </Link>
             </section>
-
-            <section className="space-y-3">
-              <InfoCard
-                icon={<ShieldIcon />}
-                title="Thanh toán bảo mật"
-                description="Hệ thống xác thực và lưu trữ an toàn cho mọi đơn hàng."
-              />
-              <InfoCard
-                icon={<SupportIcon />}
-                title="Hỗ trợ 24/7"
-                description="Đội ngũ hỗ trợ luôn sẵn sàng tư vấn trong suốt quá trình mua hàng."
-              />
-            </section>
           </aside>
         </div>
-
-        <section className="overflow-hidden rounded-[1.5rem] bg-[linear-gradient(135deg,#2563eb_0%,#1d4ed8_55%,#1e3a8a_100%)] px-6 py-7 text-white shadow-sm">
-          <h2 className="text-xl font-black sm:text-2xl">Ưu đãi độc quyền!</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-blue-50">
-            Giảm thêm 5% khi mua kèm phụ kiện hoặc dán cường lực. Áp dụng cho khách hàng mua máy trong tuần này.
-          </p>
-        </section>
       </div>
     </main>
   );
@@ -233,22 +210,6 @@ function SummaryRow({ label, value }) {
       <span className="text-slate-500">{label}</span>
       <span className="font-medium text-slate-900">{value}</span>
     </div>
-  );
-}
-
-function InfoCard({ icon, title, description }) {
-  return (
-    <article className="rounded-[1rem] border border-slate-200 bg-white p-3.5 shadow-sm">
-      <div className="flex items-start gap-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-          {icon}
-        </span>
-        <div>
-          <h3 className="text-sm font-bold text-slate-900">{title}</h3>
-          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
-        </div>
-      </div>
-    </article>
   );
 }
 
@@ -284,38 +245,6 @@ function ArrowLeftIcon() {
       className="h-4 w-4"
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 19l-7-7 7-7" />
-    </svg>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="h-5 w-5"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 5 6v6c0 4.3 2.9 7.8 7 9 4.1-1.2 7-4.7 7-9V6z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-function SupportIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="h-5 w-5"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 13a8 8 0 1 1 16 0" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 13v4a2 2 0 0 0 2 2h1v-8H8a2 2 0 0 0-2 2Zm12-2h-1v8h1a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2Z" />
     </svg>
   );
 }
