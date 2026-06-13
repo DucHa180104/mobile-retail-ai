@@ -9,6 +9,7 @@ import CartPage from "./pages/CartPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import MyOrdersPage from "./pages/MyOrdersPage.jsx";
+import OrderDetailPage from "./pages/OrderDetailPage.jsx";
 import OrderSuccessPage from "./pages/OrderSuccessPage.jsx";
 import PhonesPage from "./pages/PhonesPage.jsx";
 import ProductDetailPage from "./pages/ProductDetailPage.jsx";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/my-orders" element={<MyOrdersPage />} />
+          <Route path="/my-orders/:id" element={<OrderDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />

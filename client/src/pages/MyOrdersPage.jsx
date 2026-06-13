@@ -3,26 +3,45 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
+const orderTabs = [
+  { label: "Tất cả", value: "all" },
+  { label: "Chờ xác nhận", value: "pending" },
+  { label: "Đã xác nhận", value: "confirmed" },
+  { label: "Đã hủy", value: "cancelled" }
+];
+
 function MyOrdersPage() {
   const { token, isAuthenticated } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
       return;
     }
 
-    fetchMyOrders();
-  }, [isAuthenticated, token]);
+    fetchMyOrders(activeTab);
+  }, [activeTab, isAuthenticated, token]);
 
-  async function fetchMyOrders() {
+  async function fetchMyOrders(status) {
     try {
       setLoading(true);
       setError("");
 
-      const response = await fetch(buildApiUrl("/api/orders/my-orders"), {
+      const params = new URLSearchParams();
+
+      if (status && status !== "all") {
+        params.set("status", status);
+      }
+
+      const queryString = params.toString();
+      const url = queryString
+        ? buildApiUrl(`/api/orders/my-orders?${queryString}`)
+        : buildApiUrl("/api/orders/my-orders");
+
+      const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -68,6 +87,25 @@ function MyOrdersPage() {
           </Link>
         </div>
 
+        <section className="rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            {orderTabs.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setActiveTab(tab.value)}
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === tab.value
+                    ? "bg-blue-700 text-white"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {loading ? (
           <section className="rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
             <p className="text-slate-600">Đang tải lịch sử đơn hàng...</p>
@@ -81,9 +119,9 @@ function MyOrdersPage() {
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-600">
               <BoxIcon />
             </div>
-            <h2 className="mt-6 text-2xl font-black text-slate-900">Bạn chưa có đơn hàng nào</h2>
+            <h2 className="mt-6 text-2xl font-black text-slate-900">Không có đơn hàng nào</h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">
-              Hãy chọn sản phẩm yêu thích và hoàn tất đơn hàng đầu tiên của bạn.
+              Chưa có đơn phù hợp với trạng thái bạn đang chọn.
             </p>
           </section>
         ) : (
@@ -93,22 +131,22 @@ function MyOrdersPage() {
                 key={order._id}
                 className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm"
               >
-                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
-                  <div className="space-y-2">
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div>
                     <p className="text-sm text-slate-500">
-                      Mã đơn:
-                      <span className="ml-2 font-semibold text-slate-900">
+                      Mã đơn
+                      <span className="ml-2 font-bold text-slate-900">
                         #{String(order._id).slice(-8).toUpperCase()}
                       </span>
                     </p>
-                    <p className="text-sm text-slate-500">
-                      Ngày đặt:
+                    <p className="mt-2 text-sm text-slate-500">
+                      Ngày đặt
                       <span className="ml-2 font-semibold text-slate-900">
                         {formatDate(order.createdAt)}
                       </span>
                     </p>
-                    <p className="text-sm text-slate-500">
-                      Thanh toán:
+                    <p className="mt-2 text-sm text-slate-500">
+                      Thanh toán
                       <span className="ml-2 font-semibold text-slate-900">
                         {formatPaymentMethod(order.paymentMethod)}
                       </span>
@@ -116,69 +154,65 @@ function MyOrdersPage() {
                   </div>
 
                   <div className="text-right">
-                    <p className="text-sm text-slate-500">Tổng tiền</p>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <StatusBadge status={order.status} />
+                      <PaymentBadge paymentStatus={order.paymentStatus} />
+                    </div>
+                    <p className="mt-3 text-sm text-slate-500">Tổng tiền</p>
                     <p className="mt-1 text-2xl font-black text-blue-700">
                       {formatCurrency(order.totalAmount)}
                     </p>
-                    <div className="mt-2">
-                      <StatusBadge status={order.status} />
-                    </div>
-                    <div className="mt-2">
-                      <PaymentBadge paymentStatus={order.paymentStatus} />
-                    </div>
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-                  <div className="space-y-3">
-                    {order.items?.map((item, index) => {
-                      const productId = getItemProductId(item);
+                <div className="mt-4 space-y-3">
+                  {(order.items || []).slice(0, 2).map((item, index) => {
+                    const productId = getItemProductId(item);
 
-                      return (
-                        <Link
-                          key={`${productId}-${index}`}
-                          to={productId ? `/products/${productId}` : "#"}
-                          className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200 hover:bg-blue-50/50"
-                        >
-                          <img
-                            src={item.image || "https://via.placeholder.com/160x120?text=No+Image"}
-                            alt={item.name}
-                            className="h-16 w-16 rounded-xl object-cover"
-                          />
+                    return (
+                      <div
+                        key={`${productId}-${index}`}
+                        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                      >
+                        <img
+                          src={item.image || "https://via.placeholder.com/160x120?text=No+Image"}
+                          alt={item.name}
+                          className="h-16 w-16 rounded-xl object-cover"
+                        />
 
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold text-slate-900">{item.name}</p>
-                            <p className="mt-1 text-sm text-slate-500">Số lượng: {item.quantity}</p>
-                            <p className="mt-1 text-xs font-medium text-blue-700">
-                              Xem chi tiết sản phẩm
-                            </p>
-                          </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold text-slate-900">{item.name}</p>
+                          <p className="mt-1 text-sm text-slate-500">Số lượng: {item.quantity}</p>
+                        </div>
 
-                          <p className="text-sm font-bold text-slate-700">
-                            {formatCurrency(item.price)}
-                          </p>
-                        </Link>
-                      );
-                    })}
+                        <p className="text-sm font-bold text-slate-700">
+                          {formatCurrency(item.price)}
+                        </p>
+                      </div>
+                    );
+                  })}
+
+                  {(order.items || []).length > 2 ? (
+                    <p className="text-sm text-slate-500">
+                      Và {(order.items || []).length - 2} sản phẩm khác
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-sm text-slate-500">
+                    Giao đến:
+                    <span className="ml-2 font-semibold text-slate-900">
+                      {formatOrderAddress(order)}
+                    </span>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">
-                      Thông tin giao hàng
-                    </h3>
-                    <div className="mt-4 space-y-3">
-                      <InfoRow label="Người nhận" value={getOrderFullName(order) || "Đang cập nhật"} />
-                      <InfoRow
-                        label="Số điện thoại"
-                        value={getOrderPhoneNumber(order) || "Đang cập nhật"}
-                      />
-                      <InfoRow label="Địa chỉ giao hàng" value={formatOrderAddress(order)} />
-                      <InfoRow
-                        label="Ghi chú"
-                        value={order.shippingInfo?.note || order.note || "Không có ghi chú"}
-                      />
-                    </div>
-                  </div>
+                  <Link
+                    to={`/my-orders/${order._id}`}
+                    className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                  >
+                    Xem chi tiết
+                  </Link>
                 </div>
               </article>
             ))}
@@ -186,15 +220,6 @@ function MyOrdersPage() {
         )}
       </div>
     </main>
-  );
-}
-
-function InfoRow({ label, value }) {
-  return (
-    <div>
-      <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
-    </div>
   );
 }
 
@@ -206,7 +231,12 @@ function StatusBadge({ status }) {
   };
 
   const badge = badgeMap[status] || badgeMap.pending;
-  return <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>{badge.label}</span>;
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>
+      {badge.label}
+    </span>
+  );
 }
 
 function PaymentBadge({ paymentStatus }) {
@@ -218,15 +248,12 @@ function PaymentBadge({ paymentStatus }) {
   };
 
   const badge = badgeMap[paymentStatus] || badgeMap.unpaid;
-  return <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>{badge.label}</span>;
-}
 
-function getOrderFullName(order) {
-  return order.shippingInfo?.fullName || order.customerName || "";
-}
-
-function getOrderPhoneNumber(order) {
-  return order.shippingInfo?.phoneNumber || order.phoneNumber || "";
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-bold ${badge.className}`}>
+      {badge.label}
+    </span>
+  );
 }
 
 function formatOrderAddress(order) {

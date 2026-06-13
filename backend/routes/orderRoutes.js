@@ -13,7 +13,7 @@ const router = express.Router();
 router.post("/", protectOptional, createOrder);
 router.get("/", protect, protectAdmin, getOrders);
 router.get("/my-orders", protect, getMyOrders);
-router.get("/:id", getOrderById);
+router.get("/:id", protect, getOrderById);
 router.patch("/:id/status", protect, protectAdmin, updateOrderStatus);
 
 export default router;

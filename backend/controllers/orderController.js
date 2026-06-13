@@ -1,6 +1,8 @@
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 
+const allowedOrderStatuses = ["pending", "confirmed", "cancelled"];
+
 export const createOrder = async (req, res) => {
   try {
     const {
@@ -95,7 +97,8 @@ export const createOrder = async (req, res) => {
 
 export const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
+    const filters = buildStatusFilter(req.query.status);
+    const orders = await Order.find(filters).sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -104,7 +107,12 @@ export const getOrders = async (req, res) => {
 
 export const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const filters = {
+      user: req.user._id,
+      ...buildStatusFilter(req.query.status)
+    };
+
+    const orders = await Order.find(filters).sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -119,6 +127,13 @@ export const getOrderById = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    const isAdmin = req.user?.role === "admin";
+    const isOwner = order.user && String(order.user) === String(req.user?._id);
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ message: "You do not have permission to view this order" });
+    }
+
     res.status(200).json(order);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -128,9 +143,8 @@ export const getOrderById = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const allowedStatuses = ["pending", "confirmed", "cancelled"];
 
-    if (!allowedStatuses.includes(status)) {
+    if (!allowedOrderStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid order status" });
     }
 
@@ -175,4 +189,16 @@ function getPaymentData(paymentMethod) {
     paidAt: null,
     transactionId: ""
   };
+}
+
+function buildStatusFilter(status) {
+  if (!status || status === "all") {
+    return {};
+  }
+
+  if (!allowedOrderStatuses.includes(status)) {
+    return {};
+  }
+
+  return { status };
 }

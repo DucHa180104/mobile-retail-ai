@@ -30,7 +30,18 @@ function AdminOrdersPage() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(buildApiUrl("/api/orders"), {
+        const params = new URLSearchParams();
+
+        if (activeTab && activeTab !== "all") {
+          params.set("status", activeTab);
+        }
+
+        const queryString = params.toString();
+        const url = queryString
+          ? buildApiUrl(`/api/orders?${queryString}`)
+          : buildApiUrl("/api/orders");
+
+        const response = await fetch(url, {
           headers: token
             ? {
                 Authorization: `Bearer ${token}`
@@ -55,15 +66,9 @@ function AdminOrdersPage() {
     }
 
     fetchOrders();
-  }, [token]);
+  }, [activeTab, token]);
 
-  const filteredOrders = useMemo(() => {
-    if (activeTab === "all") {
-      return orders;
-    }
-
-    return orders.filter((order) => order.status === activeTab);
-  }, [activeTab, orders]);
+  const filteredOrders = useMemo(() => orders, [orders]);
 
   const selectedOrder =
     filteredOrders.find((order) => order._id === selectedOrderId) ||
