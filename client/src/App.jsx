@@ -5,6 +5,7 @@ import MainLayout from "./layouts/MainLayout.jsx";
 import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
 import AdminOrdersPage from "./pages/AdminOrdersPage.jsx";
 import AdminProductsPage from "./pages/AdminProductsPage.jsx";
+import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -50,6 +51,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="products" element={<AdminProductsPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
