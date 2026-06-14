@@ -86,6 +86,24 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user"
     },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    banReason: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    bannedAt: {
+      type: Date,
+      default: null
+    },
+    bannedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
     phoneNumber: {
       type: String,
       trim: true,

@@ -13,6 +13,7 @@ function formatUserResponse(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    isActive: user.isActive,
     phoneNumber: user.phoneNumber || "",
     shippingInfo: {
       fullName: user.shippingInfo?.fullName || "",
@@ -92,6 +93,12 @@ export const loginUser = async (req, res) => {
     if (!user) {
       return res.status(401).json({
         message: "Invalid email or password"
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        message: "Tài khoản đã bị khóa"
       });
     }
 

@@ -15,6 +15,9 @@ function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [roleConfirmData, setRoleConfirmData] = useState(null);
+  const [statusModalUser, setStatusModalUser] = useState(null);
+  const [banReason, setBanReason] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -49,20 +52,37 @@ function AdminUsersPage() {
     }
   }
 
-  async function handleRoleChange(userId, nextRole) {
+  function askRoleChangeConfirmation(user, nextRole) {
+    if (user.role === nextRole) {
+      return;
+    }
+
+    setRoleConfirmData({
+      userId: user.id,
+      userName: user.name,
+      currentRole: user.role,
+      nextRole
+    });
+  }
+
+  async function confirmRoleChange() {
+    if (!roleConfirmData) {
+      return;
+    }
+
     try {
-      setUpdatingUserId(userId);
+      setUpdatingUserId(roleConfirmData.userId);
       setError("");
       setMessage("");
 
-      const response = await fetch(buildApiUrl(`/api/admin/users/${userId}/role`), {
+      const response = await fetch(buildApiUrl(`/api/admin/users/${roleConfirmData.userId}/role`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          role: nextRole
+          role: roleConfirmData.nextRole
         })
       });
 
@@ -73,19 +93,116 @@ function AdminUsersPage() {
       }
 
       setUsers((currentUsers) =>
-        currentUsers.map((user) => (user.id === userId ? data.user : user))
+        currentUsers.map((user) => (user.id === roleConfirmData.userId ? data.user : user))
       );
 
       setSelectedUser((currentSelectedUser) =>
-        currentSelectedUser?.id === userId ? data.user : currentSelectedUser
+        currentSelectedUser?.id === roleConfirmData.userId ? data.user : currentSelectedUser
       );
 
-      setMessage(`Đã cập nhật quyền thành ${formatRole(nextRole)}`);
+      setStatusModalUser((currentStatusUser) =>
+        currentStatusUser?.id === roleConfirmData.userId ? data.user : currentStatusUser
+      );
+
+      setMessage(`Đã cập nhật quyền thành ${formatRole(roleConfirmData.nextRole)}`);
+      setRoleConfirmData(null);
     } catch (updateError) {
       setError(updateError.message || "Không thể cập nhật quyền");
     } finally {
       setUpdatingUserId("");
     }
+  }
+
+  function openBanModal(user) {
+    setBanReason("");
+    setStatusModalUser(user);
+  }
+
+  async function handleLockUser() {
+    if (!statusModalUser) {
+      return;
+    }
+
+    try {
+      setUpdatingUserId(statusModalUser.id);
+      setError("");
+      setMessage("");
+
+      const response = await fetch(buildApiUrl(`/api/admin/users/${statusModalUser.id}/status`), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          isActive: false,
+          banReason
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể khóa tài khoản");
+      }
+
+      updateUserInState(data.user);
+      setMessage("Khóa tài khoản thành công");
+      setStatusModalUser(null);
+      setBanReason("");
+    } catch (statusError) {
+      setError(statusError.message || "Không thể khóa tài khoản");
+    } finally {
+      setUpdatingUserId("");
+    }
+  }
+
+  async function handleUnlockUser(user) {
+    const confirmed = window.confirm(`Bạn có chắc muốn mở khóa tài khoản "${user.name}" không?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setUpdatingUserId(user.id);
+      setError("");
+      setMessage("");
+
+      const response = await fetch(buildApiUrl(`/api/admin/users/${user.id}/status`), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          isActive: true
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể mở khóa tài khoản");
+      }
+
+      updateUserInState(data.user);
+      setMessage("Mở khóa tài khoản thành công");
+    } catch (statusError) {
+      setError(statusError.message || "Không thể mở khóa tài khoản");
+    } finally {
+      setUpdatingUserId("");
+    }
+  }
+
+  function updateUserInState(nextUser) {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) => (user.id === nextUser.id ? nextUser : user))
+    );
+
+    setSelectedUser((currentSelectedUser) =>
+      currentSelectedUser?.id === nextUser.id ? nextUser : currentSelectedUser
+    );
   }
 
   const filteredUsers = useMemo(() => {
@@ -118,6 +235,7 @@ function AdminUsersPage() {
   const stats = useMemo(() => {
     const adminCount = users.filter((user) => user.role === "admin").length;
     const userCount = users.filter((user) => user.role === "user").length;
+    const lockedCount = users.filter((user) => user.isActive === false).length;
 
     return [
       {
@@ -134,6 +252,11 @@ function AdminUsersPage() {
         label: "Khách hàng",
         value: userCount,
         tone: "bg-slate-100 text-slate-900"
+      },
+      {
+        label: "Tài khoản bị khóa",
+        value: lockedCount,
+        tone: "bg-rose-50 text-rose-700"
       }
     ];
   }, [users]);
@@ -160,8 +283,8 @@ function AdminUsersPage() {
               User Management Dashboard
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-              Quản lý danh sách tài khoản, tìm kiếm nhanh và cập nhật quyền user/admin trực tiếp
-              từ giao diện.
+              Quản lý danh sách tài khoản, tìm kiếm nhanh, cập nhật quyền và khóa hoặc mở khóa tài
+              khoản trực tiếp từ giao diện.
             </p>
           </div>
 
@@ -175,7 +298,7 @@ function AdminUsersPage() {
           </div>
         </div>
 
-        <section className="grid gap-4 md:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => (
             <article key={stat.label} className={`rounded-[1.5rem] p-5 shadow-sm ${stat.tone}`}>
               <p className="text-sm font-semibold opacity-80">{stat.label}</p>
@@ -241,6 +364,7 @@ function AdminUsersPage() {
                   <th className="px-5 py-4">Email</th>
                   <th className="px-5 py-4">Số điện thoại</th>
                   <th className="px-5 py-4">Vai trò</th>
+                  <th className="px-5 py-4">Trạng thái</th>
                   <th className="px-5 py-4">Ngày tạo</th>
                   <th className="px-5 py-4">Actions</th>
                 </tr>
@@ -280,6 +404,15 @@ function AdminUsersPage() {
                           {formatRole(user.role)}
                         </span>
                       </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusBadgeClass(
+                            user.isActive
+                          )}`}
+                        >
+                          {user.isActive ? "Hoạt động" : "Bị khóa"}
+                        </span>
+                      </td>
                       <td className="px-5 py-4 text-sm text-slate-500">
                         {formatDate(user.createdAt)}
                       </td>
@@ -296,12 +429,32 @@ function AdminUsersPage() {
                           <select
                             value={user.role}
                             disabled={isCurrentAdmin || updatingUserId === user.id}
-                            onChange={(event) => handleRoleChange(user.id, event.target.value)}
+                            onChange={(event) => askRoleChangeConfirmation(user, event.target.value)}
                             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                           >
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
                           </select>
+
+                          {user.isActive ? (
+                            <button
+                              type="button"
+                              disabled={isCurrentAdmin || updatingUserId === user.id}
+                              onClick={() => openBanModal(user)}
+                              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Khóa tài khoản
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={isCurrentAdmin || updatingUserId === user.id}
+                              onClick={() => handleUnlockUser(user)}
+                              className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Mở khóa
+                            </button>
+                          )}
 
                           {isCurrentAdmin && (
                             <span className="text-xs font-semibold text-amber-600">
@@ -316,7 +469,7 @@ function AdminUsersPage() {
 
                 {paginatedUsers.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-5 py-12 text-center text-sm text-slate-500">
+                    <td colSpan="7" className="px-5 py-12 text-center text-sm text-slate-500">
                       Không tìm thấy người dùng phù hợp.
                     </td>
                   </tr>
@@ -371,10 +524,31 @@ function AdminUsersPage() {
         </section>
       </div>
 
-      {selectedUser && (
-        <UserDetailModal
-          user={selectedUser}
-          onClose={() => setSelectedUser(null)}
+      {selectedUser && <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />}
+
+      {roleConfirmData && (
+        <ConfirmModal
+          title="Xác nhận đổi quyền"
+          description={`Bạn có chắc muốn đổi "${roleConfirmData.userName}" từ ${formatRole(
+            roleConfirmData.currentRole
+          )} sang ${formatRole(roleConfirmData.nextRole)} không?`}
+          confirmText="Xác nhận đổi quyền"
+          onCancel={() => setRoleConfirmData(null)}
+          onConfirm={confirmRoleChange}
+        />
+      )}
+
+      {statusModalUser && (
+        <BanUserModal
+          user={statusModalUser}
+          banReason={banReason}
+          onChangeBanReason={setBanReason}
+          onClose={() => {
+            setStatusModalUser(null);
+            setBanReason("");
+          }}
+          onConfirm={handleLockUser}
+          loading={updatingUserId === statusModalUser.id}
         />
       )}
     </>
@@ -382,7 +556,9 @@ function AdminUsersPage() {
 }
 
 function UserDetailModal({ user, onClose }) {
-  const hasShippingInfo = Object.values(user.shippingInfo || {}).some((value) => String(value || "").trim());
+  const hasShippingInfo = Object.values(user.shippingInfo || {}).some((value) =>
+    String(value || "").trim()
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6">
@@ -415,7 +591,14 @@ function UserDetailModal({ user, onClose }) {
             <DetailCard label="Email" value={user.email} />
             <DetailCard label="Số điện thoại" value={user.phoneNumber || "Chưa cập nhật"} />
             <DetailCard label="Vai trò" value={formatRole(user.role)} badgeClass={getRoleBadgeClass(user.role)} />
+            <DetailCard label="Trạng thái" value={user.isActive ? "Hoạt động" : "Bị khóa"} badgeClass={getStatusBadgeClass(user.isActive)} />
             <DetailCard label="Ngày tạo" value={formatDateTime(user.createdAt)} />
+            {!user.isActive && (
+              <DetailCard
+                label="Lý do khóa"
+                value={user.banReason || "Không có"}
+              />
+            )}
           </div>
 
           <section className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -434,9 +617,85 @@ function UserDetailModal({ user, onClose }) {
                 <DetailRow label="Ghi chú" value={user.shippingInfo?.note || "Không có"} className="md:col-span-2" />
               </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-500">Người dùng này chưa lưu thông tin giao hàng.</p>
+              <p className="mt-4 text-sm text-slate-500">
+                Người dùng này chưa lưu thông tin giao hàng.
+              </p>
             )}
           </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({ title, description, confirmText, onCancel, onConfirm }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6">
+      <div className="w-full max-w-md rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-2xl">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">{title}</p>
+        <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BanUserModal({ user, banReason, onChangeBanReason, onClose, onConfirm, loading }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6">
+      <div className="w-full max-w-lg rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-2xl">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-rose-500">
+          Khóa tài khoản
+        </p>
+        <h3 className="mt-2 text-2xl font-black text-slate-900">{user.name}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Nhập lý do khóa tài khoản. Người dùng bị khóa sẽ không thể đăng nhập cho đến khi được mở
+          khóa lại.
+        </p>
+
+        <div className="mt-5">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Lý do khóa</label>
+          <textarea
+            value={banReason}
+            onChange={(event) => onChangeBanReason(event.target.value)}
+            rows="4"
+            placeholder="Ví dụ: vi phạm quy định, spam, tài khoản giả mạo..."
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-rose-400 focus:bg-white"
+          />
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
+          >
+            Xác nhận khóa
+          </button>
         </div>
       </div>
     </div>
@@ -477,6 +736,12 @@ function getRoleBadgeClass(role) {
   return role === "admin"
     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
     : "bg-slate-100 text-slate-700";
+}
+
+function getStatusBadgeClass(isActive) {
+  return isActive
+    ? "bg-emerald-100 text-emerald-700"
+    : "bg-rose-100 text-rose-700";
 }
 
 function formatDate(value) {
