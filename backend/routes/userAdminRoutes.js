@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getAdminUserDetails,
   getAdminUsers,
   updateUserRole,
   updateUserStatus
@@ -9,6 +10,7 @@ import { protect, protectAdmin } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/", protect, protectAdmin, getAdminUsers);
+router.get("/:id/details", protect, protectAdmin, getAdminUserDetails);
 router.patch("/:id/role", protect, protectAdmin, updateUserRole);
 router.patch("/:id/status", protect, protectAdmin, updateUserStatus);
 

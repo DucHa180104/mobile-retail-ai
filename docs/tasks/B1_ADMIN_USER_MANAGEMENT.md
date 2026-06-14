@@ -9,6 +9,7 @@
 - Cho admin xem danh sách user từ giao diện.
 - Cho admin đổi quyền `user` / `admin` mà không phải sửa database tay.
 - Cho admin khóa / mở khóa tài khoản an toàn từ giao diện.
+- Cho admin xem chi tiết hoạt động của user trong modal.
 - Chặn user thường gọi API quản trị.
 - Chặn admin tự hạ quyền hoặc tự khóa chính mình để tránh mất quyền truy cập khu admin.
 
@@ -27,6 +28,7 @@
 ## API đã thêm
 
 - `GET /api/admin/users`
+- `GET /api/admin/users/:id/details`
 - `PATCH /api/admin/users/:id/role`
 - `PATCH /api/admin/users/:id/status`
 
@@ -38,7 +40,7 @@
   - `protectAdmin`
 - Nếu không có token hoặc token sai -> `401`
 - Nếu có token nhưng không phải admin -> `403`
-- Nếu là admin hợp lệ -> được xem danh sách user, đổi role, khóa hoặc mở khóa tài khoản.
+- Nếu là admin hợp lệ -> được xem danh sách user, xem chi tiết hoạt động, đổi role, khóa hoặc mở khóa tài khoản.
 
 ## Vì sao phải chặn ở backend
 
@@ -78,6 +80,26 @@
 - Thêm xác nhận trước khi đổi role.
 - Nếu user bị khóa thì backend chặn đăng nhập và trả message `Tài khoản đã bị khóa`.
 
+## Pha 3: Xem chi tiết hoạt động của user
+
+- Thêm API:
+  - `GET /api/admin/users/:id/details`
+- API này trả:
+  - thông tin user không có password
+  - danh sách order của user
+  - `ordersCount`
+  - `cancelledOrdersCount`
+  - danh sách review của user
+- Modal `Xem chi tiết` ở frontend được đổi sang fetch dữ liệu thật khi bấm.
+- Modal hiển thị:
+  - thông tin user
+  - tổng số đơn
+  - tổng số đơn đã hủy
+  - lịch sử đơn hàng
+  - các đánh giá đã viết
+- Có `loading` và `error` riêng trong modal.
+- Nếu chưa có đơn hoặc chưa có review thì hiển thị trạng thái rỗng.
+
 ## Vì sao phải chặn admin tự khóa / tự hạ quyền
 
 - Nếu admin tự khóa chính mình thì có thể không đăng nhập lại được.
@@ -97,8 +119,6 @@
 - [ ] Chuyển trang pagination hoạt động đúng
 - [ ] Badge admin hiển thị khác badge khách hàng
 - [ ] Badge trạng thái hiển thị đúng `Hoạt động / Bị khóa`
-- [ ] Modal “Xem chi tiết” hiển thị đúng name, email, phoneNumber, role, createdAt
-- [ ] Modal hiển thị `shippingInfo` nếu user có lưu
 - [ ] Đổi role có confirm trước khi gọi API
 - [ ] Đổi user thường thành admin thành công
 - [ ] Đổi admin thành user thành công
@@ -108,7 +128,15 @@
 - [ ] Admin mở khóa user thành công
 - [ ] User sau khi mở khóa login lại được
 - [ ] Admin tự khóa chính mình bị chặn
+- [ ] Bấm `Xem chi tiết` -> modal tải dữ liệu thật
+- [ ] Modal hiển thị đúng thông tin user
+- [ ] Modal hiển thị đúng tổng số đơn
+- [ ] Modal hiển thị đúng số đơn đã hủy
+- [ ] Modal hiển thị đúng lịch sử đơn hàng
+- [ ] Modal hiển thị đúng danh sách review
+- [ ] User chưa có order/review -> hiện trạng thái rỗng
 - [ ] User thường gọi `GET /api/admin/users` bị `403`
+- [ ] User thường gọi `GET /api/admin/users/:id/details` bị `403`
 - [ ] User thường gọi `PATCH /api/admin/users/:id/role` bị `403`
 - [ ] User thường gọi `PATCH /api/admin/users/:id/status` bị `403`
 - [ ] Không có token gọi API admin bị `401`
@@ -117,7 +145,6 @@
 
 ## Vấn đề còn tồn tại
 
-- Chưa làm order history trong modal.
 - Chưa làm tổng chi tiêu theo user.
 - Search/filter/pagination hiện vẫn là frontend-only.
 - Chưa có xác nhận tùy biến đẹp cho thao tác mở khóa, hiện dùng confirm đơn giản.
@@ -132,4 +159,4 @@
   - chặn user thường ở backend
   - chặn admin tự hạ quyền chính mình
   - chặn admin tự khóa chính mình
-- Pha 2 tập trung vào an toàn quản trị trước, chưa mở rộng sang lịch sử đơn hàng hay thống kê chi tiêu.
+- Pha 3 dùng query từ `User`, `Order`, `Review` để giúp admin xem nhanh hoạt động của user mà chưa cần mở rộng sang dashboard chi tiêu riêng.

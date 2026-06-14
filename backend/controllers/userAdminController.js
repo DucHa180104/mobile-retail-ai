@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import Order from "../models/Order.js";
+import Review from "../models/Review.js";
 import User from "../models/User.js";
 
 function formatAdminUser(user) {
@@ -26,6 +28,14 @@ function formatAdminUser(user) {
   };
 }
 
+function isValidObjectId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
+
+async function findAdminUserById(id) {
+  return User.findById(id).select("-password");
+}
+
 export const getAdminUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
@@ -40,12 +50,69 @@ export const getAdminUsers = async (req, res) => {
   }
 };
 
+export const getAdminUserDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "User id is invalid"
+      });
+    }
+
+    const user = await findAdminUserById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    const [orders, reviews] = await Promise.all([
+      Order.find({ user: user._id }).sort({ createdAt: -1 }),
+      Review.find({ user: user._id })
+        .populate("product", "name images")
+        .sort({ createdAt: -1 })
+    ]);
+
+    const formattedOrders = orders.map((order) => ({
+      id: order._id,
+      orderCode: `#${String(order._id).slice(-6).toUpperCase()}`,
+      createdAt: order.createdAt,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      paymentStatus: order.paymentStatus
+    }));
+
+    const formattedReviews = reviews.map((review) => ({
+      id: review._id,
+      productName: review.product?.name || "Sản phẩm",
+      productImage: review.product?.images?.[0] || "",
+      rating: review.rating,
+      comment: review.comment || "",
+      createdAt: review.createdAt
+    }));
+
+    return res.status(200).json({
+      user: formatAdminUser(user),
+      orders: formattedOrders,
+      ordersCount: formattedOrders.length,
+      cancelledOrdersCount: formattedOrders.filter((order) => order.status === "cancelled").length,
+      reviews: formattedReviews
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Failed to fetch user details"
+    });
+  }
+};
+
 export const updateUserRole = async (req, res) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidObjectId(id)) {
       return res.status(400).json({
         message: "User id is invalid"
       });
@@ -69,7 +136,7 @@ export const updateUserRole = async (req, res) => {
       });
     }
 
-    const user = await User.findById(id).select("-password");
+    const user = await findAdminUserById(id);
 
     if (!user) {
       return res.status(404).json({
@@ -96,7 +163,7 @@ export const updateUserStatus = async (req, res) => {
     const { id } = req.params;
     const { isActive, banReason } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidObjectId(id)) {
       return res.status(400).json({
         message: "User id is invalid"
       });
@@ -114,7 +181,7 @@ export const updateUserStatus = async (req, res) => {
       });
     }
 
-    const user = await User.findById(id).select("-password");
+    const user = await findAdminUserById(id);
 
     if (!user) {
       return res.status(404).json({
