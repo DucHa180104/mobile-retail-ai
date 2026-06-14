@@ -8,6 +8,15 @@ function formatAdminUser(user) {
     email: user.email,
     role: user.role,
     phoneNumber: user.phoneNumber || "",
+    shippingInfo: {
+      fullName: user.shippingInfo?.fullName || "",
+      phoneNumber: user.shippingInfo?.phoneNumber || "",
+      address: user.shippingInfo?.address || "",
+      city: user.shippingInfo?.city || "",
+      district: user.shippingInfo?.district || "",
+      ward: user.shippingInfo?.ward || "",
+      note: user.shippingInfo?.note || ""
+    },
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   };

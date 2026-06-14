@@ -42,24 +42,47 @@
 - Nếu chỉ chặn ở frontend mà backend không kiểm tra, user thường vẫn có thể tự đổi role.
 - Vì vậy lớp bảo mật chính phải nằm ở backend bằng `protect + protectAdmin`.
 
+## Pha 1: Nâng cấp UI/UX frontend
+
+- Nâng cấp `AdminUsersPage` theo hướng dashboard quản lý người dùng.
+- Thêm:
+  - tìm kiếm frontend theo `name`, `email`, `phoneNumber`
+  - filter frontend theo role `all / admin / user`
+  - phân trang frontend, 8 user mỗi trang
+  - avatar chữ cái đầu tên user
+  - badge role trực quan
+  - modal xem chi tiết user
+- Giữ nguyên API hiện có, không đổi logic B1.
+- Bổ sung `shippingInfo` vào dữ liệu trả về để modal hiển thị thông tin giao hàng.
+
 ## Manual Test Checklist
 
-- [ ] Login bằng tài khoản admin
-- [ ] Vào `/admin/users` thấy danh sách user
-- [ ] Danh sách không trả password
-- [ ] Danh sách sắp xếp user mới nhất lên đầu
-- [ ] Đổi user thường thành admin thành công
-- [ ] Đổi admin thành user thành công
-- [ ] Admin tự đổi quyền của chính mình bị chặn
-- [ ] User thường gọi `GET /api/admin/users` bị `403`
-- [ ] User thường gọi `PATCH /api/admin/users/:id/role` bị `403`
+- [x] Login bằng tài khoản admin
+- [x] Vào `/admin/users` thấy danh sách user
+- [x] Danh sách không trả password
+- [x] Danh sách sắp xếp user mới nhất lên đầu
+- [x] Tìm theo tên user hoạt động đúng
+- [x] Tìm theo email hoạt động đúng
+- [ ] Tìm theo số điện thoại hoạt động đúng
+- [x] Filter `all / admin / user` hoạt động đúng
+- [ ] Chuyển trang pagination hoạt động đúng
+- [ ] Badge admin hiển thị khác badge khách hàng
+- [x] Modal “Xem chi tiết” hiển thị đúng name, email, phoneNumber, role, createdAt
+- [x] Modal hiển thị `shippingInfo` nếu user có lưu
+- [x] Đổi user thường thành admin thành công
+- [x] Đổi admin thành user thành công
+- [x] Admin tự đổi quyền của chính mình bị chặn
+- [x] User thường gọi `GET /api/admin/users` bị `403`
+- [x] User thường gọi `PATCH /api/admin/users/:id/role` bị `403`
 - [ ] Không có token gọi API admin bị `401`
 - [ ] Gửi role sai khác `user/admin` bị `400`
 
 ## Vấn đề còn tồn tại
 
-- Chưa có tìm kiếm / lọc user trong trang admin.
-- Chưa có phân trang nếu số lượng user tăng nhiều.
+- Pha 1 chỉ nâng UI, search/filter/pagination ở frontend.
+- Chưa có khóa / mở tài khoản vì backend chưa hỗ trợ.
+- Chưa có tổng chi tiêu của từng user.
+- Chưa có lịch sử đơn hàng trong modal chi tiết.
 - Chưa có xác nhận trước khi đổi quyền.
 - Chưa có log lịch sử ai đã đổi quyền ai.
 
@@ -70,3 +93,4 @@
 - Điểm an toàn quan trọng nhất của task này là:
   - chặn user thường ở backend
   - chặn admin tự hạ quyền chính mình
+- Pha 1 tập trung vào trải nghiệm quản trị tốt hơn mà không phá API hay logic bảo mật hiện có.
