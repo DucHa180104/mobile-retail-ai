@@ -87,7 +87,7 @@ export function CartProvider({ children }) {
           );
         }
 
-        return [...currentItems, { ...product, quantity: 1 }];
+        return [{ ...product, quantity: 1 }, ...currentItems];
       });
       return;
     }

@@ -46,7 +46,7 @@ export const addToCart = async (req, res) => {
     if (existingItem) {
       existingItem.quantity += Number(quantity);
     } else {
-      user.cart.push({
+      user.cart.unshift({
         productId: product._id,
         quantity: Number(quantity)
       });
@@ -152,6 +152,8 @@ export const syncCart = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const newCartItems = [];
+
     for (const incomingItem of normalizedItems) {
       const existingItem = user.cart.find(
         (item) => String(item.productId) === String(incomingItem.productId)
@@ -160,11 +162,15 @@ export const syncCart = async (req, res) => {
       if (existingItem) {
         existingItem.quantity += incomingItem.quantity;
       } else {
-        user.cart.push({
+        newCartItems.push({
           productId: incomingItem.productId,
           quantity: incomingItem.quantity
         });
       }
+    }
+
+    if (newCartItems.length > 0) {
+      user.cart = [...newCartItems, ...user.cart];
     }
 
     await user.save();

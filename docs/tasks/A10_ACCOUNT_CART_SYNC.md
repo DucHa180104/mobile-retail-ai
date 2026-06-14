@@ -63,48 +63,48 @@
 
 ### 1. Guest cart - chưa đăng nhập
 
-- [ ] Chưa đăng nhập -> thêm sản phẩm vào giỏ
-- [ ] Reload trang -> sản phẩm vẫn còn trong giỏ
-- [ ] Tăng số lượng sản phẩm -> số lượng cập nhật đúng
-- [ ] Giảm số lượng sản phẩm -> số lượng cập nhật đúng
-- [ ] Xóa sản phẩm khỏi giỏ -> sản phẩm biến mất
-- [ ] Clear cart -> giỏ hàng rỗng
+- [x] Chưa đăng nhập -> thêm sản phẩm vào giỏ
+- [x] Reload trang -> sản phẩm vẫn còn trong giỏ
+- [x] Tăng số lượng sản phẩm -> số lượng cập nhật đúng
+- [x] Giảm số lượng sản phẩm -> số lượng cập nhật đúng
+- [x] Xóa sản phẩm khỏi giỏ -> sản phẩm biến mất
+- [x] Clear cart -> giỏ hàng rỗng
 
 ### 2. Sync khi login
 
-- [ ] Chưa đăng nhập -> thêm 1-2 sản phẩm vào giỏ
-- [ ] Login tài khoản user
-- [ ] Giỏ local được sync lên tài khoản
-- [ ] Sau login, sản phẩm vẫn còn trong giỏ
-- [ ] Reload trang -> giỏ vẫn còn
+- [x] Chưa đăng nhập -> thêm 1-2 sản phẩm vào giỏ
+- [x] Login tài khoản user
+- [x] Giỏ local được sync lên tài khoản
+- [x] Sau login, sản phẩm vẫn còn trong giỏ
+- [x] Reload trang -> giỏ vẫn còn
 
 ### 3. Cart theo tài khoản
 
-- [ ] Login user A -> thêm sản phẩm vào giỏ
-- [ ] Logout
-- [ ] Login lại user A -> vẫn thấy giỏ hàng cũ
-- [ ] Login user B -> không thấy giỏ hàng của user A
+- [x] Login user A -> thêm sản phẩm vào giỏ
+- [x] Logout
+- [x] Login lại user A -> vẫn thấy giỏ hàng cũ
+- [x] Login user B -> không thấy giỏ hàng của user A
 
 ### 4. Cart backend
 
-- [ ] Khi đã login -> thêm sản phẩm -> gọi API backend thành công
-- [ ] Tăng số lượng -> reload vẫn đúng
-- [ ] Giảm số lượng -> reload vẫn đúng
-- [ ] Xóa item -> reload vẫn mất
-- [ ] Clear cart -> reload vẫn rỗng
+- [x] Khi đã login -> thêm sản phẩm -> gọi API backend thành công
+- [x] Tăng số lượng -> reload vẫn đúng
+- [x] Giảm số lượng -> reload vẫn đúng
+- [x] Xóa item -> reload vẫn mất
+- [x] Clear cart -> reload vẫn rỗng
 
 ### 5. Checkout
 
-- [ ] Login -> thêm sản phẩm vào giỏ
-- [ ] Checkout thành công
-- [ ] Sau checkout -> giỏ hàng rỗng
-- [ ] Reload trang -> giỏ vẫn rỗng
+- [x] Login -> thêm sản phẩm vào giỏ
+- [x] Checkout thành công
+- [x] Sau checkout -> giỏ hàng rỗng
+- [x] Reload trang -> giỏ vẫn rỗng
 
 ### 6. Merge cart
 
-- [ ] User có sẵn sản phẩm A trong cart backend
+- [x] User có sẵn sản phẩm A trong cart backend
 - [ ] Logout -> thêm sản phẩm B ở guest cart
-- [ ] Login lại -> giỏ có cả A và B
+- [x] Login lại -> giỏ có cả A và B
 - [ ] Nếu A đã có ở cả local và backend -> số lượng được merge đúng
 
 ### 7. Lỗi / edge case
