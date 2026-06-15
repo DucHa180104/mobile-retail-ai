@@ -16,22 +16,23 @@ function AdminDashboardPage() {
         setError("");
 
         const [productsResponse, ordersResponse] = await Promise.all([
-          fetch(buildApiUrl("/api/products")),
+          fetch(buildApiUrl("/api/products?page=1&limit=1000")),
           fetch(buildApiUrl("/api/orders"), {
-            headers: token
-              ? {
-                  Authorization: `Bearer ${token}`
-                }
-              : {}
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
           })
         ]);
 
         if (!productsResponse.ok) {
-          throw new Error("Không thể tải dữ liệu sản phẩm");
+          throw new Error("Không thể tải dữ liệu sản phẩm.");
         }
 
         if (!ordersResponse.ok) {
-          throw new Error(getAdminApiErrorMessage(ordersResponse.status, "Không thể tải dữ liệu đơn hàng"));
+          throw new Error(
+            getAdminApiErrorMessage(
+              ordersResponse.status,
+              "Không thể tải dữ liệu đơn hàng."
+            )
+          );
         }
 
         const [productsData, ordersData] = await Promise.all([
@@ -44,9 +45,9 @@ function AdminDashboardPage() {
           : productsData.products || [];
 
         setProducts(productList);
-        setOrders(ordersData);
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
       } catch (fetchError) {
-        setError(fetchError.message || "Không thể tải dữ liệu dashboard");
+        setError(fetchError.message || "Không thể tải dữ liệu dashboard.");
       } finally {
         setLoading(false);
       }
@@ -55,9 +56,10 @@ function AdminDashboardPage() {
     fetchDashboardData();
   }, [token]);
 
-  const totalRevenue = useMemo(() => {
-    return orders.reduce((sum, order) => sum + (Number(order.totalAmount) || 0), 0);
-  }, [orders]);
+  const totalRevenue = useMemo(
+    () => orders.reduce((sum, order) => sum + (Number(order.totalAmount) || 0), 0),
+    [orders]
+  );
 
   const recentOrders = useMemo(() => {
     return [...orders]
@@ -65,8 +67,29 @@ function AdminDashboardPage() {
       .slice(0, 5);
   }, [orders]);
 
+  const outOfStockCount = useMemo(
+    () => products.filter((product) => (Number(product.stock) || 0) === 0).length,
+    [products]
+  );
+
+  const lowStockCount = useMemo(
+    () =>
+      products.filter((product) => {
+        const stock = Number(product.stock) || 0;
+        return stock > 0 && stock <= 5;
+      }).length,
+    [products]
+  );
+
+  const lowStockProducts = useMemo(() => {
+    return [...products]
+      .filter((product) => (Number(product.stock) || 0) <= 5)
+      .sort((a, b) => (Number(a.stock) || 0) - (Number(b.stock) || 0))
+      .slice(0, 5);
+  }, [products]);
+
   const weeklyBars = useMemo(() => {
-    const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const dayLabels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
     const today = new Date();
     const currentDay = today.getDay();
     const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
@@ -111,30 +134,26 @@ function AdminDashboardPage() {
     {
       title: "Tổng sản phẩm",
       value: products.length.toLocaleString("vi-VN"),
-      meta: `${products.length} sản phẩm hiện có`,
-      tone: "text-emerald-600",
-      icon: "smartphone"
+      meta: `${products.length} sản phẩm đang có trong hệ thống`,
+      tone: "text-blue-700"
     },
     {
-      title: "Tổng đơn hàng",
-      value: orders.length.toLocaleString("vi-VN"),
-      meta: `${recentOrders.length} đơn gần đây`,
-      tone: "text-emerald-600",
-      icon: "shopping_cart"
+      title: "Sản phẩm hết hàng",
+      value: outOfStockCount.toLocaleString("vi-VN"),
+      meta: "Các máy có stock = 0 cần theo dõi",
+      tone: "text-rose-600"
+    },
+    {
+      title: "Sản phẩm sắp hết",
+      value: lowStockCount.toLocaleString("vi-VN"),
+      meta: "Các máy có stock từ 1 đến 5",
+      tone: "text-amber-600"
     },
     {
       title: "Doanh thu tạm tính",
       value: formatCurrency(totalRevenue),
-      meta: "Tính từ toàn bộ đơn hàng",
-      tone: "text-amber-600",
-      icon: "payments"
-    },
-    {
-      title: "Yêu cầu thu cũ",
-      value: "0",
-      meta: "Chưa kết nối dữ liệu thu cũ",
-      tone: "text-slate-500",
-      icon: "swap_horizontal_circle"
+      meta: "Tính từ toàn bộ đơn hàng hiện có",
+      tone: "text-emerald-600"
     }
   ];
 
@@ -162,9 +181,13 @@ function AdminDashboardPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div>
         <p className="text-sm text-slate-400">
-          home / <span className="font-semibold text-blue-700">Dashboard Tổng Quan</span>
+          Trang quản trị /{" "}
+          <span className="font-semibold text-blue-700">Tổng quan</span>
         </p>
-        <h1 className="mt-2 text-3xl font-black text-slate-900">Dashboard Tổng Quan</h1>
+        <h1 className="mt-2 text-3xl font-black text-slate-900">Dashboard tổng quan</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Theo dõi đơn hàng, doanh thu tạm tính và cảnh báo tồn kho của cửa hàng.
+        </p>
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -173,31 +196,25 @@ function AdminDashboardPage() {
             key={stat.title}
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-slate-500">{stat.title}</p>
-                <p className="mt-3 text-4xl font-black text-slate-900">{stat.value}</p>
-              </div>
-              <span className="text-sm font-semibold text-slate-300">{stat.icon}</span>
-            </div>
+            <p className="text-sm font-semibold text-slate-500">{stat.title}</p>
+            <p className="mt-3 text-4xl font-black text-slate-900">{stat.value}</p>
             <p className={`mt-5 text-sm font-semibold ${stat.tone}`}>{stat.meta}</p>
           </article>
         ))}
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1.6fr_0.75fr]">
+      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.9fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-black text-slate-900">Biểu đồ doanh thu tuần</h2>
-              <p className="mt-1 text-sm text-slate-500">Thống kê 7 ngày trong tuần hiện tại</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Thống kê doanh thu theo 7 ngày trong tuần hiện tại
+              </p>
             </div>
-            <button
-              type="button"
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600"
-            >
+            <span className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
               7 ngày qua
-            </button>
+            </span>
           </div>
 
           <div className="mt-6 rounded-2xl bg-slate-50 px-5 py-6">
@@ -206,7 +223,7 @@ function AdminDashboardPage() {
                 <div key={bar.label} className="flex flex-1 flex-col items-center gap-3">
                   <div
                     className={`w-full rounded-t-xl ${
-                      bar.active ? "bg-blue-800" : "bg-slate-200"
+                      bar.active ? "bg-blue-700" : "bg-slate-200"
                     }`}
                     style={{ height: `${bar.value}%` }}
                   />
@@ -220,36 +237,50 @@ function AdminDashboardPage() {
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-black text-slate-900">Tóm tắt đơn hàng</h2>
-          <p className="mt-1 text-sm text-slate-500">Dựa trên dữ liệu đơn hàng hiện tại</p>
+          <h2 className="text-xl font-black text-slate-900">Cảnh báo tồn kho</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Hiển thị 5 sản phẩm có stock thấp nhất, ưu tiên máy sắp hết và hết hàng.
+          </p>
 
-          <div className="mt-5 flex h-48 flex-col justify-center rounded-2xl bg-slate-100 px-6 text-center">
-            <p className="text-sm font-semibold text-slate-500">Đơn hàng gần đây</p>
-            <p className="mt-3 text-4xl font-black text-slate-900">{recentOrders.length}</p>
-            <p className="mt-2 text-sm text-slate-500">Hiển thị 5 đơn mới nhất</p>
-          </div>
+          {lowStockProducts.length === 0 ? (
+            <div className="mt-6 rounded-2xl bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
+              Hiện chưa có sản phẩm nào sắp hết hoặc hết hàng.
+            </div>
+          ) : (
+            <div className="mt-6 space-y-3">
+              {lowStockProducts.map((product) => (
+                <div
+                  key={product._id}
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 px-4 py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-900">
+                      {product.name}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {normalizeBrand(product.brand)}
+                    </p>
+                  </div>
 
-          <div className="mt-5">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-semibold text-slate-500">Tỷ lệ hoàn thành</span>
-              <span className="font-black text-slate-900">{getCompletionRate(orders)}%</span>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <p className="text-sm font-bold text-slate-900">
+                      Stock: {Number(product.stock) || 0}
+                    </p>
+                    <StockStatusBadge stock={product.stock} />
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="mt-3 h-3 rounded-full bg-slate-100">
-              <div
-                className="h-3 rounded-full bg-blue-800"
-                style={{ width: `${getCompletionRate(orders)}%` }}
-              />
-            </div>
-          </div>
+          )}
         </article>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
           <h2 className="text-xl font-black text-slate-900">Đơn hàng gần đây</h2>
-          <button type="button" className="text-sm font-semibold text-blue-700">
-            Xem tất cả
-          </button>
+          <span className="text-sm font-semibold text-blue-700">
+            {recentOrders.length} đơn gần nhất
+          </span>
         </div>
 
         <div className="overflow-x-auto">
@@ -281,9 +312,7 @@ function AdminDashboardPage() {
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(
-                        order.status
-                      )}`}
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(order.status)}`}
                     >
                       {formatStatus(order.status)}
                     </span>
@@ -293,6 +322,7 @@ function AdminDashboardPage() {
                   </td>
                 </tr>
               ))}
+
               {recentOrders.length === 0 && (
                 <tr>
                   <td colSpan="6" className="px-5 py-10 text-center text-sm text-slate-500">
@@ -306,6 +336,46 @@ function AdminDashboardPage() {
       </section>
     </div>
   );
+}
+
+function StockStatusBadge({ stock }) {
+  const stockNumber = Number(stock) || 0;
+  const { label, className } = getStockStatusMeta(stockNumber);
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-bold ${className}`}>
+      {label}
+    </span>
+  );
+}
+
+function getStockStatusMeta(stock) {
+  if (stock === 0) {
+    return {
+      label: "Hết hàng",
+      className: "bg-rose-100 text-rose-700"
+    };
+  }
+
+  if (stock > 0 && stock <= 5) {
+    return {
+      label: "Sắp hết",
+      className: "bg-amber-100 text-amber-700"
+    };
+  }
+
+  return {
+    label: "Còn hàng",
+    className: "bg-emerald-100 text-emerald-700"
+  };
+}
+
+function normalizeBrand(brand) {
+  if (!brand) {
+    return "Không rõ hãng";
+  }
+
+  return brand;
 }
 
 function formatCurrency(value) {
@@ -326,14 +396,14 @@ function formatOrderProducts(items = []) {
 
 function formatStatus(status) {
   if (status === "confirmed") {
-    return "Confirmed";
+    return "Đã xác nhận";
   }
 
   if (status === "cancelled") {
-    return "Cancelled";
+    return "Đã hủy";
   }
 
-  return "Pending";
+  return "Chờ xác nhận";
 }
 
 function getStatusClass(status) {
@@ -361,22 +431,13 @@ function formatOrderDate(value) {
   })} - ${date.toLocaleDateString("vi-VN")}`;
 }
 
-function getCompletionRate(orders) {
-  if (!orders.length) {
-    return 0;
-  }
-
-  const completedOrders = orders.filter((order) => order.status === "confirmed").length;
-  return Math.round((completedOrders / orders.length) * 100);
-}
-
 function getAdminApiErrorMessage(status, fallbackMessage) {
   if (status === 401) {
-    return "Phiên đăng nhập đã hết hạn hoặc thiếu token admin";
+    return "Phiên đăng nhập đã hết hạn hoặc thiếu token admin.";
   }
 
   if (status === 403) {
-    return "Bạn không có quyền admin để truy cập dữ liệu này";
+    return "Bạn không có quyền admin để truy cập dữ liệu này.";
   }
 
   return fallbackMessage;
