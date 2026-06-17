@@ -13,14 +13,14 @@ function getGuestCart() {
   }
 
   try {
-    return JSON.parse(savedCart);
+    return sanitizeCartItems(JSON.parse(savedCart));
   } catch {
     return [];
   }
 }
 
 function setGuestCart(cartItems) {
-  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(sanitizeCartItems(cartItems)));
 }
 
 function clearGuestCart() {
@@ -53,13 +53,13 @@ export function CartProvider({ children }) {
 
         if (guestCart.length > 0) {
           const syncedCart = await syncCartToServer(guestCart, token);
-          setCartItems(syncedCart);
+          setCartItems(sanitizeCartItems(syncedCart));
           clearGuestCart();
           return;
         }
 
         const serverCart = await fetchServerCart(token);
-        setCartItems(serverCart);
+        setCartItems(sanitizeCartItems(serverCart));
       } catch {
         setCartItems([]);
       } finally {
@@ -79,15 +79,16 @@ export function CartProvider({ children }) {
   async function addToCart(product) {
     if (!isAuthenticated || !token) {
       setCartItems((currentItems) => {
-        const existingProduct = currentItems.find((item) => item._id === product._id);
+        const safeItems = sanitizeCartItems(currentItems);
+        const existingProduct = safeItems.find((item) => item._id === product._id);
 
         if (existingProduct) {
-          return currentItems.map((item) =>
+          return safeItems.map((item) =>
             item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
           );
         }
 
-        return [{ ...product, quantity: 1 }, ...currentItems];
+        return [{ ...product, quantity: 1 }, ...safeItems];
       });
       return;
     }
@@ -101,7 +102,7 @@ export function CartProvider({ children }) {
         }
       });
 
-      setCartItems(nextCart);
+      setCartItems(sanitizeCartItems(nextCart));
     } catch (error) {
       console.error("Cart add error:", error.message);
     }
@@ -109,7 +110,9 @@ export function CartProvider({ children }) {
 
   async function removeFromCart(productId) {
     if (!isAuthenticated || !token) {
-      setCartItems((currentItems) => currentItems.filter((item) => item._id !== productId));
+      setCartItems((currentItems) =>
+        sanitizeCartItems(currentItems).filter((item) => item._id !== productId)
+      );
       return;
     }
 
@@ -118,7 +121,7 @@ export function CartProvider({ children }) {
         method: "DELETE"
       });
 
-      setCartItems(nextCart);
+      setCartItems(sanitizeCartItems(nextCart));
     } catch (error) {
       console.error("Cart remove error:", error.message);
     }
@@ -127,7 +130,7 @@ export function CartProvider({ children }) {
   async function increaseQuantity(productId) {
     if (!isAuthenticated || !token) {
       setCartItems((currentItems) =>
-        currentItems.map((item) =>
+        sanitizeCartItems(currentItems).map((item) =>
           item._id === productId ? { ...item, quantity: item.quantity + 1 } : item
         )
       );
@@ -148,7 +151,7 @@ export function CartProvider({ children }) {
         }
       });
 
-      setCartItems(nextCart);
+      setCartItems(sanitizeCartItems(nextCart));
     } catch (error) {
       console.error("Cart increase error:", error.message);
     }
@@ -157,7 +160,7 @@ export function CartProvider({ children }) {
   async function decreaseQuantity(productId) {
     if (!isAuthenticated || !token) {
       setCartItems((currentItems) =>
-        currentItems
+        sanitizeCartItems(currentItems)
           .map((item) =>
             item._id === productId ? { ...item, quantity: item.quantity - 1 } : item
           )
@@ -180,7 +183,7 @@ export function CartProvider({ children }) {
         }
       });
 
-      setCartItems(nextCart);
+      setCartItems(sanitizeCartItems(nextCart));
     } catch (error) {
       console.error("Cart decrease error:", error.message);
     }
@@ -198,14 +201,14 @@ export function CartProvider({ children }) {
         method: "DELETE"
       });
 
-      setCartItems(nextCart);
+      setCartItems(sanitizeCartItems(nextCart));
     } catch (error) {
       console.error("Cart clear error:", error.message);
     }
   }
 
   const totalItems = useMemo(
-    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    () => sanitizeCartItems(cartItems).reduce((total, item) => total + item.quantity, 0),
     [cartItems]
   );
 
@@ -235,7 +238,7 @@ async function fetchServerCart(token) {
     throw new Error(data.message || "Không thể tải giỏ hàng");
   }
 
-  return data.cartItems || [];
+  return sanitizeCartItems(data.cartItems || []);
 }
 
 async function syncCartToServer(cartItems, token) {
@@ -262,7 +265,17 @@ async function requestCartUpdate(path, token, options) {
     throw new Error(data.message || "Không thể cập nhật giỏ hàng");
   }
 
-  return data.cartItems || [];
+  return sanitizeCartItems(data.cartItems || []);
+}
+
+function sanitizeCartItems(cartItems) {
+  if (!Array.isArray(cartItems)) {
+    return [];
+  }
+
+  return cartItems.filter(
+    (item) => item && item._id && Number(item.quantity || 0) > 0
+  );
 }
 
 export function useCart() {

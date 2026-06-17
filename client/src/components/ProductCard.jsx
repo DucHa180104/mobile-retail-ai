@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-function ProductCard({ product, badge, onAddToCart, isWishlisted = false, onToggleWishlist }) {
+function ProductCard({ product, badge, isWishlisted = false, onToggleWishlist }) {
   const imageUrl =
     product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
@@ -51,13 +51,12 @@ function ProductCard({ product, badge, onAddToCart, isWishlisted = false, onTogg
         </p>
 
         <div className="mt-3 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onAddToCart(product)}
+          <Link
+            to={`/products/${product._id}`}
             className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
           >
             Mua ngay
-          </button>
+          </Link>
 
           <Link
             to={`/products/${product._id}`}

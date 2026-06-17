@@ -33,7 +33,13 @@ const initialShippingInfo = {
 };
 
 function CheckoutPage() {
-  const { cartItems, clearCart } = useCart();
+  const {
+    cartItems,
+    clearCart,
+    increaseQuantity,
+    decreaseQuantity,
+    removeFromCart
+  } = useCart();
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const [contactEmail, setContactEmail] = useState(user?.email || "");
@@ -48,7 +54,14 @@ function CheckoutPage() {
     }
   }, [user?.email]);
 
-  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const totalPrice = cartItems.reduce(
+    (total, item) => total + Number(item.price || 0) * Number(item.quantity || 0),
+    0
+  );
+  const totalQuantity = cartItems.reduce(
+    (total, item) => total + Number(item.quantity || 0),
+    0
+  );
 
   function handleShippingChange(event) {
     const { name, value } = event.target;
@@ -157,6 +170,21 @@ function CheckoutPage() {
     }
   }
 
+  async function handleIncrease(productId) {
+    setError("");
+    await increaseQuantity(productId);
+  }
+
+  async function handleDecrease(productId) {
+    setError("");
+    await decreaseQuantity(productId);
+  }
+
+  async function handleRemove(productId) {
+    setError("");
+    await removeFromCart(productId);
+  }
+
   if (cartItems.length === 0) {
     return (
       <main className="px-4 py-8 sm:px-6 lg:px-8">
@@ -169,8 +197,8 @@ function CheckoutPage() {
             <h1 className="mt-6 text-3xl font-black text-slate-900">Chưa thể thanh toán</h1>
 
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-500">
-              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa chọn sản phẩm trước
-              khi đặt hàng.
+              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa chọn
+              sản phẩm trước khi đặt hàng.
             </p>
 
             <Link
@@ -296,7 +324,9 @@ function CheckoutPage() {
               </div>
 
               <div>
-                <p className="mb-3 text-sm font-semibold text-slate-700">Phương thức thanh toán</p>
+                <p className="mb-3 text-sm font-semibold text-slate-700">
+                  Phương thức thanh toán
+                </p>
                 <div className="space-y-3">
                   {paymentOptions.map((option) => (
                     <label
@@ -331,7 +361,7 @@ function CheckoutPage() {
                   <p className="font-semibold text-blue-700">Thông tin chuyển khoản demo</p>
                   <p className="mt-2">Ngân hàng: Vietcombank</p>
                   <p>Số tài khoản: 1234567890</p>
-                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯỜNG</p>
+                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯỞNG</p>
                   <p className="mt-2 text-slate-500">
                     Nội dung: Thanh toan don hang + số điện thoại của bạn
                   </p>
@@ -355,7 +385,9 @@ function CheckoutPage() {
               </span>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Tóm tắt đơn hàng</h2>
-                <p className="text-sm text-slate-500">{cartItems.length} sản phẩm đang chờ thanh toán</p>
+                <p className="text-sm text-slate-500">
+                  {cartItems.length} sản phẩm đang chờ thanh toán
+                </p>
               </div>
             </div>
 
@@ -363,33 +395,69 @@ function CheckoutPage() {
               {cartItems.map((item) => (
                 <article
                   key={item._id}
-                  className="flex gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                 >
-                  <img
-                    src={item.images?.[0] || "https://via.placeholder.com/240x180?text=Khong+co+anh"}
-                    alt={item.name}
-                    className="h-20 w-20 rounded-xl object-cover"
-                  />
+                  <div className="flex gap-4">
+                    <img
+                      src={
+                        item.images?.[0] ||
+                        "https://via.placeholder.com/240x180?text=Khong+co+anh"
+                      }
+                      alt={item.name}
+                      className="h-20 w-20 rounded-xl object-cover"
+                    />
 
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900">{item.name}</h3>
-                    <p className="mt-1 text-sm text-slate-500">Số lượng: {item.quantity}</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-700">
-                      Đơn giá: {item.price?.toLocaleString("vi-VN")} đ
-                    </p>
-                    <p className="mt-2 text-lg font-bold text-blue-700">
-                      {(item.price * item.quantity).toLocaleString("vi-VN")} đ
-                    </p>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="font-semibold text-slate-900">{item.name}</h3>
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(item._id)}
+                          className="text-sm font-semibold text-red-500 transition hover:text-red-600"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+
+                      <p className="mt-2 text-sm font-semibold text-slate-700">
+                        Đơn giá: {formatCurrency(item.price)}
+                      </p>
+
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center rounded-xl border border-slate-200 bg-white">
+                          <button
+                            type="button"
+                            onClick={() => handleDecrease(item._id)}
+                            className="flex h-10 w-10 items-center justify-center text-lg font-bold text-slate-600 transition hover:bg-slate-50"
+                            aria-label={`Giảm số lượng ${item.name}`}
+                          >
+                            -
+                          </button>
+                          <span className="flex min-w-[48px] items-center justify-center text-sm font-bold text-slate-900">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleIncrease(item._id)}
+                            className="flex h-10 w-10 items-center justify-center text-lg font-bold text-slate-600 transition hover:bg-slate-50"
+                            aria-label={`Tăng số lượng ${item.name}`}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <p className="text-lg font-bold text-blue-700">
+                          {formatCurrency(item.price * item.quantity)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </article>
               ))}
             </div>
 
             <div className="mt-6 rounded-2xl bg-slate-50 p-5">
-              <SummaryRow
-                label="Tổng số lượng"
-                value={`${cartItems.reduce((total, item) => total + item.quantity, 0)} món`}
-              />
+              <SummaryRow label="Tổng số lượng" value={`${totalQuantity} món`} />
               <SummaryRow label="Phí vận chuyển" value="Sẽ tính khi xác nhận" />
               <SummaryRow label="Thanh toán" value={formatPaymentMethod(paymentMethod)} />
             </div>
@@ -402,7 +470,7 @@ function CheckoutPage() {
                   </p>
                 </div>
                 <span className="text-3xl font-black text-blue-700">
-                  {totalPrice.toLocaleString("vi-VN")} đ
+                  {formatCurrency(totalPrice)}
                 </span>
               </div>
             </div>
@@ -449,6 +517,10 @@ function formatPaymentMethod(value) {
   return "Thanh toán khi nhận hàng";
 }
 
+function formatCurrency(value) {
+  return `${(Number(value) || 0).toLocaleString("vi-VN")} đ`;
+}
+
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -463,7 +535,11 @@ function CheckoutIcon() {
       strokeWidth="2"
       className="h-8 w-8"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7z"
+      />
       <path strokeLinecap="round" strokeLinejoin="round" d="m9.5 12 1.8 1.8 3.2-3.6" />
     </svg>
   );
@@ -495,7 +571,11 @@ function ReceiptIcon() {
       strokeWidth="2"
       className="h-5 w-5"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z"
+      />
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 8h6M9 12h6M9 16h4" />
     </svg>
   );

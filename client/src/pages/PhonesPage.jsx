@@ -1,33 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useCart } from "../context/CartContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
 const brandOptions = ["Apple", "Samsung", "Xiaomi", "Oppo"];
+
 const conditionOptions = [
   { label: "Cũ 99%", value: "used_99" },
   { label: "Cũ đẹp", value: "used_good" },
   { label: "Cũ dùng tốt", value: "used_fair" },
   { label: "Máy mới", value: "new" }
 ];
+
 const sortOptions = [
   { label: "Mới nhất", value: "newest" },
   { label: "Giá thấp", value: "price_asc" },
   { label: "Giá cao", value: "price_desc" }
 ];
+
 const storageOptions = ["64GB", "128GB", "256GB", "512GB"];
+
 const priceRangeOptions = [
   { label: "Dưới 10 triệu", value: "under_10m", minPrice: 0, maxPrice: 10000000 },
   { label: "10 - 15 triệu", value: "10m_15m", minPrice: 10000000, maxPrice: 15000000 },
   { label: "15 - 20 triệu", value: "15m_20m", minPrice: 15000000, maxPrice: 20000000 },
   { label: "Trên 20 triệu", value: "above_20m", minPrice: 20000000, maxPrice: null }
 ];
+
 const pageSize = 6;
 
 function PhonesPage() {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
   const { token, isAuthenticated } = useAuth();
   const { searchTerm } = useOutletContext();
   const [products, setProducts] = useState([]);
@@ -50,7 +53,9 @@ function PhonesPage() {
         setError("");
 
         const params = new URLSearchParams();
-        const selectedPrice = priceRangeOptions.find((option) => option.value === selectedPriceRange);
+        const selectedPrice = priceRangeOptions.find(
+          (option) => option.value === selectedPriceRange
+        );
 
         if (searchTerm.trim()) {
           params.set("keyword", searchTerm.trim());
@@ -115,7 +120,14 @@ function PhonesPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedBrand, selectedCondition, selectedStorage, selectedPriceRange, selectedSort]);
+  }, [
+    searchTerm,
+    selectedBrand,
+    selectedCondition,
+    selectedStorage,
+    selectedPriceRange,
+    selectedSort
+  ]);
 
   useEffect(() => {
     async function fetchWishlist() {
@@ -145,10 +157,7 @@ function PhonesPage() {
     fetchWishlist();
   }, [isAuthenticated, token]);
 
-  const wishlistIds = useMemo(
-    () => new Set(wishlist.map((product) => product._id)),
-    [wishlist]
-  );
+  const wishlistIds = useMemo(() => new Set(wishlist.map((product) => product._id)), [wishlist]);
 
   async function handleToggleWishlist(product) {
     if (!isAuthenticated || !token) {
@@ -238,7 +247,6 @@ function PhonesPage() {
                 <ProductGrid
                   products={products}
                   wishlistIds={wishlistIds}
-                  onAddToCart={addToCart}
                   onOpenProduct={(productId) => navigate(`/products/${productId}`)}
                   onToggleWishlist={handleToggleWishlist}
                 />
@@ -268,7 +276,8 @@ function CatalogBanner() {
           Danh sách điện thoại
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-          Tìm nhanh theo tên máy, hãng, tình trạng, dung lượng và khoảng giá phù hợp nhu cầu.
+          Tìm nhanh theo tên máy, hãng, tình trạng, dung lượng và khoảng giá phù hợp
+          nhu cầu.
         </p>
       </div>
     </section>
@@ -401,7 +410,7 @@ function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
   );
 }
 
-function ProductGrid({ products, wishlistIds, onAddToCart, onOpenProduct, onToggleWishlist }) {
+function ProductGrid({ products, wishlistIds, onOpenProduct, onToggleWishlist }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {products.map((product) => (
@@ -410,7 +419,6 @@ function ProductGrid({ products, wishlistIds, onAddToCart, onOpenProduct, onTogg
           product={product}
           badge={getProductBadge(product)}
           isWishlisted={wishlistIds.has(product._id)}
-          onAddToCart={onAddToCart}
           onOpenProduct={onOpenProduct}
           onToggleWishlist={onToggleWishlist}
         />
@@ -419,14 +427,7 @@ function ProductGrid({ products, wishlistIds, onAddToCart, onOpenProduct, onTogg
   );
 }
 
-function CatalogProductCard({
-  product,
-  badge,
-  isWishlisted,
-  onAddToCart,
-  onOpenProduct,
-  onToggleWishlist
-}) {
+function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onToggleWishlist }) {
   const imageUrl =
     product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
@@ -483,16 +484,13 @@ function CatalogProductCard({
         </p>
 
         <div className="mt-4 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onAddToCart(product);
-            }}
-            className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
+          <Link
+            to={`/products/${product._id}`}
+            onClick={(event) => event.stopPropagation()}
+            className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-blue-700"
           >
-            Thêm vào giỏ
-          </button>
+            Mua ngay
+          </Link>
 
           <Link
             to={`/products/${product._id}`}

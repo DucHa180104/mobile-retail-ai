@@ -45,7 +45,7 @@ function LoginPage() {
       }
 
       login(data.user, data.token);
-      navigate("/");
+      navigate(data.user?.role === "admin" ? "/admin/dashboard" : "/");
     } catch (submitError) {
       setError(submitError.message || "Đăng nhập thất bại");
     } finally {
