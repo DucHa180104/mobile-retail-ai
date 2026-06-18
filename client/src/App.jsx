@@ -19,6 +19,8 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import TradeInPage from "./pages/TradeInPage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
+// CHATBOT: thêm import page chatbot ở đây
+import ChatbotPage from "./pages/ChatbotPage.jsx";
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
           <Route path="/my-orders/:id" element={<OrderDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
+          {/* CHATBOT: thêm route React ở đây */}
+          <Route path="/chatbot" element={<ChatbotPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success" element={<OrderSuccessPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />

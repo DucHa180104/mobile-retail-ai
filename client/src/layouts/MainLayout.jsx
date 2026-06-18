@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import ChatbotWidget from "../components/ChatbotWidget.jsx";
 import Footer from "../components/Footer.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { useCart } from "../context/CartContext.jsx";
@@ -25,6 +26,7 @@ function MainLayout() {
       </div>
 
       <Footer />
+      <ChatbotWidget floating />
     </div>
   );
 }

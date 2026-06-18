@@ -14,6 +14,8 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import userAdminRoutes from "./routes/userAdminRoutes.js";
+// CHATBOT: thêm import route chatbot ở đây
+import chatRoutes from "./routes/chatRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +44,8 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/admin/users", userAdminRoutes);
+// CHATBOT: đăng ký route ở đây
+app.use("/api/chat", chatRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello backend");
