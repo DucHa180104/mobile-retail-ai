@@ -1,5 +1,6 @@
-// CHATBOT: controller mock cho bước 1
-// TODO: bước sau sẽ gọi AI API thật thay vì trả lời giả lập.
+// CHATBOT: controller bước 2
+// TODO: bước sau service sẽ gọi Gemini API thật.
+import { generateChatReply } from "../services/aiChatService.js";
 
 export async function sendChatReply(req, res) {
   try {
@@ -11,13 +12,15 @@ export async function sendChatReply(req, res) {
       });
     }
 
-    // CHATBOT: mock response để kiểm tra luồng frontend -> backend -> frontend
+    // CHATBOT: controller gọi service để lấy reply
+    const reply = await generateChatReply(message);
+
     return res.status(200).json({
-      reply: `Bạn vừa hỏi: ${String(message).trim()}`
+      reply
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Chatbot mock đang gặp lỗi"
+      message: error.message || "Chatbot AI mock đang gặp lỗi"
     });
   }
 }
