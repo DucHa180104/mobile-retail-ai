@@ -3,6 +3,7 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import MainLayout from "./layouts/MainLayout.jsx";
 import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
+import AdminChatbotLogsPage from "./pages/AdminChatbotLogsPage.jsx";
 import AdminOrdersPage from "./pages/AdminOrdersPage.jsx";
 import AdminProductsPage from "./pages/AdminProductsPage.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage.jsx";
@@ -54,6 +55,7 @@ function App() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="chatbot-logs" element={<AdminChatbotLogsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="users" element={<AdminUsersPage />} />

@@ -1,10 +1,10 @@
 import express from "express";
-import { sendChatReply } from "../controllers/chatController.js";
+import { getMyChatHistory, sendChatReply } from "../controllers/chatController.js";
+import { protect, protectOptional } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// CHATBOT: route mock bước 1
-// TODO: bước sau có thể thêm validate, auth hoặc lưu lịch sử chat nếu cần.
-router.post("/", sendChatReply);
+router.get("/history", protect, getMyChatHistory);
+router.post("/", protectOptional, sendChatReply);
 
 export default router;

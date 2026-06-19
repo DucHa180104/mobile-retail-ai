@@ -5,6 +5,7 @@ import AdminTopbar from "../components/admin/AdminTopbar.jsx";
 function AdminLayout() {
   const quickLinks = [
     { label: "Dashboard", to: "/admin/dashboard" },
+    { label: "Chatbot Logs", to: "/admin/chatbot-logs" },
     { label: "Orders", to: "/admin/orders" },
     { label: "Products", to: "/admin/products" },
     { label: "Users", to: "/admin/users" }
