@@ -14,7 +14,7 @@ export async function generateChatReply(message) {
   }
 
   // Tạo endpoint Gemini cho model đang dùng
-  const modelName = "gemini-1.5-flash";
+  const modelName = "gemini-2.5-flash";
   const endpoint =
     `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent` +
     `?key=${geminiApiKey}`;
