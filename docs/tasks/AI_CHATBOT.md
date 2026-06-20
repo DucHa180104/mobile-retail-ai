@@ -29,6 +29,28 @@
 
 ## Nội dung đã làm
 
+### Refactor nhẹ `aiChatService.js`
+
+- Đã tách rõ 4 tầng xử lý trong backend:
+  - phân tích ý định người dùng
+  - lọc ứng viên sản phẩm
+  - chấm điểm ứng viên
+  - gọi Gemini để sinh câu trả lời
+- Đã tách thêm các hàm nhỏ để dễ đọc hơn:
+  - `extractSemanticNeeds()`
+  - `extractStructuredFilters()`
+  - `extractPriceFilters()`
+  - `buildProductQuery()`
+  - `fetchCandidateProducts()`
+  - `rankCandidateProducts()`
+  - `mergeCurrentProductIfNeeded()`
+  - `buildHistorySummary()`
+  - `buildCurrentProductSummary()`
+  - `buildProductSummary()`
+  - `callGemini()`
+  - `extractGeminiReply()`
+- Mục tiêu của lần refactor này là làm luồng hybrid rõ hơn nhưng không đổi nghiệp vụ chat hiện có.
+
 ### Nền tảng ban đầu
 
 - Frontend có widget chatbot nổi ở góc dưới phải.

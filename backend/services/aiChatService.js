@@ -24,14 +24,13 @@ export async function generateChatReply({
   }
 
   const modelName = "gemini-2.5-flash";
-  const endpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent` +
-    `?key=${geminiApiKey}`;
+  const endpoint = buildGeminiEndpoint(modelName, geminiApiKey);
 
   const normalizedHistory = normalizeChatHistory(history);
   const filters = extractChatFilters(trimmedMessage);
   const currentProduct = await findCurrentProduct(currentProductId);
   const products = await findRelevantProducts(filters, currentProduct);
+
   const prompt = buildChatPrompt({
     question: trimmedMessage,
     products,
@@ -40,56 +39,20 @@ export async function generateChatReply({
     currentPath
   });
 
-  const requestBody = {
-    contents: [
-      {
-        parts: [
-          {
-            text: prompt
-          }
-        ]
-      }
-    ]
-  };
-
-  let response;
-  let data;
-
-  try {
-    response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    data = await response.json();
-  } catch {
-    throw new Error("Không thể kết nối tới Gemini API");
-  }
-
-  if (!response.ok) {
-    const geminiErrorMessage =
-      data?.error?.message || "Gemini API trả về lỗi không xác định";
-
-    throw new Error(`Gemini API lỗi: ${geminiErrorMessage}`);
-  }
-
-  const reply =
-    data?.candidates?.[0]?.content?.parts
-      ?.map((part) => part?.text || "")
-      .join("")
-      .trim() || "";
-
-  if (!reply) {
-    throw new Error("Gemini không trả về nội dung phản hồi");
-  }
+  const data = await callGemini(endpoint, prompt);
+  const reply = extractGeminiReply(data);
 
   return {
     reply: formatChatReply(reply),
     suggestedProducts: buildSuggestedProducts(products, currentProduct)
   };
+}
+
+function buildGeminiEndpoint(modelName, geminiApiKey) {
+  return (
+    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent` +
+    `?key=${geminiApiKey}`
+  );
 }
 
 function normalizeChatHistory(history) {
@@ -124,6 +87,18 @@ async function findCurrentProduct(currentProductId) {
 function extractChatFilters(message) {
   const normalizedMessage = normalizeVietnameseText(message);
 
+  const semanticNeeds = extractSemanticNeeds(normalizedMessage);
+  const structuredFilters = extractStructuredFilters(normalizedMessage, semanticNeeds);
+  const priceFilters = extractPriceFilters(normalizedMessage);
+
+  return {
+    ...structuredFilters,
+    ...priceFilters,
+    ...semanticNeeds
+  };
+}
+
+function extractSemanticNeeds(normalizedMessage) {
   const prefersIOS = containsAny(normalizedMessage, ["ios", "iphone", "apple"]);
   const prefersAndroid = containsAny(normalizedMessage, ["android", "samsung", "xiaomi", "oppo"]);
   const needsStudy = containsAny(normalizedMessage, [
@@ -161,12 +136,7 @@ function extractChatFilters(message) {
     "cam mot tay"
   ]);
 
-  const filters = {
-    brand: "",
-    condition: "",
-    storage: "",
-    minPrice: null,
-    maxPrice: null,
+  return {
     prefersIOS,
     prefersAndroid,
     needsStudy,
@@ -227,8 +197,16 @@ function extractChatFilters(message) {
       "may dang xem"
     ])
   };
+}
 
-  if (prefersIOS) {
+function extractStructuredFilters(normalizedMessage, semanticNeeds) {
+  const filters = {
+    brand: "",
+    condition: "",
+    storage: ""
+  };
+
+  if (semanticNeeds.prefersIOS) {
     filters.brand = "Apple";
   } else if (containsAny(normalizedMessage, ["samsung"])) {
     filters.brand = "Samsung";
@@ -254,23 +232,39 @@ function extractChatFilters(message) {
     filters.storage = storageMatch[1].toUpperCase();
   }
 
+  return filters;
+}
+
+function extractPriceFilters(normalizedMessage) {
+  const priceFilters = {
+    minPrice: null,
+    maxPrice: null
+  };
+
   const underPriceMatch = normalizedMessage.match(/duoi\s+(\d+)\s*trieu/i);
   const fromToPriceMatch = normalizedMessage.match(/tu\s+(\d+)\s*(?:den|-)\s*(\d+)\s*trieu/i);
   const aroundPriceMatch = normalizedMessage.match(/(\d+)\s*trieu/i);
 
   if (fromToPriceMatch) {
-    filters.minPrice = Number.parseInt(fromToPriceMatch[1], 10) * 1000000;
-    filters.maxPrice = Number.parseInt(fromToPriceMatch[2], 10) * 1000000;
+    priceFilters.minPrice = Number.parseInt(fromToPriceMatch[1], 10) * 1000000;
+    priceFilters.maxPrice = Number.parseInt(fromToPriceMatch[2], 10) * 1000000;
   } else if (underPriceMatch) {
-    filters.maxPrice = Number.parseInt(underPriceMatch[1], 10) * 1000000;
+    priceFilters.maxPrice = Number.parseInt(underPriceMatch[1], 10) * 1000000;
   } else if (aroundPriceMatch) {
-    filters.maxPrice = Number.parseInt(aroundPriceMatch[1], 10) * 1000000;
+    priceFilters.maxPrice = Number.parseInt(aroundPriceMatch[1], 10) * 1000000;
   }
 
-  return filters;
+  return priceFilters;
 }
 
 async function findRelevantProducts(filters, currentProduct) {
+  const query = buildProductQuery(filters);
+  const candidates = await fetchCandidateProducts(query);
+  const rankedProducts = rankCandidateProducts(candidates, filters, currentProduct);
+  return mergeCurrentProductIfNeeded(rankedProducts, filters, currentProduct);
+}
+
+function buildProductQuery(filters) {
   const query = {
     stock: { $gt: 0 }
   };
@@ -299,12 +293,15 @@ async function findRelevantProducts(filters, currentProduct) {
     }
   }
 
-  const candidates = await Product.find(query)
-    .sort({ createdAt: -1 })
-    .limit(CHATBOT_CANDIDATE_LIMIT)
-    .lean();
+  return query;
+}
 
-  const scoredProducts = candidates
+async function fetchCandidateProducts(query) {
+  return Product.find(query).sort({ createdAt: -1 }).limit(CHATBOT_CANDIDATE_LIMIT).lean();
+}
+
+function rankCandidateProducts(candidates, filters, currentProduct) {
+  return candidates
     .map((product) => ({
       product,
       score: scoreProductForNeeds(product, filters, currentProduct)
@@ -322,35 +319,54 @@ async function findRelevantProducts(filters, currentProduct) {
     })
     .slice(0, CHATBOT_PRODUCT_LIMIT)
     .map((entry) => entry.product);
+}
 
+function mergeCurrentProductIfNeeded(products, filters, currentProduct) {
   if (!currentProduct || !currentProduct._id) {
-    return scoredProducts;
+    return products;
   }
 
-  const dedupedProducts = [];
+  const mergedProducts = [];
 
   if (
     filters.refersToCurrentProduct ||
-    !scoredProducts.some((item) => String(item._id) === String(currentProduct._id))
+    !products.some((product) => String(product._id) === String(currentProduct._id))
   ) {
-    dedupedProducts.push(currentProduct);
+    mergedProducts.push(currentProduct);
   }
 
-  for (const product of scoredProducts) {
-    if (!dedupedProducts.some((item) => String(item._id) === String(product._id))) {
-      dedupedProducts.push(product);
+  for (const product of products) {
+    if (!mergedProducts.some((item) => String(item._id) === String(product._id))) {
+      mergedProducts.push(product);
     }
   }
 
-  return dedupedProducts.slice(0, CHATBOT_PRODUCT_LIMIT);
+  return mergedProducts.slice(0, CHATBOT_PRODUCT_LIMIT);
 }
 
 function scoreProductForNeeds(product, filters, currentProduct) {
   let score = 0;
 
+  // Nhom 1: uu tien san pham dang xem va dieu kien co cau truc.
   if (currentProduct && String(currentProduct._id) === String(product._id)) {
     score += filters.refersToCurrentProduct ? 12 : 2;
   }
+
+  score += scoreStructuredMatch(product, filters);
+
+  // Nhom 2: uu tien theo nhu cau su dung mem.
+  score += scoreSemanticNeeds(product, filters);
+
+  // Nhom 3: uu tien ton kho con san.
+  if (product.stock > 0) {
+    score += Math.min(product.stock, 3);
+  }
+
+  return score;
+}
+
+function scoreStructuredMatch(product, filters) {
+  let score = 0;
 
   if (filters.prefersIOS && equalsIgnoreCase(product.brand, "Apple")) {
     score += 8;
@@ -386,6 +402,12 @@ function scoreProductForNeeds(product, filters, currentProduct) {
   if (filters.minPrice && Number.isFinite(product.price) && product.price >= filters.minPrice) {
     score += 1;
   }
+
+  return score;
+}
+
+function scoreSemanticNeeds(product, filters) {
+  let score = 0;
 
   if (filters.needsGoodBattery) {
     score += scoreBatteryHealth(product);
@@ -444,28 +466,13 @@ function scoreProductForNeeds(product, filters, currentProduct) {
     score += scoreByText(product.usedDetails?.repairHistory, ["chua", "khong", "nguyen ban", "zin"]);
   }
 
-  if (product.stock > 0) {
-    score += Math.min(product.stock, 3);
-  }
-
   return score;
 }
 
 function buildChatPrompt({ question, products, history, currentProduct, currentPath }) {
-  const historySummary = history.length
-    ? history
-        .map((entry, index) => `${index + 1}. ${entry.role === "user" ? "Khách" : "Bot"}: ${entry.text}`)
-        .join("\n")
-    : "Chưa có lịch sử hội thoại trước đó.";
-
-  const currentProductSummary = currentProduct
-    ? formatCurrentProductContext(currentProduct, currentPath)
-    : "Người dùng hiện không đứng ở một trang sản phẩm cụ thể.";
-
-  const productSummary =
-    products.length > 0
-      ? products.map((product, index) => formatProductForPrompt(product, index + 1)).join("\n")
-      : "Hiện tại không có sản phẩm nào trong shop khớp với bộ lọc cơ bản.";
+  const historySummary = buildHistorySummary(history);
+  const currentProductSummary = buildCurrentProductSummary(currentProduct, currentPath);
+  const productSummary = buildProductSummary(products);
 
   return `
 Bạn là chatbot tư vấn bán điện thoại cũ của shop Mạnh Hướng.
@@ -510,7 +517,33 @@ ${productSummary}
 
 Câu hỏi mới nhất của khách:
 ${question}
-`.trim();
+  `.trim();
+}
+
+function buildHistorySummary(history) {
+  if (!history.length) {
+    return "Chưa có lịch sử hội thoại trước đó.";
+  }
+
+  return history
+    .map((entry, index) => `${index + 1}. ${entry.role === "user" ? "Khách" : "Bot"}: ${entry.text}`)
+    .join("\n");
+}
+
+function buildCurrentProductSummary(currentProduct, currentPath) {
+  if (!currentProduct) {
+    return "Người dùng hiện không đứng ở một trang sản phẩm cụ thể.";
+  }
+
+  return formatCurrentProductContext(currentProduct, currentPath);
+}
+
+function buildProductSummary(products) {
+  if (!products.length) {
+    return "Hiện tại không có sản phẩm nào trong shop khớp với bộ lọc cơ bản.";
+  }
+
+  return products.map((product, index) => formatProductForPrompt(product, index + 1)).join("\n");
 }
 
 function formatCurrentProductContext(product, currentPath) {
@@ -584,6 +617,60 @@ function buildSuggestedProducts(products, currentProduct) {
     image: product.images?.[0] || "",
     path: `/products/${product._id}`
   }));
+}
+
+async function callGemini(endpoint, prompt) {
+  const requestBody = {
+    contents: [
+      {
+        parts: [
+          {
+            text: prompt
+          }
+        ]
+      }
+    ]
+  };
+
+  let response;
+  let data;
+
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    data = await response.json();
+  } catch {
+    throw new Error("Không thể kết nối tới Gemini API");
+  }
+
+  if (!response.ok) {
+    const geminiErrorMessage =
+      data?.error?.message || "Gemini API trả về lỗi không xác định";
+
+    throw new Error(`Gemini API lỗi: ${geminiErrorMessage}`);
+  }
+
+  return data;
+}
+
+function extractGeminiReply(data) {
+  const reply =
+    data?.candidates?.[0]?.content?.parts
+      ?.map((part) => part?.text || "")
+      .join("")
+      .trim() || "";
+
+  if (!reply) {
+    throw new Error("Gemini không trả về nội dung phản hồi");
+  }
+
+  return reply;
 }
 
 function formatChatReply(reply) {
@@ -701,7 +788,10 @@ function scoreStudyNeeds(product) {
   score += scoreBatteryHealth(product);
   score += scoreStudentBudget(product.price);
 
-  if (equalsIgnoreCase(product.specs?.storage, "128GB") || equalsIgnoreCase(product.specs?.storage, "256GB")) {
+  if (
+    equalsIgnoreCase(product.specs?.storage, "128GB") ||
+    equalsIgnoreCase(product.specs?.storage, "256GB")
+  ) {
     score += 3;
   } else if (equalsIgnoreCase(product.specs?.storage, "64GB")) {
     score += 1;
