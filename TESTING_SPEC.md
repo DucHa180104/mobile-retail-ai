@@ -1,28 +1,26 @@
-# Testing Spec - mobile-retail-ai
+# Testing Spec — mobile-retail-ai
 
-> Tài liệu này mô tả chuẩn kiểm thử cho dự án `mobile-retail-ai`.
-> Mục tiêu là đảm bảo các thay đổi quan trọng đều có test đi kèm và `npm test` chạy thành công trong môi trường local development.
-> Phạm vi: chạy hoàn toàn ở local dev, không phụ thuộc CI hay MongoDB thật nếu không cần.
+> Tài liệu này dành cho **Hà**.C Tiến dùng để review: mỗi PR phải kèm test theo spec này và `npm test` phải xanh.
+> Phạm vi: chạy hoàn toàn ở **local dev**, không cần server/CI.
 
 ## 1. Mục tiêu
 
-- Mỗi lần sửa code, chỉ cần chạy một lệnh là biết logic còn đúng hay không.
-- Test phải chạy nhanh trong vài giây, không phụ thuộc internet, không phụ thuộc MongoDB thật.
-- Ưu tiên test phần logic nghiệp vụ dễ sai và ảnh hưởng trực tiếp đến tiền, đơn hàng, phân quyền hơn là test giao diện thuần túy.
+- Mỗi lần sửa code, chạy 1 lệnh là biết code còn đúng hay không.
+- Test phải chạy nhanh (vài giây), không phụ thuộc internet, không phụ thuộc MongoDB thật.
+- Ưu tiên test phần **logic nghiệp vụ** (dễ sai, dễ ảnh hưởng tiền/đơn hàng) hơn là test giao diện.
 
-## 2. Công cụ
+## 2. Công cụ (stack test)
 
-Toàn bộ dự án dùng **Vitest** vì codebase đang chạy ES Modules (`"type": "module"`), cấu hình gọn và phù hợp local development.
+Cả backend và client đều dùng **Vitest** (vì project đang dùng ES modules `"type": "module"` — Vitest hỗ trợ sẵn, ít cấu hình hơn Jest).
 
-| Lớp test | Công cụ | Mục đích |
+| Lớp test | Công cụ | Lý do |
 |---|---|---|
-| Backend - logic thuần | Vitest | Test hàm tính giá, validate, helper |
-| Backend - API | Vitest + Supertest | Gọi thử endpoint Express như client thật |
-| Backend - DB | mongodb-memory-server | Dùng MongoDB trong RAM, không cần MongoDB thật |
-| Client - component/logic | Vitest + @testing-library/react + jsdom | Test render và tương tác UI |
+| Backend - logic thuần | Vitest | Test hàm tính giá, validate… không cần DB |
+| Backend - API end-to-end | Vitest + **Supertest** | Gọi thử endpoint Express như client thật |
+| Backend - DB | **mongodb-memory-server** | MongoDB chạy trong RAM, không cần cài Mongo, tự xóa sau test |
+| Client - component/logic | Vitest + **@testing-library/react** + jsdom | Test render và tương tác UI |
 
-### Cài đặt
-
+Cài đặt (dev tự chạy):
 ```bash
 # backend
 cd backend
@@ -33,8 +31,7 @@ cd client
 npm i -D vitest @testing-library/react @testing-library/jest-dom jsdom
 ```
 
-### Scripts cần có trong `package.json`
-
+Thêm script vào **cả 2** `package.json`:
 ```json
 "scripts": {
   "test": "vitest run",
@@ -43,149 +40,106 @@ npm i -D vitest @testing-library/react @testing-library/jest-dom jsdom
 }
 ```
 
-- `npm test`: chạy test một lần, dùng trước khi commit hoặc review.
-- `npm run test:watch`: chạy nền, tự test lại khi sửa code.
-- `npm run test:coverage`: chạy test và đo coverage.
+- `npm test` → chạy 1 lần (dùng khi review / trước khi commit).
+- `npm run test:watch` → chạy nền, tự chạy lại khi sửa code (dùng khi đang code).
 
-## 3. Cấu trúc và quy ước
+## 3. Cấu trúc & quy ước
 
-- File test đặt cạnh file nguồn, đặt tên dạng `*.test.js` hoặc `*.test.jsx`.
-- Mỗi nhóm test dùng `describe(...)`.
-- Mỗi ca test dùng `it("should ...")` hoặc tên tiếng Việt mô tả rõ hành vi.
-- Test phải độc lập, không phụ thuộc thứ tự chạy.
-- Mỗi test tự chuẩn bị và tự dọn dữ liệu nếu có side effect.
+- File test đặt **cạnh file nguồn**, đặt tên `*.test.js` (vd: `tradeInService.test.js` cạnh `tradeInService.js`).
+- Mỗi nhóm dùng `describe(...)`, mỗi case dùng `it("should ...")` mô tả rõ hành vi.
+- Test phải **độc lập**: không dựa vào thứ tự chạy, mỗi test tự dọn dữ liệu.
+- Đặt tên test bằng tiếng Việt hoặc tiếng Anh đều được, miễn mô tả đúng kỳ vọng.
 
-## 4. Phạm vi và mục tiêu coverage
+## 4. Phạm vi & mục tiêu coverage
 
-| Module | Mức ưu tiên | Coverage mục tiêu |
+| Module | Bắt buộc test | Mục tiêu coverage |
 |---|---|---|
-| `services/tradeInService.js` | Bắt buộc, ưu tiên cao nhất | 100% |
-| `controllers/orderController.js` | Bắt buộc | >= 80% |
-| `middleware/authMiddleware.js` | Bắt buộc | >= 80% |
-| `controllers/authController.js` | Bắt buộc | >= 80% |
-| `controllers/productController.js` | Nên có | >= 60% |
-| `client/src/context/CartContext.jsx` | Bắt buộc | >= 70% |
-| `client/src/context/AuthContext.jsx` | Bắt buộc | >= 70% |
-| Các trang frontend quan trọng | Nên có | Best effort |
+| `services/tradeInService.js` (tính giá thu cũ) | ✅ Bắt buộc, kỹ nhất | 100% |
+| `controllers/orderController.js` (đặt hàng, trừ kho, thanh toán) | ✅ Bắt buộc | ≥ 80% |
+| `middleware/authMiddleware.js` (phân quyền) | ✅ Bắt buộc | ≥ 80% |
+| `controllers/authController.js` (đăng ký/đăng nhập) | ✅ Bắt buộc | ≥ 80% |
+| `controllers/productController.js` | Nên có | ≥ 60% |
+| Client: `CartContext`, `AuthContext` | ✅ Bắt buộc | ≥ 70% |
+| Client: trang/màn hình | Nên có (1–2 màn quan trọng) | best effort |
 
-**Định nghĩa hoàn thành:** `npm test` ở cả backend và client đều pass, không có test bị skip mà không ghi rõ lý do.
+**Định nghĩa "xong":** `npm test` ở cả backend và client đều pass, không có test bị skip mà không ghi lý do.
 
-## 5. Danh sách test case cụ thể
+## 5. Danh sách test case cụ thể (bám theo code hiện tại)
 
-### 5.1 Trade-in (`tradeInService.test.js`) - ưu tiên cao nhất
-
-Đây là logic tiền bạc, dễ sai, cần test kỹ:
-
-- Model có trong bảng giá -> trả đúng `basePrice`
-- Model không có trong bảng giá -> `basePrice = 0`, `estimatedPrice = 0`
-- Tên model có chữ hoa, chữ thường, khoảng trắng thừa -> vẫn nhận đúng
-- Pin < 80% -> trừ 700.000
-- Pin từ 80% đến 85% -> trừ 400.000
-- Pin > 85% -> không trừ
-- `displayStatus = "replaced"` -> trừ 1.000.000
-- `displayStatus = "unknown"` -> trừ 500.000
-- `bodyCondition = "light_scratches"` -> trừ 300.000
-- `bodyCondition = "heavy_scratches"` -> trừ 800.000
-- `faceIdStatus = "broken"` -> trừ 1.200.000
-- `accessoryStatus = "missing_box_or_cable"` -> trừ 300.000
-- Case tổng hợp nhiều lỗi cùng lúc -> tổng trừ đúng, `estimatedPrice` không âm
-- Mảng `deductions` liệt kê đúng lý do và số tiền
+### 5.1 Trade-in (`tradeInService.test.js`) — QUAN TRỌNG NHẤT
+Đây là logic tiền bạc, dễ sai, dễ chấm điểm:
+- Model có trong bảng giá → trả đúng `basePrice`.
+- Model không có trong bảng (vd "iphone 99") → `basePrice = 0`, `estimatedPrice = 0`.
+- Tên model có chữ HOA/thường/khoảng trắng thừa → vẫn nhận đúng (test hàm chuẩn hóa).
+- Pin < 80% → trừ 700.000; pin 80–85% → trừ 400.000; pin > 85% → không trừ.
+- Màn hình `replaced` → trừ 1.000.000; `unknown` → trừ 500.000.
+- Thân máy `light_scratches` → 300.000; `heavy_scratches` → 800.000.
+- Face ID `broken` → trừ 1.200.000.
+- Thiếu hộp/cáp → trừ 300.000.
+- **Case tổng hợp:** máy dính nhiều lỗi cùng lúc → tổng trừ đúng, và `estimatedPrice` **không bao giờ âm** (phải = 0 nếu trừ quá base).
+- Mảng `deductions` liệt kê đúng từng lý do.
 
 ### 5.2 Order API (`orderController` qua Supertest + mongodb-memory-server)
-
-- Tạo đơn thành công -> trả 201, đơn lưu DB, kho bị trừ đúng
-- Đặt số lượng lớn hơn tồn kho -> trả 400, kho không bị trừ
-- `productId` không tồn tại -> trả 400
-- `items` rỗng -> trả 400
-- Thiếu thông tin giao hàng bắt buộc -> trả 400
-- `paymentMethod` không hợp lệ -> trả 400
-- Mapping thanh toán:
-  - `cod` -> `unpaid`
-  - `bank_transfer` -> `pending`
-  - `online_mock` -> `paid` + có `transactionId`
-- Đặt đơn khi chưa đăng nhập -> vẫn tạo được, `user = null`
-- Đặt đơn khi đã đăng nhập -> `user` gắn đúng `req.user._id`
+- Tạo đơn thành công → trả 201, đơn lưu DB, **kho bị trừ đúng số lượng**.
+- Đặt số lượng > tồn kho → trả 400, **kho KHÔNG bị trừ**.
+- `productId` không tồn tại → trả 400.
+- `items` rỗng → trả 400.
+- Thiếu tên/sđt/địa chỉ giao hàng → trả 400 đúng thông báo.
+- `paymentMethod` không hợp lệ → trả 400.
+- Mapping thanh toán: `cod`→`unpaid`, `bank_transfer`→`pending`, `online_mock`→`paid` + có `transactionId` dạng `MOCK-...`.
+- Đặt đơn khi **chưa đăng nhập** (guest) → vẫn tạo được, `user = null`.
+- Đặt đơn khi **đã đăng nhập** → `user` gắn đúng id.
 
 ### 5.3 Auth (`authController` + `authMiddleware`)
-
-- Đăng ký thiếu trường -> 400
-- Đăng ký email trùng -> 400
-- Đăng ký thành công:
-  - password được hash
-  - response không trả password
-  - có token + user
-- Đăng nhập sai email hoặc sai password -> 401
-- Đăng nhập đúng -> có token hợp lệ
-- `protect`:
-  - không token -> 401
-  - token sai -> 401
-  - token đúng -> next và gắn `req.user`
-- `protectAdmin`:
-  - role `user` -> 403
-  - role `admin` -> cho qua
-- `protectOptional`:
-  - không token -> vẫn next
+- Đăng ký thiếu trường → 400.
+- Đăng ký email trùng → 400.
+- Đăng ký thành công → mật khẩu **đã được hash** (không lưu plain text), trả về token + user (không kèm password).
+- Đăng nhập sai mật khẩu / sai email → 401.
+- Đăng nhập đúng → trả token hợp lệ.
+- `protect`: không có token → 401; token sai → 401; token đúng → cho qua, gắn `req.user`.
+- `protectAdmin`: user role `user` → 403; role `admin` → cho qua.
+- `protectOptional`: không token → vẫn next (không lỗi).
 
 ### 5.4 Client - Cart (`CartContext.test.jsx`)
-
-- Thêm sản phẩm mới -> có trong giỏ, quantity = 1
-- Thêm lại sản phẩm cũ -> quantity tăng, không tạo dòng mới
-- `decreaseQuantity` về 0 -> xóa sản phẩm
-- `removeFromCart` -> xóa đúng item
-- `totalItems` tính đúng tổng số lượng
-- `clearCart` -> giỏ hàng rỗng
+- Thêm sản phẩm mới → có trong giỏ, quantity = 1.
+- Thêm lại sản phẩm đã có → quantity tăng, không tạo dòng mới.
+- `decreaseQuantity` về 0 → sản phẩm bị xóa khỏi giỏ.
+- `removeFromCart` → xóa đúng sản phẩm.
+- `totalItems` tính đúng tổng số lượng.
+- `clearCart` → giỏ rỗng.
 
 ### 5.5 Client - Auth (`AuthContext.test.jsx`)
+- `login` → set user/token và lưu vào localStorage.
+- `logout` → xóa state + localStorage.
+- `isAuthenticated` đúng theo có/không có user+token.
 
-- `login` -> set user/token và lưu localStorage
-- `logout` -> xóa state và localStorage
-- `isAuthenticated` phản ánh đúng theo có/không có user và token
+### 5.6 Security tests (bám theo `SECURITY_SPEC.md`) — RẤT QUAN TRỌNG
 
-### 5.6 Security tests (tham chiếu `SECURITY_SPEC.md`)
+Mỗi lỗ hổng sửa xong phải có test tái hiện kịch bản tấn công + chứng minh đã chặn. Đây là bằng chứng bảo mật khi bảo vệ đồ án.
 
-Sau khi sửa lỗ hổng bảo mật tương ứng, phải có test tái hiện và chứng minh đã chặn được:
+- **S1 — IDOR đơn hàng:**
+  - User A đăng nhập, xem đơn của User B → **403** (không lộ dữ liệu).
+  - Không đăng nhập gọi `GET /api/orders/:id` → **401**.
+  - Admin xem được mọi đơn → 200.
+  - Chủ đơn xem đơn của chính mình → 200.
+- **S2 — Price tampering:**
+  - Gửi `items[].price` bịa thấp (vd 1đ) → đơn lưu **theo giá DB**, không theo giá client.
+  - Gửi `totalAmount` sai → server tự tính lại đúng (hoặc trả 400 nếu lệch).
+  - `quantity` ≤ 0 / không phải số → **400**.
+- **S4 — Rate limit login:** gọi `/api/auth/login` vượt ngưỡng trong 1 phút → **429**.
+- **S5 — Mass assignment:** tạo/sửa sản phẩm kèm field lạ (vd `role`, `_id`, `createdAt`, `__proto__`) → field lạ **bị bỏ qua**, không lưu vào DB.
+- **S6 — Không lộ lỗi nội bộ:** ép lỗi hệ thống → response **không chứa** stack trace / thông điệp lỗi DB.
+- **S8 — Regex injection:** `keyword` chứa ký tự regex (vd `(a+)+`, `.*`) → được escape, truy vấn không lỗi/không treo.
+- **S9 — Cấu hình bí mật:** chạy app khi thiếu `JWT_SECRET`/`MONGODB_URI` → app **không khởi động** (hoặc test hàm kiểm tra cấu hình trả lỗi).
+- **Phân quyền tổng quát:** mọi endpoint admin (`POST/PUT/DELETE /api/products`, `GET /api/orders`, `PATCH /api/orders/:id/status`) — gọi bằng token user thường → **403**; không token → **401**.
+- **Auth (đã nêu ở 5.3, nhấn lại ở góc độ bảo mật):** mật khẩu được hash (không lưu plain text); response đăng nhập/đăng ký **không kèm trường password**.
 
-- **S1 - IDOR đơn hàng**
-  - User A không xem được đơn của User B -> 403
-  - Chưa đăng nhập -> 401
-  - Admin xem được mọi đơn -> 200
-- **S2 - Price tampering**
-  - Client gửi giá giả -> server vẫn dùng giá DB
-  - Client gửi `totalAmount` sai -> server tự tính lại hoặc trả 400
-  - `quantity <= 0` hoặc sai kiểu -> 400
-- **S4 - Rate limit login**
-  - Gọi `/api/auth/login` vượt ngưỡng -> 429
-- **S5 - Mass assignment**
-  - Gửi field lạ khi tạo/sửa product -> field lạ bị bỏ qua
-- **S6 - Không lộ lỗi nội bộ**
-  - Response không trả stack trace hoặc lỗi DB chi tiết
-- **S8 - Regex injection**
-  - Keyword chứa regex độc -> được escape, không treo, không lỗi
-- **S9 - Cấu hình bí mật**
-  - Thiếu `JWT_SECRET` hoặc `MONGODB_URI` -> app không khởi động
-- **Phân quyền tổng quát**
-  - Token user thường gọi endpoint admin -> 403
-  - Không token gọi endpoint admin -> 401
+> Lưu ý thứ tự làm: phần này chỉ viết được **sau khi** dev đã sửa lỗ hổng tương ứng trong `SECURITY_SPEC.md`. Trước đó, có thể viết test ở dạng "kỳ vọng" (đang fail) để đánh dấu việc cần làm.
 
-## 6. Quy tắc thực hiện
+## 6. Quy tắc cho Hà (để cậu review dễ)
 
-1. Không sửa logic nghiệp vụ mà không cập nhật hoặc bổ sung test tương ứng.
-2. Mỗi bug được fix phải có ít nhất một test tái hiện bug đó.
-3. Test phải tự chuẩn bị và tự dọn dữ liệu.
-4. Không gọi internet hay API bên ngoài trong test.
-5. Trước khi báo hoàn thành một task quan trọng, cần chạy `npm test` ở backend và client.
-
-## 7. Thứ tự triển khai đề xuất
-
-1. `tradeInService.test.js`
-2. `authMiddleware.test.js`
-3. `authController.test.js`
-4. `orderController.test.js`
-5. `CartContext.test.jsx`
-6. `AuthContext.test.jsx`
-7. Security tests theo `SECURITY_SPEC.md`
-
-## 8. Ghi chú
-
-- Mục tiêu của tài liệu này là tạo một chuẩn kiểm thử rõ ràng, có thể dùng lâu dài cho dự án.
-- Nếu phạm vi dự án thay đổi, file spec này cần được cập nhật cùng với logic mới.
+1. **Không sửa logic nghiệp vụ mà không cập nhật/ thêm test tương ứng.**
+2. Mọi bug được fix phải kèm 1 test tái hiện bug đó (chống tái phát).
+3. Test phải tự tạo và tự dọn dữ liệu (`beforeEach`/`afterEach`), không để lại rác trong DB in-memory.
+4. Không gọi API thật/internet trong test.
+5. Trước khi báo "xong 1 task": chạy `npm test` ở cả backend lẫn client, dán kết quả vào PR.
