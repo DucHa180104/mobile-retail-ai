@@ -14,7 +14,6 @@ export const createOrder = async (req, res) => {
       contactEmail,
       shippingInfo,
       items,
-      totalAmount,
       paymentMethod = "cod"
     } = req.body;
     const allowedPaymentMethods = ["cod", "bank_transfer", "online_mock"];
@@ -59,24 +58,52 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment method" });
     }
 
-    const productIds = items.map((item) => item.productId);
+    const normalizedRequestItems = items.map((item) => ({
+      productId: String(item.productId || "").trim(),
+      quantity: Number(item.quantity || 0)
+    }));
+
+    for (const item of normalizedRequestItems) {
+      if (!item.productId) {
+        return res.status(400).json({ message: "Product id is required" });
+      }
+
+      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+        return res.status(400).json({ message: "Item quantity must be at least 1" });
+      }
+    }
+
+    const productIds = normalizedRequestItems.map((item) => item.productId);
     const products = await Product.find({ _id: { $in: productIds } });
     const productMap = new Map(products.map((product) => [String(product._id), product]));
+    const orderItems = [];
+    let calculatedTotalAmount = 0;
 
-    for (const item of items) {
+    for (const item of normalizedRequestItems) {
       const product = productMap.get(String(item.productId));
 
       if (!product) {
         return res.status(400).json({
-          message: `Product not found for item ${item.name || item.productId}`
+          message: `Product not found for item ${item.productId}`
         });
       }
 
-      if ((product.stock ?? 0) < (item.quantity ?? 0)) {
+      if ((product.stock ?? 0) < item.quantity) {
         return res.status(400).json({
           message: `${product.name} không đủ hàng trong kho`
         });
       }
+
+      const orderItem = {
+        productId: product._id,
+        name: product.name,
+        price: Number(product.price || 0),
+        quantity: item.quantity,
+        image: product.images?.[0] || ""
+      };
+
+      orderItems.push(orderItem);
+      calculatedTotalAmount += orderItem.price * orderItem.quantity;
     }
 
     const paymentData = getPaymentData(paymentMethod);
@@ -89,17 +116,17 @@ export const createOrder = async (req, res) => {
       phoneNumber: normalizedShippingInfo.phoneNumber,
       address: normalizedShippingInfo.address,
       note: normalizedShippingInfo.note,
-      items,
-      totalAmount,
+      items: orderItems,
+      totalAmount: calculatedTotalAmount,
       paymentMethod,
       paymentStatus: paymentData.paymentStatus,
       paidAt: paymentData.paidAt,
       transactionId: paymentData.transactionId
     });
 
-    for (const item of items) {
+    for (const item of orderItems) {
       await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -Number(item.quantity || 0) }
+        $inc: { stock: -item.quantity }
       });
     }
 
