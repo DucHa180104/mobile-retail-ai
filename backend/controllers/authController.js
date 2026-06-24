@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCK_TIME_MS = 10 * 60 * 1000;
+
 function generateToken(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "7d"
@@ -96,6 +99,12 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    if (user.lockUntil && user.lockUntil > new Date()) {
+      return res.status(423).json({
+        message: "Tài khoản tạm thời bị khóa do đăng nhập sai quá nhiều lần. Vui lòng thử lại sau."
+      });
+    }
+
     if (user.isActive === false) {
       return res.status(403).json({
         message: "Tài khoản đã bị khóa"
@@ -105,10 +114,23 @@ export const loginUser = async (req, res) => {
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
+      user.failedLoginAttempts += 1;
+
+      if (user.failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+        user.lockUntil = new Date(Date.now() + LOGIN_LOCK_TIME_MS);
+        user.failedLoginAttempts = 0;
+      }
+
+      await user.save();
+
       return res.status(401).json({
         message: "Invalid email or password"
       });
     }
+
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
 
     const token = generateToken(user._id);
 

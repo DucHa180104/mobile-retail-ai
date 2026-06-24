@@ -109,6 +109,14 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: ""
     },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0
+    },
+    lockUntil: {
+      type: Date,
+      default: null
+    },
     shippingInfo: {
       type: shippingInfoSchema,
       default: () => ({})
