@@ -4,7 +4,7 @@ import { sendOrderConfirmationEmail } from "../services/emailService.js";
 
 const allowedOrderStatuses = ["pending", "confirmed", "cancelled"];
 
-export const createOrder = async (req, res) => {
+export const createOrder = async (req, res, next) => {
   try {
     const {
       customerName,
@@ -138,21 +138,21 @@ export const createOrder = async (req, res) => {
 
     res.status(201).json(order);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getOrders = async (req, res) => {
+export const getOrders = async (req, res, next) => {
   try {
     const filters = buildStatusFilter(req.query.status);
     const orders = await Order.find(filters).sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getMyOrders = async (req, res) => {
+export const getMyOrders = async (req, res, next) => {
   try {
     const filters = {
       user: req.user._id,
@@ -162,11 +162,11 @@ export const getMyOrders = async (req, res) => {
     const orders = await Order.find(filters).sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getOrderById = async (req, res) => {
+export const getOrderById = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id);
 
@@ -183,11 +183,11 @@ export const getOrderById = async (req, res) => {
 
     res.status(200).json(order);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const updateOrderStatus = async (req, res) => {
+export const updateOrderStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
 
@@ -210,7 +210,7 @@ export const updateOrderStatus = async (req, res) => {
 
     res.status(200).json(order);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

@@ -1,6 +1,6 @@
 import Product from "../models/Product.js";
 
-export const getProducts = async (req, res) => {
+export const getProducts = async (req, res, next) => {
   try {
     const {
       keyword = "",
@@ -64,11 +64,11 @@ export const getProducts = async (req, res) => {
       pageSize: limitNumber
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getProductById = async (req, res) => {
+export const getProductById = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
 
@@ -78,21 +78,25 @@ export const getProductById = async (req, res) => {
 
     res.status(200).json(product);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const createProduct = async (req, res) => {
+export const createProduct = async (req, res, next) => {
   try {
     const productData = buildProductPayload(req.body);
     const product = await Product.create(productData);
     res.status(201).json(product);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    if (error.name === "ValidationError" || error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid product data" });
+    }
+
+    next(error);
   }
 };
 
-export const updateProduct = async (req, res) => {
+export const updateProduct = async (req, res, next) => {
   try {
     const productData = buildProductPayload(req.body);
     const product = await Product.findByIdAndUpdate(req.params.id, productData, {
@@ -106,11 +110,15 @@ export const updateProduct = async (req, res) => {
 
     res.status(200).json(product);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    if (error.name === "ValidationError" || error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid product data" });
+    }
+
+    next(error);
   }
 };
 
-export const deleteProduct = async (req, res) => {
+export const deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
 
@@ -120,7 +128,7 @@ export const deleteProduct = async (req, res) => {
 
     res.status(200).json({ message: "Product deleted" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

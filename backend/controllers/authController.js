@@ -30,7 +30,7 @@ function formatUserResponse(user) {
   };
 }
 
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
@@ -68,13 +68,11 @@ export const registerUser = async (req, res) => {
       user: formatUserResponse(user)
     });
   } catch (error) {
-    res.status(400).json({
-      message: error.message || "Failed to register user"
-    });
+    next(error);
   }
 };
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -139,9 +137,7 @@ export const loginUser = async (req, res) => {
       user: formatUserResponse(user)
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message || "Failed to login"
-    });
+    next(error);
   }
 };
 
@@ -151,7 +147,7 @@ export const getMe = async (req, res) => {
   });
 };
 
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res, next) => {
   try {
     const { name, phoneNumber, shippingInfo } = req.body;
 
@@ -191,13 +187,11 @@ export const updateProfile = async (req, res) => {
       user: formatUserResponse(user)
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Failed to update profile"
-    });
+    return next(error);
   }
 };
 
-export const changePassword = async (req, res) => {
+export const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -236,8 +230,6 @@ export const changePassword = async (req, res) => {
       message: "Password changed successfully"
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Failed to change password"
-    });
+    return next(error);
   }
 };

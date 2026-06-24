@@ -17,6 +17,7 @@ import cartRoutes from "./routes/cartRoutes.js";
 import userAdminRoutes from "./routes/userAdminRoutes.js";
 import chatAdminRoutes from "./routes/chatAdminRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +49,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/admin/users", userAdminRoutes);
 app.use("/api/admin/chat-logs", chatAdminRoutes);
 app.use("/api/chat", chatRoutes);
+app.use(errorHandler);
 
 app.get("/", (req, res) => {
   res.send("Hello backend");
