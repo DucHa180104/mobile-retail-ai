@@ -19,11 +19,14 @@ export const getProducts = async (req, res, next) => {
     const skip = (pageNumber - 1) * limitNumber;
     const minPriceNumber = Number.parseInt(minPrice, 10);
     const maxPriceNumber = Number.parseInt(maxPrice, 10);
+    const normalizedKeyword = keyword.trim().slice(0, 100);
 
-    if (keyword.trim()) {
+    if (normalizedKeyword) {
+      const safeKeyword = escapeRegex(normalizedKeyword);
+
       query.$or = [
-        { name: { $regex: keyword.trim(), $options: "i" } },
-        { brand: { $regex: keyword.trim(), $options: "i" } }
+        { name: { $regex: safeKeyword, $options: "i" } },
+        { brand: { $regex: safeKeyword, $options: "i" } }
       ];
     }
 
