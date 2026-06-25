@@ -382,9 +382,10 @@ function ProductDetailPage() {
                   <HeartIcon isFilled={isWishlisted} />
                 </button>
                 <img
+                  key={selectedImageIndex}
                   src={selectedImage}
                   alt={product.name}
-                  className="h-[360px] w-full object-cover sm:h-[500px]"
+                  className="h-[360px] w-full object-cover sm:h-[500px] animate-fade-in transition-transform duration-500 hover:scale-102 cursor-zoom-in"
                 />
               </div>
 
@@ -394,16 +395,16 @@ function ProductDetailPage() {
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`overflow-hidden rounded-2xl border bg-white transition ${
+                    className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-200 p-1 bg-white ${
                       selectedImageIndex === index
-                        ? "border-blue-500 shadow-sm"
-                        : "border-slate-200 hover:border-blue-200"
+                        ? "border-blue-600 ring-2 ring-blue-100"
+                        : "border-slate-200 hover:border-blue-350"
                     }`}
                   >
                     <img
                       src={image}
                       alt={`${product.name} ${index + 1}`}
-                      className="h-20 w-full object-cover"
+                      className="h-full w-full object-cover rounded-lg"
                     />
                   </button>
                 ))}
@@ -535,8 +536,8 @@ function ProductDetailPage() {
             </article>
           </section>
 
-          <aside className="space-y-6">
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7 xl:sticky xl:top-24">
+          <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
+            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`rounded-full px-3 py-1 text-xs font-bold ${conditionClassName}`}>
                   {conditionLabel}

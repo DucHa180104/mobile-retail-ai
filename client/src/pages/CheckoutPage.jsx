@@ -266,7 +266,7 @@ function CheckoutPage() {
                   type="email"
                   value={contactEmail}
                   onChange={(event) => setContactEmail(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
                   placeholder="example@email.com"
                 />
               </div>
@@ -318,7 +318,7 @@ function CheckoutPage() {
                   value={shippingInfo.note}
                   onChange={handleShippingChange}
                   rows="4"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
                   placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."
                 />
               </div>
@@ -328,31 +328,34 @@ function CheckoutPage() {
                   Phương thức thanh toán
                 </p>
                 <div className="space-y-3">
-                  {paymentOptions.map((option) => (
-                    <label
-                      key={option.value}
-                      className={`block rounded-2xl border px-4 py-4 transition ${
-                        paymentMethod === option.value
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-slate-200 bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value={option.value}
-                          checked={paymentMethod === option.value}
-                          onChange={(event) => setPaymentMethod(event.target.value)}
-                          className="mt-1"
-                        />
-                        <div>
-                          <p className="font-semibold text-slate-900">{option.title}</p>
-                          <p className="mt-1 text-sm text-slate-500">{option.description}</p>
+                  {paymentOptions.map((option) => {
+                    const isSelected = paymentMethod === option.value;
+                    return (
+                      <label
+                        key={option.value}
+                        className={`block cursor-pointer rounded-2xl border p-4 transition-all duration-200 ${
+                          isSelected
+                            ? "border-blue-500 bg-blue-50/40 shadow-sm ring-1 ring-blue-500"
+                            : "border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50/40"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3.5">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value={option.value}
+                            checked={isSelected}
+                            onChange={(event) => setPaymentMethod(event.target.value)}
+                            className="mt-1 h-4 w-4 border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500"
+                          />
+                          <div>
+                            <p className={`font-semibold text-sm ${isSelected ? "text-blue-900" : "text-slate-900"}`}>{option.title}</p>
+                            <p className="mt-1.5 text-xs leading-5 text-slate-500">{option.description}</p>
+                          </div>
                         </div>
-                      </div>
-                    </label>
-                  ))}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -361,7 +364,7 @@ function CheckoutPage() {
                   <p className="font-semibold text-blue-700">Thông tin chuyển khoản demo</p>
                   <p className="mt-2">Ngân hàng: Vietcombank</p>
                   <p>Số tài khoản: 1234567890</p>
-                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯỞNG</p>
+                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯỜNG</p>
                   <p className="mt-2 text-slate-500">
                     Nội dung: Thanh toan don hang + số điện thoại của bạn
                   </p>
@@ -371,7 +374,7 @@ function CheckoutPage() {
               <button
                 type="submit"
                 disabled={submitting || cartItems.length === 0}
-                className="w-full rounded-xl bg-blue-600 px-5 py-3.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3.5 font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-300 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? "Đang đặt hàng..." : "Đặt hàng"}
               </button>
@@ -490,7 +493,7 @@ function FormField({ label, name, value, onChange }) {
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white"
+        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
       />
     </div>
   );

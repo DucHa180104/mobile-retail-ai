@@ -69,24 +69,24 @@ function CartPage() {
             {cartItems.map((item) => (
               <article
                 key={item._id}
-                className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+                className="group rounded-2xl border border-slate-250/60 bg-white p-4 shadow-sm transition-all duration-350 hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.03)] sm:p-5"
               >
-                <div className="grid gap-4 md:grid-cols-[104px_1fr]">
-                  <div className="overflow-hidden rounded-xl bg-slate-100">
+                <div className="grid gap-4 md:grid-cols-[112px_1fr]">
+                  <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                     <img
                       src={item.images?.[0] || "https://via.placeholder.com/320x240?text=Khong+co+anh"}
                       alt={item.name}
-                      className="h-24 w-full object-cover md:h-28"
+                      className="h-24 w-full object-cover transition-transform duration-500 group-hover:scale-105 md:h-28"
                     />
                   </div>
 
                   <div className="flex flex-col justify-between gap-4">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="max-w-xl">
-                        <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+                        <h2 className="text-base font-bold text-slate-900 transition-colors duration-150 group-hover:text-blue-700 sm:text-lg">
                           {item.name}
                         </h2>
-                        <p className="mt-2 text-sm leading-6 text-slate-500">
+                        <p className="mt-1.5 text-xs leading-5 text-slate-400">
                           {item.description ||
                             "Sản phẩm chính hãng, hỗ trợ bảo hành và giao hàng toàn quốc."}
                         </p>
@@ -95,41 +95,41 @@ function CartPage() {
                       <button
                         type="button"
                         onClick={() => removeFromCart(item._id)}
-                        className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:text-red-600"
+                        className="rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-semibold text-slate-500 transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                       >
                         Xóa
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <p className="text-xl font-black text-red-500 sm:text-2xl">
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-50 pt-3">
+                      <p className="text-xl font-black text-rose-500 sm:text-2xl">
                         {item.price?.toLocaleString("vi-VN")} đ
                       </p>
 
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center overflow-hidden rounded-full border border-slate-200 bg-slate-50">
+                        <div className="flex h-9 items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                           <button
                             type="button"
                             onClick={() => decreaseQuantity(item._id)}
-                            className="px-3 py-2 text-base font-semibold text-slate-700 transition hover:bg-white"
+                            className="h-full px-3 text-sm font-semibold text-slate-500 transition-all hover:bg-white hover:text-slate-900"
                           >
                             -
                           </button>
-                          <span className="min-w-10 px-3 text-center text-sm font-bold text-slate-900">
+                          <span className="flex h-full min-w-9 items-center justify-center bg-white px-2 text-xs font-bold text-slate-800 border-x border-slate-100">
                             {item.quantity}
                           </span>
                           <button
                             type="button"
                             onClick={() => increaseQuantity(item._id)}
-                            className="px-3 py-2 text-base font-semibold text-slate-700 transition hover:bg-white"
+                            className="h-full px-3 text-sm font-semibold text-slate-500 transition-all hover:bg-white hover:text-slate-900"
                           >
                             +
                           </button>
                         </div>
 
-                        <p className="text-sm font-semibold text-slate-500">
+                        <p className="text-xs font-semibold text-slate-400">
                           Thành tiền:
-                          <span className="ml-2 text-base font-bold text-slate-900">
+                          <span className="ml-2 text-sm font-black text-slate-800">
                             {(item.price * item.quantity).toLocaleString("vi-VN")} đ
                           </span>
                         </p>

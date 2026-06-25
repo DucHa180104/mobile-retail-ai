@@ -195,17 +195,45 @@ function PhonesPage() {
         <div className="mx-auto max-w-[1120px] space-y-5">
           <div className="skeleton h-36 rounded-3xl" />
           <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
-            <div className="skeleton h-80 rounded-2xl" />
+            {/* Filter sidebar skeleton */}
+            <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="skeleton h-5 w-16 rounded" />
+                <div className="skeleton h-7 w-16 rounded-full" />
+              </div>
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-2.5 border-b border-slate-100 pb-4 last:border-0 last:pb-0">
+                  <div className="skeleton h-4.5 w-16 rounded" />
+                  <div className="space-y-2">
+                    {[...Array(4)].map((_, idx) => (
+                      <div key={idx} className="flex items-center gap-2.5 py-0.5">
+                        <div className="skeleton h-4 w-4 rounded" />
+                        <div className="skeleton h-3.5 w-20 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
             <div className="space-y-4">
               <div className="skeleton h-20 rounded-2xl" />
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div key={i} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
                     <div className="skeleton h-52 rounded-xl" />
-                    <div className="mt-4 space-y-2">
+                    <div className="mt-4 space-y-2.5">
                       <div className="skeleton h-4 w-full rounded" />
-                      <div className="skeleton h-4 w-2/3 rounded" />
-                      <div className="skeleton mt-2 h-7 w-1/2 rounded" />
+                      {/* Rating placeholder skeleton */}
+                      <div className="flex gap-1 py-1">
+                        {[...Array(5)].map((_, idx) => (
+                          <div key={idx} className="skeleton h-3 w-3 rounded-full" />
+                        ))}
+                      </div>
+                      <div className="skeleton h-5.5 w-1/2 rounded" />
+                      <div className="flex gap-2 pt-2">
+                        <div className="skeleton h-9.5 flex-1 rounded-xl" />
+                        <div className="skeleton h-9.5 w-10 rounded-xl" />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -321,7 +349,7 @@ function ProductFilterSidebar({
   onClearFilters
 }) {
   return (
-    <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <aside className="h-fit rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:sticky lg:top-24 lg:self-start">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-base font-black text-slate-900">Bộ lọc</h2>
         <button
