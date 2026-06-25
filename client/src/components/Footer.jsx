@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="mt-12 border-t border-slate-200 bg-white">
+    <footer className="mt-12 border-t border-slate-200 bg-gradient-to-b from-white to-slate-50/50">
       {/* Top accent line */}
       <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500" />
 
@@ -26,13 +26,13 @@ function Footer() {
             </p>
 
             <div className="mt-5 flex gap-3">
-              <SocialIcon href="#" label="Facebook">
+              <SocialIcon href="#" label="Facebook" hoverClass="hover:border-transparent hover:bg-[#1877f2] hover:text-white hover:shadow-md hover:shadow-blue-100">
                 <FacebookIcon />
               </SocialIcon>
-              <SocialIcon href="#" label="Zalo">
+              <SocialIcon href="#" label="Zalo" hoverClass="hover:border-transparent hover:bg-[#0068ff] hover:text-white hover:shadow-md hover:shadow-sky-100">
                 <ZaloIcon />
               </SocialIcon>
-              <SocialIcon href="#" label="TikTok">
+              <SocialIcon href="#" label="TikTok" hoverClass="hover:border-transparent hover:bg-black hover:text-white hover:shadow-md hover:shadow-slate-350">
                 <TiktokIcon />
               </SocialIcon>
             </div>
@@ -108,12 +108,12 @@ function ContactRow({ icon, title }) {
   );
 }
 
-function SocialIcon({ href, label, children }) {
+function SocialIcon({ href, label, hoverClass, children }) {
   return (
     <a
       href={href}
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+      className={`flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-300 ${hoverClass}`}
     >
       {children}
     </a>
@@ -122,16 +122,16 @@ function SocialIcon({ href, label, children }) {
 
 function FacebookIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5">
+      <path d="M14 13.5h2.5l1-4H14v-2c0-1.03.3-1.5 1.5-1.5H17V2h-3c-3 0-5 1.78-5 4.8v2.7H7v4h2V22h5v-8.5z" />
     </svg>
   );
 }
 
 function ZaloIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5">
+      <path d="M12 2C6.48 2 2 5.8 2 10.5c0 2.65 1.43 4.98 3.65 6.42L4.5 21l4.83-2.42c.86.26 1.76.42 2.67.42 5.52 0 10-3.8 10-8.5S17.52 2 12 2zm-1.2 11.5H8.5V13l1.8-2.5H8.6V9.5h2.1V10l-1.8 2.5h1.9v1zm4.7 0H12.2V9.5h1.2v3H15.5v1z" />
     </svg>
   );
 }
@@ -139,7 +139,7 @@ function ZaloIcon() {
 function TiktokIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.81a8.17 8.17 0 0 0 4.77 1.53V6.9a4.85 4.85 0 0 1-1-.21z" />
+      <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.89-.74-3.94-1.78-.22-.22-.4-.47-.59-.72v7.37c-.03 2.44-1.27 4.96-3.57 5.93-2.3 1.01-5.11.75-7.06-.92-2.07-1.73-2.73-4.91-1.48-7.3 1.12-2.18 3.66-3.61 6.13-3.21v4.09c-1.14-.3-2.47.11-3.09 1.09-.72 1.12-.4 2.8.74 3.51 1.09.7 2.66.42 3.38-.7.22-.34.3-.74.3-1.15V0h4.03z" />
     </svg>
   );
 }

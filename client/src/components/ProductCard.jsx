@@ -5,7 +5,7 @@ function ProductCard({ product, badge, isWishlisted = false, onToggleWishlist })
     product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-100 hover:shadow-lg hover:shadow-slate-200/60">
+    <article className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-200/60 hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)]">
       <div className="relative overflow-hidden rounded-xl bg-slate-50">
         {badge ? (
           <span
@@ -50,7 +50,19 @@ function ProductCard({ product, badge, isWishlisted = false, onToggleWishlist })
           </h3>
         </Link>
 
-        <p className="mt-2 text-lg font-black text-rose-500">
+        {/* Rating placeholder */}
+        <div className="mt-1.5 flex items-center gap-1">
+          <div className="flex items-center text-amber-400">
+            <StarIcon />
+            <StarIcon />
+            <StarIcon />
+            <StarIcon />
+            <StarIcon className="h-3 w-3 fill-current text-slate-200" />
+          </div>
+          <span className="text-[11px] font-medium text-slate-400">4.0 (24)</span>
+        </div>
+
+        <p className="mt-2.5 text-lg font-black text-rose-500">
           {product.price?.toLocaleString("vi-VN")} đ
         </p>
 
@@ -105,6 +117,18 @@ function ArrowIcon() {
       className="h-4 w-4"
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 5l7 7-7 7" />
+    </svg>
+  );
+}
+
+function StarIcon({ className = "h-3 w-3 fill-current" }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      className={className}
+    >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
     </svg>
   );
 }

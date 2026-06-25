@@ -16,7 +16,7 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
   const isAdmin = user?.role === "admin";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-slate-200/50 bg-white/75 shadow-sm backdrop-blur-lg transition-all duration-300">
       <div className="mx-auto max-w-[1360px] px-4 sm:px-5 lg:px-6">
         <div className="py-3.5">
           <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
@@ -227,9 +227,9 @@ function MenuLink({ item, pathname }) {
       }`}
     >
       {item.label}
-      {isActive && (
-        <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-blue-600" />
-      )}
+      <span className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-blue-600 transition-all duration-300 origin-center ${
+        isActive ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
+      }`} />
     </Link>
   );
 }
