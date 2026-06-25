@@ -136,8 +136,34 @@ function ProductListPage() {
   if (loading) {
     return (
       <main className="px-4 py-4 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1120px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-          <p className="text-slate-600">Đang tải sản phẩm...</p>
+        <div className="mx-auto max-w-[1120px] space-y-6">
+          {/* Hero skeleton */}
+          <div className="grid gap-3 lg:grid-cols-[2fr_0.95fr]">
+            <div className="skeleton h-64 rounded-3xl sm:h-72" />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="skeleton h-32 rounded-2xl" />
+              <div className="skeleton h-32 rounded-2xl" />
+            </div>
+          </div>
+          {/* Category skeleton */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="skeleton h-24 rounded-2xl" />
+            ))}
+          </div>
+          {/* Cards skeleton */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="rounded-2xl border border-slate-200 bg-white p-3">
+                <div className="skeleton h-44 rounded-xl" />
+                <div className="mt-3 space-y-2">
+                  <div className="skeleton h-4 w-full rounded" />
+                  <div className="skeleton h-4 w-3/4 rounded" />
+                  <div className="skeleton mt-2 h-6 w-1/2 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     );
@@ -146,8 +172,14 @@ function ProductListPage() {
   if (error) {
     return (
       <main className="px-4 py-4 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1120px] rounded-[1.5rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-          <p className="text-red-600">{error}</p>
+        <div className="mx-auto max-w-[1120px] rounded-2xl border border-red-100 bg-red-50 px-6 py-14 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-7 w-7 text-red-500">
+              <circle cx="12" cy="12" r="10" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 9l-6 6M9 9l6 6" />
+            </svg>
+          </div>
+          <p className="font-semibold text-red-700">{error}</p>
         </div>
       </main>
     );
@@ -194,15 +226,29 @@ function ProductListPage() {
           </div>
 
           {products.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500 shadow-sm">
-              Chưa có sản phẩm nào.
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-slate-400">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 14h.01M12 14h.01" />
+                </svg>
+              </div>
+              <p className="font-semibold text-slate-700">Chưa có sản phẩm nào</p>
+              <p className="mt-1 text-sm text-slate-400">Sản phẩm sẽ được cập nhật sớm.</p>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500 shadow-sm">
-              Không tìm thấy sản phẩm phù hợp.
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-blue-400">
+                  <circle cx="11" cy="11" r="7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
+                </svg>
+              </div>
+              <p className="font-semibold text-slate-700">Không tìm thấy sản phẩm</p>
+              <p className="mt-1 text-sm text-slate-400">Thử tìm kiếm với từ khóa khác.</p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid animate-fade-in gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {filteredProducts.map((product, index) => (
                 <ProductCard
                   key={product._id}

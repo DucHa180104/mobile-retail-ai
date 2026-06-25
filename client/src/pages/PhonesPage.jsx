@@ -192,8 +192,26 @@ function PhonesPage() {
   if (loading) {
     return (
       <main className="px-4 py-5 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1120px] rounded-[1.6rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-          <p className="text-slate-600">Đang tải sản phẩm...</p>
+        <div className="mx-auto max-w-[1120px] space-y-5">
+          <div className="skeleton h-36 rounded-3xl" />
+          <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
+            <div className="skeleton h-80 rounded-2xl" />
+            <div className="space-y-4">
+              <div className="skeleton h-20 rounded-2xl" />
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="skeleton h-52 rounded-xl" />
+                    <div className="mt-4 space-y-2">
+                      <div className="skeleton h-4 w-full rounded" />
+                      <div className="skeleton h-4 w-2/3 rounded" />
+                      <div className="skeleton mt-2 h-7 w-1/2 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -202,8 +220,14 @@ function PhonesPage() {
   if (error) {
     return (
       <main className="px-4 py-5 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1120px] rounded-[1.6rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-          <p className="text-red-600">{error}</p>
+        <div className="mx-auto max-w-[1120px] rounded-2xl border border-red-100 bg-red-50 px-6 py-14 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-7 w-7 text-red-500">
+              <circle cx="12" cy="12" r="10" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 9l-6 6M9 9l6 6" />
+            </svg>
+          </div>
+          <p className="font-semibold text-red-700">{error}</p>
         </div>
       </main>
     );
@@ -267,12 +291,13 @@ function PhonesPage() {
 
 function CatalogBanner() {
   return (
-    <section className="overflow-hidden rounded-[1.6rem] border border-blue-100 bg-[linear-gradient(135deg,#e8f2ff_0%,#dbeafe_45%,#eff6ff_100%)] px-6 py-6 shadow-sm sm:px-7">
+    <section className="overflow-hidden rounded-3xl border border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_50%,#eff6ff_100%)] px-7 py-7 shadow-sm sm:px-8">
       <div className="max-w-2xl">
-        <span className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700 shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
           Điện thoại cũ
         </span>
-        <h1 className="mt-3 text-3xl font-black text-slate-900 sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
           Danh sách điện thoại
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
@@ -296,13 +321,13 @@ function ProductFilterSidebar({
   onClearFilters
 }) {
   return (
-    <aside className="h-fit rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm">
+    <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-black text-slate-900">Bộ lọc</h2>
+        <h2 className="text-base font-black text-slate-900">Bộ lọc</h2>
         <button
           type="button"
           onClick={onClearFilters}
-          className="text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+          className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
         >
           Xóa lọc
         </button>
@@ -372,32 +397,34 @@ function FilterGroup({ title, children }) {
 
 function FilterCheckbox({ label, checked, onChange }) {
   return (
-    <label className="flex items-center gap-3 text-sm text-slate-600">
+    <label className={`flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 text-sm transition-colors duration-150 ${checked ? "text-blue-700" : "text-slate-600 hover:bg-slate-50"}`}>
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+        className="h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500"
       />
-      <span>{label}</span>
+      <span className={checked ? "font-semibold" : ""}>{label}</span>
     </label>
   );
 }
 
 function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
   return (
-    <div className="flex flex-col gap-4 rounded-[1.6rem] border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-xl font-black text-slate-900">Danh sách sản phẩm</h2>
-        <p className="mt-1 text-sm text-slate-500">Đang hiển thị {totalProducts} sản phẩm</p>
+        <h2 className="text-lg font-black text-slate-900">Danh sách sản phẩm</h2>
+        <p className="mt-0.5 text-sm text-slate-500">
+          <span className="font-semibold text-blue-700">{totalProducts}</span> sản phẩm
+        </p>
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold text-slate-500">Sắp xếp</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-slate-500">Sắp xếp:</span>
         <select
           value={selectedSort}
           onChange={(event) => onSelectSort(event.target.value)}
-          className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
+          className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
         >
           {sortOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -434,19 +461,19 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
   return (
     <article
       onClick={() => onOpenProduct(product._id)}
-      className="group cursor-pointer overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+      className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-100 hover:shadow-lg hover:shadow-slate-200/60"
     >
-      <div className="relative overflow-hidden rounded-2xl bg-slate-100">
+      <div className="relative overflow-hidden rounded-xl bg-slate-50">
         {badge ? (
           <span
-            className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-[11px] font-bold uppercase text-white ${
+            className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${
               badge === "Cũ 99%"
-                ? "bg-amber-500"
+                ? "bg-gradient-to-r from-amber-500 to-amber-400"
                 : badge === "Cũ đẹp"
-                  ? "bg-blue-600"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-500"
                   : badge === "Cũ dùng tốt"
-                    ? "bg-slate-600"
-                    : "bg-emerald-600"
+                    ? "bg-gradient-to-r from-slate-600 to-slate-500"
+                    : "bg-gradient-to-r from-emerald-600 to-emerald-500"
             }`}
           >
             {badge}
@@ -459,8 +486,8 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
             event.stopPropagation();
             onToggleWishlist(product);
           }}
-          className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm transition ${
-            isWishlisted ? "text-red-500" : "text-slate-500 hover:text-red-500"
+          className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-all duration-200 ${
+            isWishlisted ? "text-red-500 shadow-red-100" : "text-slate-400 hover:text-red-500 hover:shadow-red-100"
           }`}
           aria-label={`${isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"} ${product.name}`}
         >
@@ -470,24 +497,24 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
         <img
           src={imageUrl}
           alt={product.name}
-          className="h-52 w-full object-cover transition duration-300 group-hover:scale-105"
+          className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 
       <div className="pt-4">
-        <h3 className="line-clamp-2 min-h-[50px] text-sm font-bold leading-6 text-slate-900 sm:text-base">
+        <h3 className="line-clamp-2 min-h-[48px] text-sm font-bold leading-6 text-slate-900 sm:text-base">
           {product.name}
         </h3>
 
-        <p className="mt-3 text-xl font-black text-red-500">
+        <p className="mt-2 text-xl font-black text-rose-500">
           {product.price?.toLocaleString("vi-VN")} đ
         </p>
 
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex items-center gap-2">
           <Link
             to={`/products/${product._id}`}
             onClick={(event) => event.stopPropagation()}
-            className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-blue-700"
+            className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2.5 text-center text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800"
           >
             Mua ngay
           </Link>
@@ -495,7 +522,7 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
           <Link
             to={`/products/${product._id}`}
             onClick={(event) => event.stopPropagation()}
-            className="rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:bg-slate-50 hover:text-blue-700"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 text-slate-600 transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             aria-label={`Xem chi tiết ${product.name}`}
           >
             <ArrowIcon />
@@ -551,8 +578,15 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-[1.6rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
-      {message}
+    <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-blue-400">
+          <circle cx="11" cy="11" r="7" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
+        </svg>
+      </div>
+      <p className="font-semibold text-slate-700">{message}</p>
+      <p className="mt-1 text-sm text-slate-400">Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
     </div>
   );
 }

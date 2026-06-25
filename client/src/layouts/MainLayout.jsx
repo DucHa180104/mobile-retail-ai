@@ -10,7 +10,7 @@ function MainLayout() {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-50">
       <Navbar
         searchValue={searchTerm}
         onSearchChange={(event) => setSearchTerm(event.target.value)}

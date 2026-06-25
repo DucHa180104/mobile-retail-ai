@@ -13,43 +13,50 @@ const menuItems = [
 function AdminSidebar() {
   return (
     <aside className="hidden w-[260px] shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
-      <div className="border-b border-slate-200 px-6 py-6">
+      <div className="border-b border-slate-100 px-6 py-6">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-700 text-sm font-black text-white">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-black text-white shadow-md shadow-blue-200">
             MH
           </span>
           <div>
-            <p className="text-lg font-black text-slate-900">Manh Huong</p>
-            <p className="text-sm text-slate-500">Mobile Admin</p>
+            <p className="text-base font-black tracking-tight text-slate-900">Manh Huong</p>
+            <p className="text-xs text-slate-500">Mobile Admin</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-2 px-4 py-5">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {menuItems.map((item) => (
           <NavLink
             key={item.label}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
                 isActive
                   ? "bg-blue-50 text-blue-700"
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               }`
             }
           >
-            <span className="text-slate-400">{item.icon}</span>
-            <span>{item.label}</span>
+            {({ isActive }) => (
+              <>
+                <span className={isActive ? "text-blue-600" : "text-slate-400"}>{item.icon}</span>
+                <span>{item.label}</span>
+                {isActive && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-600" />
+                )}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
 
-      <div className="border-t border-slate-200 p-4">
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+      <div className="border-t border-slate-100 p-4">
+        <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-400">
             Support Center
           </p>
-          <p className="mt-1 text-sm font-semibold text-slate-700">Ho tro quan tri</p>
+          <p className="mt-1 text-sm font-semibold text-slate-700">Hỗ trợ quản trị</p>
         </div>
       </div>
     </aside>

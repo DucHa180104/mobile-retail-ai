@@ -54,21 +54,29 @@ function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center px-4 py-8">
-      <div className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center px-4 py-10">
+      <div className="w-full animate-fade-in rounded-3xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
+        {/* Logo */}
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">
-            Mạnh Hường
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-md shadow-blue-200">
+            <span className="text-xl font-black text-white">M</span>
+          </div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+            Mạnh Hường Mobile
           </p>
-          <h1 className="mt-3 text-3xl font-black text-slate-900">Đăng nhập</h1>
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Đăng nhập</h1>
           <p className="mt-2 text-sm text-slate-500">
             Đăng nhập để lưu thông tin tài khoản và tiếp tục mua hàng.
           </p>
         </div>
 
         {error ? (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-            {error}
+          <div className="mt-5 flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 h-4 w-4 shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4M12 16h.01" />
+            </svg>
+            <span className="font-medium">{error}</span>
           </div>
         ) : null}
 
@@ -79,7 +87,7 @@ function LoginPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
               placeholder="admin@example.com"
               required
             />
@@ -91,7 +99,7 @@ function LoginPage() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
               placeholder="Nhập mật khẩu"
               required
             />
@@ -100,16 +108,24 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-blue-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300"
+            className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3.5 text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Đang đăng nhập...
+              </span>
+            ) : "Đăng nhập"}
           </button>
         </form>
 
-        <p className="mt-5 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-slate-500">
           Chưa có tài khoản?{" "}
           <Link to="/register" className="font-semibold text-blue-700 hover:text-blue-800">
-            Đăng ký
+            Đăng ký ngay
           </Link>
         </p>
       </div>
