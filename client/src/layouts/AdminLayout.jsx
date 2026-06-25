@@ -18,17 +18,17 @@ function AdminLayout() {
 
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <AdminTopbar />
-          <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 lg:px-8">
-            <nav className="flex flex-wrap gap-2">
+          <div className="border-b border-slate-200/60 bg-white px-4 py-3.5 sm:px-6 lg:px-8">
+            <nav className="flex flex-wrap gap-2.5">
               {quickLinks.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    `rounded-xl px-4 py-2 text-[10px] font-bold tracking-wider uppercase transition-all duration-200 focus:outline-none ${
                       isActive
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                        ? "bg-white text-blue-600 border border-blue-200/60 shadow-sm ring-2 ring-blue-100/50"
+                        : "bg-slate-50 text-slate-550 border border-slate-200/40 hover:bg-white hover:text-slate-800 hover:shadow-sm focus:ring-2 focus:ring-slate-200"
                     }`
                   }
                 >

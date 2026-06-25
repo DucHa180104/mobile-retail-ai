@@ -17,6 +17,8 @@ function ProfilePage() {
   const { token, isAuthenticated, updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [activeTab, setActiveTab] = useState("info"); // Tab state added
+  
   const [profileForm, setProfileForm] = useState({
     name: "",
     email: "",
@@ -216,7 +218,7 @@ function ProfilePage() {
           <p className="mt-3 text-slate-600">Vui lòng đăng nhập để xem và cập nhật hồ sơ của bạn.</p>
           <Link
             to="/login"
-            className="mt-6 inline-flex rounded-2xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
+            className="mt-6 inline-flex rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3 text-sm font-bold text-white shadow-sm shadow-blue-200 transition hover:from-blue-700 hover:to-blue-800"
           >
             Đi đến đăng nhập
           </Link>
@@ -258,200 +260,228 @@ function ProfilePage() {
           </p>
         </section>
 
-        <form onSubmit={handleProfileSubmit} className="space-y-6">
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-900">Thông tin cá nhân</h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <FormField label="Họ và tên">
-                <input
-                  type="text"
-                  name="name"
-                  value={profileForm.name}
-                  onChange={handleProfileChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                  required
-                />
-              </FormField>
+        {/* Tab selection layout */}
+        <div className="inline-flex rounded-2xl bg-slate-100/80 p-1 ring-1 ring-slate-200/50">
+          <button
+            type="button"
+            onClick={() => setActiveTab("info")}
+            className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 ${
+              activeTab === "info"
+                ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/20"
+                : "text-slate-600 hover:bg-white/40 hover:text-slate-900"
+            }`}
+          >
+            Thông tin tài khoản
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("password")}
+            className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 ${
+              activeTab === "password"
+                ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/20"
+                : "text-slate-600 hover:bg-white/40 hover:text-slate-900"
+            }`}
+          >
+            Đổi mật khẩu
+          </button>
+        </div>
 
-              <FormField label="Email">
-                <input
-                  type="email"
-                  value={profileForm.email}
-                  disabled
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-500 outline-none"
-                />
-              </FormField>
+        {activeTab === "info" ? (
+          <form onSubmit={handleProfileSubmit} className="space-y-6 animate-fade-in">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-black text-slate-900">Thông tin cá nhân</h2>
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <FormField label="Họ và tên">
+                  <input
+                    type="text"
+                    name="name"
+                    value={profileForm.name}
+                    onChange={handleProfileChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                    required
+                  />
+                </FormField>
 
-              <FormField label="Số điện thoại">
-                <input
-                  type="text"
-                  name="phoneNumber"
-                  value={profileForm.phoneNumber}
-                  onChange={handleProfileChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                  placeholder="0900000000"
-                />
-              </FormField>
-            </div>
-          </section>
+                <FormField label="Email">
+                  <input
+                    type="email"
+                    value={profileForm.email}
+                    disabled
+                    className="w-full rounded-xl border border-slate-200/85 bg-slate-100/50 px-4 py-2.5 text-sm text-slate-400 cursor-not-allowed outline-none"
+                  />
+                </FormField>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-900">Địa chỉ giao hàng mặc định</h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <FormField label="Họ tên người nhận">
-                <input
-                  type="text"
-                  name="fullName"
-                  value={profileForm.shippingInfo.fullName}
-                  onChange={handleShippingChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                />
-              </FormField>
-
-              <FormField label="Số điện thoại nhận hàng">
-                <input
-                  type="text"
-                  name="phoneNumber"
-                  value={profileForm.shippingInfo.phoneNumber}
-                  onChange={handleShippingChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                />
-              </FormField>
-
-              <FormField label="Địa chỉ">
-                <input
-                  type="text"
-                  name="address"
-                  value={profileForm.shippingInfo.address}
-                  onChange={handleShippingChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                />
-              </FormField>
-
-              <FormField label="Thành phố">
-                <input
-                  type="text"
-                  name="city"
-                  value={profileForm.shippingInfo.city}
-                  onChange={handleShippingChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                />
-              </FormField>
-
-              <FormField label="Quận / Huyện">
-                <input
-                  type="text"
-                  name="district"
-                  value={profileForm.shippingInfo.district}
-                  onChange={handleShippingChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                />
-              </FormField>
-
-              <FormField label="Phường / Xã">
-                <input
-                  type="text"
-                  name="ward"
-                  value={profileForm.shippingInfo.ward}
-                  onChange={handleShippingChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                />
-              </FormField>
-
-              <div className="md:col-span-2">
-                <FormField label="Ghi chú">
-                  <textarea
-                    name="note"
-                    value={profileForm.shippingInfo.note}
-                    onChange={handleShippingChange}
-                    rows="4"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
+                <FormField label="Số điện thoại">
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    value={profileForm.phoneNumber}
+                    onChange={handleProfileChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                    placeholder="0900000000"
                   />
                 </FormField>
               </div>
-            </div>
+            </section>
 
-            {profileError ? (
-              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                {profileError}
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-black text-slate-900">Địa chỉ giao hàng mặc định</h2>
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <FormField label="Họ tên người nhận">
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={profileForm.shippingInfo.fullName}
+                    onChange={handleShippingChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  />
+                </FormField>
+
+                <FormField label="Số điện thoại nhận hàng">
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    value={profileForm.shippingInfo.phoneNumber}
+                    onChange={handleShippingChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  />
+                </FormField>
+
+                <FormField label="Địa chỉ">
+                  <input
+                    type="text"
+                    name="address"
+                    value={profileForm.shippingInfo.address}
+                    onChange={handleShippingChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  />
+                </FormField>
+
+                <FormField label="Thành phố">
+                  <input
+                    type="text"
+                    name="city"
+                    value={profileForm.shippingInfo.city}
+                    onChange={handleShippingChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  />
+                </FormField>
+
+                <FormField label="Quận / Huyện">
+                  <input
+                    type="text"
+                    name="district"
+                    value={profileForm.shippingInfo.district}
+                    onChange={handleShippingChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  />
+                </FormField>
+
+                <FormField label="Phường / Xã">
+                  <input
+                    type="text"
+                    name="ward"
+                    value={profileForm.shippingInfo.ward}
+                    onChange={handleShippingChange}
+                    className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  />
+                </FormField>
+
+                <div className="md:col-span-2">
+                  <FormField label="Ghi chú">
+                    <textarea
+                      name="note"
+                      value={profileForm.shippingInfo.note}
+                      onChange={handleShippingChange}
+                      rows="4"
+                      className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                    />
+                  </FormField>
+                </div>
               </div>
-            ) : null}
 
-            {profileSuccess ? (
-              <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                {profileSuccess}
-              </div>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={profileLoading}
-              className="mt-5 rounded-2xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300"
-            >
-              {profileLoading ? "Đang lưu hồ sơ..." : "Lưu hồ sơ"}
-            </button>
-          </section>
-        </form>
-
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-900">Đổi mật khẩu</h2>
-          <form onSubmit={handlePasswordSubmit} className="mt-5 grid gap-4 md:grid-cols-2">
-            <FormField label="Mật khẩu hiện tại">
-              <input
-                type="password"
-                name="currentPassword"
-                value={passwordForm.currentPassword}
-                onChange={handlePasswordChange}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                required
-              />
-            </FormField>
-
-            <FormField label="Mật khẩu mới">
-              <input
-                type="password"
-                name="newPassword"
-                value={passwordForm.newPassword}
-                onChange={handlePasswordChange}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                required
-              />
-            </FormField>
-
-            <FormField label="Xác nhận mật khẩu mới">
-              <input
-                type="password"
-                name="confirmNewPassword"
-                value={passwordForm.confirmNewPassword}
-                onChange={handlePasswordChange}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white"
-                required
-              />
-            </FormField>
-
-            <div className="md:col-span-2">
-              {passwordError ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                  {passwordError}
+              {profileError ? (
+                <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 animate-fade-in">
+                  {profileError}
                 </div>
               ) : null}
 
-              {passwordSuccess ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                  {passwordSuccess}
+              {profileSuccess ? (
+                <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 animate-fade-in">
+                  {profileSuccess}
                 </div>
               ) : null}
 
               <button
                 type="submit"
-                disabled={passwordLoading}
-                className="mt-5 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                disabled={profileLoading}
+                className="mt-5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3 text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {passwordLoading ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
+                {profileLoading ? "Đang lưu hồ sơ..." : "Lưu hồ sơ"}
               </button>
-            </div>
+            </section>
           </form>
-        </section>
+        ) : (
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm animate-fade-in">
+            <h2 className="text-xl font-black text-slate-900">Đổi mật khẩu</h2>
+            <form onSubmit={handlePasswordSubmit} className="mt-5 grid gap-4 md:grid-cols-2">
+              <FormField label="Mật khẩu hiện tại">
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Mật khẩu mới">
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Xác nhận mật khẩu mới">
+                <input
+                  type="password"
+                  name="confirmNewPassword"
+                  value={passwordForm.confirmNewPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 outline-none transition-all duration-200 hover:bg-slate-50 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  required
+                />
+              </FormField>
+
+              <div className="md:col-span-2">
+                {passwordError ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 animate-fade-in">
+                    {passwordError}
+                  </div>
+                ) : null}
+
+                {passwordSuccess ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 animate-fade-in">
+                    {passwordSuccess}
+                  </div>
+                ) : null}
+
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="mt-5 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 px-5 py-3 text-sm font-bold text-white shadow-sm shadow-slate-200 transition-all duration-200 hover:from-slate-900 hover:to-black hover:shadow-slate-350 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {passwordLoading ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
+                </button>
+              </div>
+            </form>
+          </section>
+        )}
       </div>
     </div>
   );
@@ -460,7 +490,7 @@ function ProfilePage() {
 function FormField({ label, children }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-slate-700">{label}</span>
+      <span className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
       {children}
     </label>
   );

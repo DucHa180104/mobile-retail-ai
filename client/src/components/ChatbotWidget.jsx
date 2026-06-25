@@ -410,12 +410,12 @@ function ChatMessage({ message }) {
   const isUserMessage = message.role === "user";
 
   return (
-    <div className={isUserMessage ? "ml-auto max-w-[85%]" : "max-w-[85%]"}>
+    <div className={isUserMessage ? "ml-auto max-w-[85%] animate-slide-in-right" : "max-w-[85%] animate-fade-in"}>
       <div
         className={`rounded-2xl px-4 py-3 text-sm leading-6 ${
           isUserMessage
-            ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-sm shadow-blue-200"
-            : "bg-white text-slate-800 shadow-sm ring-1 ring-slate-200/60"
+            ? "rounded-tr-none bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-sm shadow-blue-200"
+            : "rounded-tl-none bg-white text-slate-800 shadow-sm ring-1 ring-slate-200/60"
         }`}
       >
         {isUserMessage ? (
@@ -529,15 +529,12 @@ function MarkdownMessage({ content }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="max-w-[85%] rounded-2xl bg-white px-4 py-4 shadow-sm">
-      <div className="space-y-2">
-        <div className="h-3 w-24 animate-pulse rounded-full bg-slate-200" />
-        <div className="h-3 w-full animate-pulse rounded-full bg-slate-200" />
-        <div className="h-3 w-4/5 animate-pulse rounded-full bg-slate-200" />
+    <div className="max-w-[85%] rounded-2xl rounded-tl-none bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200/60 animate-fade-in">
+      <div className="flex items-center gap-1.5 py-1">
+        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
+        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
+        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" />
       </div>
-      <p className="mt-3 text-xs text-slate-500">
-        AI đang đọc nhu cầu và chọn máy phù hợp...
-      </p>
     </div>
   );
 }

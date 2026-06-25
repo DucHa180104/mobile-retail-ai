@@ -31,7 +31,7 @@ function AdminSidebar() {
             key={item.label}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
+              `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
                 isActive
                   ? "bg-blue-50 text-blue-700"
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -40,10 +40,10 @@ function AdminSidebar() {
           >
             {({ isActive }) => (
               <>
-                <span className={isActive ? "text-blue-600" : "text-slate-400"}>{item.icon}</span>
+                <span className={`transition-colors duration-150 ${isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`}>{item.icon}</span>
                 <span>{item.label}</span>
                 {isActive && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-600" />
+                  <span className="ml-auto h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.6)]" />
                 )}
               </>
             )}
