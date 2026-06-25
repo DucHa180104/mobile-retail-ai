@@ -162,7 +162,7 @@ function AdminOrdersPage() {
         </p>
         <h1 className="mt-2 text-3xl font-black text-slate-900">Quản lý đơn hàng</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Theo dõi và cập nhật trạng thái đơn hàng của cửa hàng Mạnh Hường.
+          Theo dõi và cập nhật trạng thái đơn hàng của cửa hàng Mạnh Hương.
         </p>
       </div>
 

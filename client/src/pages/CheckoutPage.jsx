@@ -364,7 +364,7 @@ function CheckoutPage() {
                   <p className="font-semibold text-blue-700">Thông tin chuyển khoản demo</p>
                   <p className="mt-2">Ngân hàng: Vietcombank</p>
                   <p>Số tài khoản: 1234567890</p>
-                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯỜNG</p>
+                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯƠNG</p>
                   <p className="mt-2 text-slate-500">
                     Nội dung: Thanh toan don hang + số điện thoại của bạn
                   </p>

@@ -15,7 +15,7 @@ function Footer() {
                 M
               </span>
               <div>
-                <p className="text-base font-black tracking-tight text-slate-900">MẠNH HƯỜNG</p>
+                <p className="text-base font-black tracking-tight text-slate-900">MẠNH HƯƠNG</p>
                 <p className="text-xs text-slate-400">Điện thoại chính hãng</p>
               </div>
             </div>
@@ -73,7 +73,7 @@ function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 MẠNH HƯỜNG. Bảo lưu mọi quyền.</p>
+          <p>© 2026 MẠNH HƯƠNG. Bảo lưu mọi quyền.</p>
           <p>Thiết kế tối ưu cho trải nghiệm mua sắm trực tuyến.</p>
         </div>
       </div>

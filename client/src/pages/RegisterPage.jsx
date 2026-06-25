@@ -66,7 +66,7 @@ function RegisterPage() {
               <span className="text-xl font-black text-white">M</span>
             </div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-              Mạnh Hường Mobile
+              Mạnh Hương Mobile
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Đăng ký</h1>
             <p className="mt-2 text-sm text-slate-500">
@@ -159,7 +159,7 @@ function RegisterPage() {
                 Hệ thống cửa hàng toàn quốc
               </div>
               <h2 className="mt-6 text-2xl font-black leading-tight tracking-tight">
-                Tham gia thành viên Mạnh Hường Mobile
+                Tham gia thành viên Mạnh Hương Mobile
               </h2>
               <p className="mt-3 text-sm text-blue-100/90 leading-relaxed">
                 Tạo tài khoản ngay hôm nay để nhận voucher giảm giá trực tiếp cho đơn hàng đầu tiên và hưởng chế độ bảo hành vàng.

@@ -558,7 +558,7 @@ function ProductDetailPage() {
               </div>
 
               <p className="mt-3 text-sm text-slate-500">
-                Thông tin bên dưới được hiển thị theo đúng tình trạng máy đang có tại MẠNH HƯỜNG.
+                Thông tin bên dưới được hiển thị theo đúng tình trạng máy đang có tại MẠNH HƯƠNG.
               </p>
 
               <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">

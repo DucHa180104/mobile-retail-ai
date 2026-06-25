@@ -64,7 +64,7 @@ export async function sendOrderConfirmationEmail(order, recipientEmail) {
     to: recipientEmail,
     subject: `Xác nhận đơn hàng ${orderCode}`,
     text: [
-      "Cảm ơn bạn đã đặt hàng tại Mạnh Hường.",
+      "Cảm ơn bạn đã đặt hàng tại Mạnh Hương.",
       "",
       `Mã đơn: ${orderCode}`,
       `Ngày đặt: ${orderDate}`,
@@ -79,7 +79,7 @@ export async function sendOrderConfirmationEmail(order, recipientEmail) {
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
         <h2 style="margin-bottom: 8px;">Xác nhận đơn hàng ${escapeHtml(orderCode)}</h2>
-        <p>Cảm ơn bạn đã đặt hàng tại <strong>Mạnh Hường</strong>.</p>
+        <p>Cảm ơn bạn đã đặt hàng tại <strong>Mạnh Hương</strong>.</p>
         <p><strong>Mã đơn:</strong> ${escapeHtml(orderCode)}</p>
         <p><strong>Ngày đặt:</strong> ${escapeHtml(orderDate)}</p>
         <p><strong>Người nhận:</strong> ${escapeHtml(

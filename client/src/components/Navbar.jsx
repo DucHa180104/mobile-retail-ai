@@ -27,7 +27,7 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
               </span>
               <div className="min-w-0">
                 <p className="truncate text-base font-black tracking-tight text-blue-700">
-                  MẠNH HƯỜNG
+                  MẠNH HƯƠNG
                 </p>
               </div>
             </Link>

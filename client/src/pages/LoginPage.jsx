@@ -64,7 +64,7 @@ function LoginPage() {
               <span className="text-xl font-black text-white">M</span>
             </div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-              Mạnh Hường Mobile
+              Mạnh Hương Mobile
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Đăng nhập</h1>
             <p className="mt-2 text-sm text-slate-500">
@@ -145,7 +145,7 @@ function LoginPage() {
                 Hệ thống cửa hàng toàn quốc
               </div>
               <h2 className="mt-6 text-2xl font-black leading-tight tracking-tight">
-                Chào mừng bạn quay lại với Mạnh Hường Mobile
+                Chào mừng bạn quay lại với Mạnh Hương Mobile
               </h2>
               <p className="mt-3 text-sm text-blue-100/90 leading-relaxed">
                 Đăng nhập để nhận các ưu đãi độc quyền dành riêng cho khách hàng thân thiết và theo dõi tiến trình đơn hàng của bạn.

@@ -75,7 +75,7 @@ function MyOrdersPage() {
             </p>
             <h1 className="mt-2 text-3xl font-black text-slate-900">Đơn hàng của tôi</h1>
             <p className="mt-2 text-sm text-slate-500">
-              Theo dõi các đơn hàng bạn đã đặt tại cửa hàng Mạnh Hường.
+              Theo dõi các đơn hàng bạn đã đặt tại cửa hàng Mạnh Hương.
             </p>
           </div>
 
