@@ -148,18 +148,30 @@ function ProductListPage() {
           {/* Category skeleton */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="skeleton h-24 rounded-2xl" />
+              <div key={i} className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-4">
+                <div className="skeleton h-12 w-12 rounded-2xl" />
+                <div className="skeleton mt-3 h-4 w-16 rounded" />
+              </div>
             ))}
           </div>
           {/* Cards skeleton */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="rounded-2xl border border-slate-200 bg-white p-3">
+              <div key={i} className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
                 <div className="skeleton h-44 rounded-xl" />
                 <div className="mt-3 space-y-2">
                   <div className="skeleton h-4 w-full rounded" />
-                  <div className="skeleton h-4 w-3/4 rounded" />
-                  <div className="skeleton mt-2 h-6 w-1/2 rounded" />
+                  {/* Rating placeholder skeleton */}
+                  <div className="flex gap-1 py-1">
+                    {[...Array(5)].map((_, idx) => (
+                      <div key={idx} className="skeleton h-3 w-3 rounded-full" />
+                    ))}
+                  </div>
+                  <div className="skeleton h-5 w-1/2 rounded" />
+                  <div className="flex gap-2 pt-2">
+                    <div className="skeleton h-9.5 flex-1 rounded-xl" />
+                    <div className="skeleton h-9.5 w-10 rounded-xl" />
+                  </div>
                 </div>
               </div>
             ))}

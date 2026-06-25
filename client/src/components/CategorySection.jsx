@@ -2,40 +2,40 @@ const categories = [
   {
     name: "iPhone",
     icon: <AppleIcon />,
-    bg: "bg-slate-900",
-    text: "text-white",
-    activeBg: "bg-slate-900",
-    ring: "ring-slate-900/30"
-  },
-  {
-    name: "Samsung",
-    icon: <SamsungIcon />,
-    bg: "bg-blue-600",
-    text: "text-white",
+    bg: "bg-blue-50",
+    text: "text-blue-600",
     activeBg: "bg-blue-600",
     ring: "ring-blue-600/30"
   },
   {
-    name: "Oppo",
-    icon: <OppoIcon />,
-    bg: "bg-emerald-600",
-    text: "text-white",
+    name: "Samsung",
+    icon: <SamsungIcon />,
+    bg: "bg-emerald-50",
+    text: "text-emerald-600",
     activeBg: "bg-emerald-600",
     ring: "ring-emerald-600/30"
   },
   {
+    name: "Oppo",
+    icon: <OppoIcon />,
+    bg: "bg-teal-50",
+    text: "text-teal-600",
+    activeBg: "bg-teal-600",
+    ring: "ring-teal-600/30"
+  },
+  {
     name: "Xiaomi",
     icon: <XiaomiIcon />,
-    bg: "bg-orange-500",
-    text: "text-white",
+    bg: "bg-orange-50",
+    text: "text-orange-500",
     activeBg: "bg-orange-500",
     ring: "ring-orange-500/30"
   },
   {
     name: "Phụ kiện",
     icon: <HeadphoneIcon />,
-    bg: "bg-violet-600",
-    text: "text-white",
+    bg: "bg-violet-50",
+    text: "text-violet-600",
     activeBg: "bg-violet-600",
     ring: "ring-violet-600/30"
   }

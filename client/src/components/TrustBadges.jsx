@@ -5,7 +5,8 @@ const badges = [
     icon: ShieldIcon,
     color: "text-blue-600",
     bg: "bg-blue-50",
-    border: "border-blue-100"
+    border: "border-blue-100/70",
+    gradient: "from-white to-blue-50/20 hover:to-blue-50/40 hover:border-blue-200/60 hover:shadow-blue-900/5"
   },
   {
     title: "Giao hàng nhanh",
@@ -13,7 +14,8 @@ const badges = [
     icon: TruckIcon,
     color: "text-emerald-600",
     bg: "bg-emerald-50",
-    border: "border-emerald-100"
+    border: "border-emerald-100/70",
+    gradient: "from-white to-emerald-50/20 hover:to-emerald-50/40 hover:border-emerald-200/60 hover:shadow-emerald-900/5"
   },
   {
     title: "Uy tín bảo đảm",
@@ -21,7 +23,8 @@ const badges = [
     icon: MedalIcon,
     color: "text-amber-600",
     bg: "bg-amber-50",
-    border: "border-amber-100"
+    border: "border-amber-100/70",
+    gradient: "from-white to-amber-50/20 hover:to-amber-50/40 hover:border-amber-200/60 hover:shadow-amber-900/5"
   }
 ];
 
@@ -35,7 +38,7 @@ function TrustBadges() {
           <article
             key={badge.title}
             style={{ animationDelay: `${index * 80}ms` }}
-            className="animate-fade-in rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            className={`animate-fade-in rounded-2xl border border-slate-200/80 bg-gradient-to-br ${badge.gradient} p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md`}
           >
             <div className="flex items-start gap-4">
               <span
