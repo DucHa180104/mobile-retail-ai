@@ -180,30 +180,24 @@ function CheckoutPage() {
     await decreaseQuantity(productId);
   }
 
-  async function handleRemove(productId) {
-    setError("");
-    await removeFromCart(productId);
-  }
-
   if (cartItems.length === 0) {
     return (
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <section className="rounded-[2rem] border border-slate-200 bg-white px-6 py-14 text-center shadow-sm sm:px-10">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+      <main className="px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
+        <div className="mx-auto max-w-3xl">
+          <section className="rounded-[2rem] border border-slate-100 bg-white px-6 py-16 text-center shadow-sm sm:px-10">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
               <CheckoutIcon />
             </div>
 
-            <h1 className="mt-6 text-3xl font-black text-slate-900">Chưa thể thanh toán</h1>
+            <h1 className="mt-6 text-2xl font-black text-slate-800 sm:text-3xl">Chưa thể thanh toán</h1>
 
-            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-500">
-              Giỏ hàng của bạn đang trống. Hãy quay lại trang chủ để tiếp tục lựa chọn
-              sản phẩm trước khi đặt hàng.
+            <p className="mx-auto mt-3 max-w-sm text-xs sm:text-sm leading-relaxed text-slate-400 font-medium">
+              Giỏ hàng của bạn đang trống. Hãy quay lại cửa hàng để tiếp tục lựa chọn sản phẩm trước khi tiến hành thanh toán nhé.
             </p>
 
             <Link
               to="/"
-              className="mt-8 inline-block rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+              className="mt-8 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-indigo-100 hover:from-blue-700 hover:to-indigo-750 transition-all duration-300 hover:scale-105 active:scale-95"
             >
               Quay lại mua hàng
             </Link>
@@ -214,77 +208,77 @@ function CheckoutPage() {
   }
 
   return (
-    <main className="px-4 py-8 sm:px-6 lg:px-8">
+    <main className="px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
-              Thanh toán
+            <p className="text-xs font-black uppercase tracking-widest text-indigo-600">
+              Thanh toán đơn hàng
             </p>
-            <h1 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-850">
               Thông tin đặt hàng
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Điền thông tin giao hàng và kiểm tra lại đơn trước khi xác nhận.
+            <p className="mt-1 text-xs sm:text-sm font-medium text-slate-400">
+              Điền thông tin nhận máy và lựa chọn phương thức thanh toán phù hợp.
             </p>
           </div>
 
           <Link
             to="/cart"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+            className="rounded-full border border-slate-100 bg-white px-4.5 py-2 text-xs sm:text-sm font-bold text-slate-655 transition shadow-sm hover:border-indigo-150 hover:text-indigo-600"
           >
             Quay lại giỏ hàng
           </Link>
         </div>
 
-        <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <section className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-655 border border-indigo-100">
                 <UserIcon />
               </span>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Thông tin giao hàng</h2>
-                <p className="text-sm text-slate-500">
-                  Cửa hàng sẽ liên hệ và giao hàng theo thông tin bên dưới
+                <h2 className="text-base sm:text-lg font-black text-slate-800">Thông tin người nhận máy</h2>
+                <p className="text-[11px] text-slate-400 font-bold">
+                  Vui lòng điền đúng số điện thoại để nhân viên gọi xác nhận trạng thái máy trước khi gửi.
                 </p>
               </div>
             </div>
 
             {error && (
-              <p className="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                {error}
+              <p className="mt-5 rounded-2xl bg-rose-50 border border-rose-100 px-4 py-3 text-xs sm:text-sm font-bold text-rose-600">
+                ⚠️ {error}
               </p>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Email nhận xác nhận đơn hàng
+                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">
+                  Email nhận hóa đơn xác nhận
                 </label>
                 <input
                   type="email"
                   value={contactEmail}
                   onChange={(event) => setContactEmail(event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
                   placeholder="example@email.com"
                 />
               </div>
 
               <FormField
-                label="Họ tên người nhận"
+                label="Họ tên khách hàng"
                 name="fullName"
                 value={shippingInfo.fullName}
                 onChange={handleShippingChange}
               />
               <FormField
-                label="Số điện thoại"
+                label="Số điện thoại nhận hàng"
                 name="phoneNumber"
                 value={shippingInfo.phoneNumber}
                 onChange={handleShippingChange}
               />
               <FormField
-                label="Địa chỉ"
+                label="Địa chỉ giao hàng (Số nhà, tên đường...)"
                 name="address"
                 value={shippingInfo.address}
                 onChange={handleShippingChange}
@@ -292,19 +286,19 @@ function CheckoutPage() {
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <FormField
-                  label="Thành phố"
+                  label="Thành phố / Tỉnh"
                   name="city"
                   value={shippingInfo.city}
                   onChange={handleShippingChange}
                 />
                 <FormField
-                  label="Quận/Huyện"
+                  label="Quận / Huyện"
                   name="district"
                   value={shippingInfo.district}
                   onChange={handleShippingChange}
                 />
                 <FormField
-                  label="Phường/Xã"
+                  label="Phường / Xã"
                   name="ward"
                   value={shippingInfo.ward}
                   onChange={handleShippingChange}
@@ -312,19 +306,19 @@ function CheckoutPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Ghi chú</label>
+                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">Ghi chú giao hàng</label>
                 <textarea
                   name="note"
                   value={shippingInfo.note}
                   onChange={handleShippingChange}
-                  rows="4"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                  placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."
+                  rows="3"
+                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  placeholder="Ví dụ: Giao ngoài giờ hành chính, gọi trước 15 phút..."
                 />
               </div>
 
-              <div>
-                <p className="mb-3 text-sm font-semibold text-slate-700">
+              <div className="border-t border-slate-100 pt-5">
+                <p className="mb-3.5 text-xs font-black uppercase tracking-wider text-slate-400">
                   Phương thức thanh toán
                 </p>
                 <div className="space-y-3">
@@ -333,10 +327,10 @@ function CheckoutPage() {
                     return (
                       <label
                         key={option.value}
-                        className={`block cursor-pointer rounded-2xl border p-4 transition-all duration-200 ${
+                        className={`block cursor-pointer rounded-2xl border p-4 transition-all duration-300 ${
                           isSelected
-                            ? "border-blue-500 bg-blue-50/40 shadow-sm ring-1 ring-blue-500"
-                            : "border-slate-200 bg-white hover:border-slate-350 hover:bg-slate-50/40"
+                            ? "border-indigo-650 bg-indigo-50/30 shadow-sm ring-1 ring-indigo-650"
+                            : "border-slate-100 bg-white hover:border-indigo-150 hover:bg-slate-50/30"
                         }`}
                       >
                         <div className="flex items-start gap-3.5">
@@ -346,11 +340,11 @@ function CheckoutPage() {
                             value={option.value}
                             checked={isSelected}
                             onChange={(event) => setPaymentMethod(event.target.value)}
-                            className="mt-1 h-4 w-4 border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500"
+                            className="mt-1 h-4.5 w-4.5 border-slate-200 text-indigo-650 accent-indigo-650 focus:ring-indigo-500 focus:ring-offset-0"
                           />
                           <div>
-                            <p className={`font-semibold text-sm ${isSelected ? "text-blue-900" : "text-slate-900"}`}>{option.title}</p>
-                            <p className="mt-1.5 text-xs leading-5 text-slate-500">{option.description}</p>
+                            <p className={`font-bold text-sm ${isSelected ? "text-indigo-950" : "text-slate-800"}`}>{option.title}</p>
+                            <p className="mt-1 text-xs leading-relaxed text-slate-500 font-medium">{option.description}</p>
                           </div>
                         </div>
                       </label>
@@ -360,13 +354,16 @@ function CheckoutPage() {
               </div>
 
               {paymentMethod === "bank_transfer" && (
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 text-sm text-slate-700">
-                  <p className="font-semibold text-blue-700">Thông tin chuyển khoản demo</p>
-                  <p className="mt-2">Ngân hàng: Vietcombank</p>
-                  <p>Số tài khoản: 1234567890</p>
-                  <p>Chủ tài khoản: CỬA HÀNG MẠNH HƯƠNG</p>
-                  <p className="mt-2 text-slate-500">
-                    Nội dung: Thanh toan don hang + số điện thoại của bạn
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 text-sm text-indigo-950 animate-fade-in space-y-2">
+                  <p className="font-black text-indigo-800">Thông tin chuyển khoản thanh toán</p>
+                  <div className="grid gap-1.5 text-xs sm:text-sm font-bold text-slate-650 pt-1">
+                    <p>• Ngân hàng: <span className="text-slate-800 font-black">Vietcombank (VCB)</span></p>
+                    <p>• Số tài khoản: <span className="text-slate-850 font-black text-base">1234567890</span></p>
+                    <p>• Chủ tài khoản: <span className="text-slate-850 font-black">CỬA HÀNG MẠNH HƯƠNG MOBILE</span></p>
+                    <p>• Nội dung chuyển khoản: <span className="text-rose-600 font-black">MHB {shippingInfo.phoneNumber || "SỐ ĐIỆN THOẠI"}</span></p>
+                  </div>
+                  <p className="text-[11px] font-bold text-indigo-600/90 pt-1 leading-relaxed">
+                    * Đơn hàng sẽ được xử lý lập tức ngay sau khi nhận được biến động số dư. Cửa hàng sẽ gọi điện xác thực.
                   </p>
                 </div>
               )}
@@ -374,31 +371,31 @@ function CheckoutPage() {
               <button
                 type="submit"
                 disabled={submitting || cartItems.length === 0}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3.5 font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-750 hover:to-indigo-750 text-xs font-black uppercase tracking-wider text-white py-4 shadow-md shadow-indigo-150 transition-all duration-300 hover:shadow-lg active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {submitting ? "Đang đặt hàng..." : "Đặt hàng"}
+                {submitting ? "Đang xử lý đặt hàng..." : "Xác nhận đặt hàng"}
               </button>
             </form>
           </section>
 
-          <section className="h-fit rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8 xl:sticky xl:top-28">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+          <section className="h-fit rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-7 lg:sticky lg:top-24">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-655 border border-indigo-100">
                 <ReceiptIcon />
               </span>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Tóm tắt đơn hàng</h2>
-                <p className="text-sm text-slate-500">
-                  {cartItems.length} sản phẩm đang chờ thanh toán
+                <h2 className="text-base sm:text-lg font-black text-slate-800">Tóm tắt giỏ hàng</h2>
+                <p className="text-[11px] text-slate-400 font-bold">
+                  Đang thanh toán {cartItems.length} sản phẩm
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-5 space-y-4">
               {cartItems.map((item) => (
                 <article
                   key={item._id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  className="rounded-2xl border border-slate-50 bg-slate-50/50 p-4 hover:border-indigo-100 transition-all duration-300"
                 >
                   <div className="flex gap-4">
                     <img
@@ -407,49 +404,50 @@ function CheckoutPage() {
                         "https://via.placeholder.com/240x180?text=Khong+co+anh"
                       }
                       alt={item.name}
-                      className="h-20 w-20 rounded-xl object-cover"
+                      className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl object-cover border border-slate-100"
+                      loading="lazy"
                     />
 
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
-                        <h3 className="font-semibold text-slate-900">{item.name}</h3>
+                        <h3 className="font-bold text-sm text-slate-800 truncate">{item.name}</h3>
                         <button
                           type="button"
                           onClick={() => handleRemove(item._id)}
-                          className="text-sm font-semibold text-red-500 transition hover:text-red-600"
+                          className="text-[10px] font-black uppercase tracking-wider text-rose-500 hover:text-rose-600 transition"
                         >
                           Xóa
                         </button>
                       </div>
 
-                      <p className="mt-2 text-sm font-semibold text-slate-700">
+                      <p className="mt-1 text-xs text-slate-400 font-bold">
                         Đơn giá: {formatCurrency(item.price)}
                       </p>
 
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center rounded-xl border border-slate-200 bg-white">
+                      <div className="mt-3.5 flex items-center justify-between gap-3">
+                        <div className="flex items-center rounded-lg border border-slate-150 bg-white">
                           <button
                             type="button"
                             onClick={() => handleDecrease(item._id)}
-                            className="flex h-10 w-10 items-center justify-center text-lg font-bold text-slate-600 transition hover:bg-slate-50"
+                            className="flex h-8 w-8 items-center justify-center text-xs font-black text-slate-500 transition hover:bg-slate-50"
                             aria-label={`Giảm số lượng ${item.name}`}
                           >
                             -
                           </button>
-                          <span className="flex min-w-[48px] items-center justify-center text-sm font-bold text-slate-900">
+                          <span className="flex min-w-[28px] items-center justify-center text-xs font-bold text-slate-700">
                             {item.quantity}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleIncrease(item._id)}
-                            className="flex h-10 w-10 items-center justify-center text-lg font-bold text-slate-600 transition hover:bg-slate-50"
+                            className="flex h-8 w-8 items-center justify-center text-xs font-black text-slate-500 transition hover:bg-slate-50"
                             aria-label={`Tăng số lượng ${item.name}`}
                           >
                             +
                           </button>
                         </div>
 
-                        <p className="text-lg font-bold text-blue-700">
+                        <p className="text-sm font-black text-indigo-655">
                           {formatCurrency(item.price * item.quantity)}
                         </p>
                       </div>
@@ -459,20 +457,18 @@ function CheckoutPage() {
               ))}
             </div>
 
-            <div className="mt-6 rounded-2xl bg-slate-50 p-5">
-              <SummaryRow label="Tổng số lượng" value={`${totalQuantity} món`} />
-              <SummaryRow label="Phí vận chuyển" value="Sẽ tính khi xác nhận" />
-              <SummaryRow label="Thanh toán" value={formatPaymentMethod(paymentMethod)} />
+            <div className="mt-5 rounded-2xl border border-slate-50 bg-slate-50/50 p-4.5 space-y-3">
+              <SummaryRow label="Tổng số lượng sản phẩm" value={`${totalQuantity} máy`} />
+              <SummaryRow label="Phí giao nhận hàng" value="Miễn phí ship" />
+              <SummaryRow label="Hình thức thanh toán" value={formatPaymentMethod(paymentMethod)} />
             </div>
 
-            <div className="mt-6 border-t border-slate-200 pt-6">
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Tổng thanh toán
-                  </p>
-                </div>
-                <span className="text-3xl font-black text-blue-700">
+            <div className="mt-5 border-t border-slate-100 pt-5">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  Tổng chi phí
+                </p>
+                <span className="text-2xl font-black text-rose-500">
                   {formatCurrency(totalPrice)}
                 </span>
               </div>
@@ -487,13 +483,13 @@ function CheckoutPage() {
 function FormField({ label, name, value, onChange }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-700">{label}</label>
+      <label className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-400">{label}</label>
       <input
         type="text"
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
       />
     </div>
   );
@@ -501,9 +497,9 @@ function FormField({ label, name, value, onChange }) {
 
 function SummaryRow({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-4 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-semibold text-slate-900">{value}</span>
+    <div className="flex items-center justify-between gap-4 text-xs font-bold">
+      <span className="text-slate-400">{label}</span>
+      <span className="text-slate-700">{value}</span>
     </div>
   );
 }

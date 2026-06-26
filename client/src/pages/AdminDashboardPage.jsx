@@ -78,7 +78,7 @@ function AdminDashboardPage() {
         const stock = Number(product.stock) || 0;
         return stock > 0 && stock <= 5;
       }).length,
-    [products]
+      [products]
   );
 
   const lowStockProducts = useMemo(() => {
@@ -126,7 +126,8 @@ function AdminDashboardPage() {
     return buckets.map((item) => ({
       label: item.label,
       value: item.revenue > 0 ? Math.max((item.revenue / maxRevenue) * 100, 18) : 18,
-      active: item.label === activeLabel
+      active: item.label === activeLabel,
+      revenueText: formatCurrency(item.revenue)
     }));
   }, [orders]);
 
@@ -134,100 +135,122 @@ function AdminDashboardPage() {
     {
       title: "Tổng sản phẩm",
       value: products.length.toLocaleString("vi-VN"),
-      meta: `${products.length} sản phẩm đang có trong hệ thống`,
-      tone: "text-blue-700"
+      meta: "Đang lưu trữ trên hệ thống",
+      icon: "📦",
+      colorClass: "bg-indigo-50 border-indigo-100 text-indigo-700"
     },
     {
-      title: "Sản phẩm hết hàng",
+      title: "Hết hàng",
       value: outOfStockCount.toLocaleString("vi-VN"),
-      meta: "Các máy có stock = 0 cần theo dõi",
-      tone: "text-rose-600"
+      meta: "Cần nhập máy gấp",
+      icon: "⚠️",
+      colorClass: "bg-rose-50 border-rose-100 text-rose-700"
     },
     {
-      title: "Sản phẩm sắp hết",
+      title: "Sắp hết",
       value: lowStockCount.toLocaleString("vi-VN"),
-      meta: "Các máy có stock từ 1 đến 5",
-      tone: "text-amber-600"
+      meta: "Tồn kho nhỏ hơn hoặc bằng 5",
+      icon: "⏳",
+      colorClass: "bg-amber-50 border-amber-100 text-amber-700"
     },
     {
       title: "Doanh thu tạm tính",
       value: formatCurrency(totalRevenue),
-      meta: "Tính từ toàn bộ đơn hàng hiện có",
-      tone: "text-emerald-600"
+      meta: "Cộng dồn từ đơn hàng",
+      icon: "💰",
+      colorClass: "bg-emerald-50 border-emerald-100 text-emerald-700"
     }
   ];
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl">
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-          <p className="text-slate-600">Đang tải dữ liệu dashboard...</p>
+      <div className="mx-auto max-w-7xl py-12 text-center space-y-3">
+        <div className="relative w-12 h-12 mx-auto">
+          <div className="absolute inset-0 rounded-full border-4 border-slate-100"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
         </div>
+        <p className="text-sm font-semibold text-slate-500">Đang tải dữ liệu dashboard...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="mx-auto max-w-7xl">
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-          <p className="text-red-600">{error}</p>
+      <div className="mx-auto max-w-7xl py-12">
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-8 text-center">
+          <p className="font-bold text-red-800">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 animate-fade-in">
+      
+      {/* Title block */}
       <div>
-        <p className="text-sm text-slate-400">
-          Trang quản trị /{" "}
-          <span className="font-semibold text-blue-700">Tổng quan</span>
+        <p className="text-xs font-semibold text-indigo-650 uppercase tracking-wider">
+          Trang quản trị / <span className="font-black text-indigo-750">Tổng quan</span>
         </p>
-        <h1 className="mt-2 text-3xl font-black text-slate-900">Dashboard tổng quan</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Theo dõi đơn hàng, doanh thu tạm tính và cảnh báo tồn kho của cửa hàng.
+        <h1 className="mt-1.5 text-3xl font-black text-slate-900 tracking-tight">Dashboard quản lý</h1>
+        <p className="text-sm text-slate-500">
+          Thống kê kết quả kinh doanh tạm tính, theo dõi lượng tồn kho và thông tin đơn hàng mới.
         </p>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* Stats Cards Row */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <article
             key={stat.title}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm space-y-4"
           >
-            <p className="text-sm font-semibold text-slate-500">{stat.title}</p>
-            <p className="mt-3 text-4xl font-black text-slate-900">{stat.value}</p>
-            <p className={`mt-5 text-sm font-semibold ${stat.tone}`}>{stat.meta}</p>
+            <div className="flex justify-between items-start">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{stat.title}</p>
+              <span className={`flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold ${stat.colorClass}`}>
+                {stat.icon}
+              </span>
+            </div>
+            <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</p>
+            <p className="text-[11px] font-semibold text-slate-400 pt-1 border-t border-slate-50">{stat.meta}</p>
           </article>
         ))}
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.9fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
+      {/* Graphs & Warning Panels */}
+      <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        
+        {/* Weekly Revenue Graph */}
+        <article className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-55 pb-3">
             <div>
-              <h2 className="text-xl font-black text-slate-900">Biểu đồ doanh thu tuần</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Thống kê doanh thu theo 7 ngày trong tuần hiện tại
-              </p>
+              <h2 className="text-base font-extrabold text-slate-900 uppercase tracking-wider">Doanh thu theo tuần</h2>
+              <p className="text-xs text-slate-400">Ước tính doanh thu các ngày trong tuần hiện tại</p>
             </div>
-            <span className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
-              7 ngày qua
+            <span className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-600">
+              Tuần này
             </span>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-slate-50 px-5 py-6">
-            <div className="flex h-64 items-end gap-4">
+          <div className="rounded-2xl bg-slate-50/70 border border-slate-100 p-6">
+            <div className="flex h-64 items-end gap-3.5 sm:gap-5">
               {weeklyBars.map((bar) => (
-                <div key={bar.label} className="flex flex-1 flex-col items-center gap-3">
+                <div key={bar.label} className="group flex flex-1 flex-col items-center gap-2 relative">
+                  
+                  {/* Tooltip on hover */}
+                  <span className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-slate-900 text-white font-extrabold text-[9px] px-2 py-1 rounded shadow pointer-events-none z-10 whitespace-nowrap">
+                    {bar.revenueText}
+                  </span>
+                  
                   <div
-                    className={`w-full rounded-t-xl ${
-                      bar.active ? "bg-blue-700" : "bg-slate-200"
+                    className={`w-full rounded-t-lg transition-all duration-300 ${
+                      bar.active 
+                        ? "bg-gradient-to-t from-indigo-650 to-indigo-500 shadow-sm" 
+                        : "bg-slate-250 group-hover:bg-slate-300"
                     }`}
                     style={{ height: `${bar.value}%` }}
                   />
-                  <span className="text-xs font-bold uppercase text-slate-400">
+                  <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-700">
                     {bar.label}
                   </span>
                 </div>
@@ -236,36 +259,37 @@ function AdminDashboardPage() {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-black text-slate-900">Cảnh báo tồn kho</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Hiển thị 5 sản phẩm có stock thấp nhất, ưu tiên máy sắp hết và hết hàng.
-          </p>
+        {/* Low Stock Watch */}
+        <article className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm space-y-4">
+          <div className="border-b border-slate-55 pb-3">
+            <h2 className="text-base font-extrabold text-slate-900 uppercase tracking-wider">Cảnh báo tồn kho</h2>
+            <p className="text-xs text-slate-400">5 mẫu máy sắp hết hàng hoặc đã hết</p>
+          </div>
 
           {lowStockProducts.length === 0 ? (
-            <div className="mt-6 rounded-2xl bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
-              Hiện chưa có sản phẩm nào sắp hết hoặc hết hàng.
+            <div className="rounded-2xl bg-slate-50 p-6 text-center text-xs text-slate-400 font-semibold border border-dashed border-slate-200">
+              ✨ Mọi thứ đều dồi dào! Tồn kho ổn định.
             </div>
           ) : (
-            <div className="mt-6 space-y-3">
+            <div className="space-y-2.5">
               {lowStockProducts.map((product) => (
                 <div
                   key={product._id}
-                  className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 px-4 py-4"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3 bg-slate-50/30"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-slate-900">
+                    <p className="truncate text-xs font-bold text-slate-800">
                       {product.name}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {normalizeBrand(product.brand)}
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
+                      Hãng: {normalizeBrand(product.brand)}
                     </p>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-3">
-                    <p className="text-sm font-bold text-slate-900">
-                      Stock: {Number(product.stock) || 0}
-                    </p>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-xs font-extrabold text-slate-700">
+                      Tồn: {Number(product.stock) || 0}
+                    </span>
                     <StockStatusBadge stock={product.stock} />
                   </div>
                 </div>
@@ -275,49 +299,50 @@ function AdminDashboardPage() {
         </article>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
-          <h2 className="text-xl font-black text-slate-900">Đơn hàng gần đây</h2>
-          <span className="text-sm font-semibold text-blue-700">
-            {recentOrders.length} đơn gần nhất
+      {/* Recent Orders List Table */}
+      <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4.5 bg-slate-50/50">
+          <h2 className="text-base font-extrabold text-slate-900 uppercase tracking-wider">Đơn hàng mới nhận</h2>
+          <span className="rounded-full bg-indigo-50 border border-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
+            {recentOrders.length} đơn hàng mới nhất
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+          <table className="min-w-full divide-y divide-slate-100 text-left">
+            <thead className="bg-slate-50/30 text-xs font-bold uppercase tracking-wider text-slate-400">
               <tr>
-                <th className="px-5 py-4">Mã đơn</th>
-                <th className="px-5 py-4">Khách hàng</th>
-                <th className="px-5 py-4">Sản phẩm</th>
-                <th className="px-5 py-4">Tổng tiền</th>
-                <th className="px-5 py-4">Trạng thái</th>
-                <th className="px-5 py-4">Ngày đặt</th>
+                <th className="px-5 py-3.5">Mã đơn</th>
+                <th className="px-5 py-3.5">Khách hàng</th>
+                <th className="px-5 py-3.5">Chi tiết máy</th>
+                <th className="px-5 py-3.5">Tổng tiền</th>
+                <th className="px-5 py-3.5">Trạng thái</th>
+                <th className="px-5 py-3.5">Thời gian</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 text-xs text-slate-700 font-medium">
               {recentOrders.map((order) => (
-                <tr key={order._id} className="border-t border-slate-100">
-                  <td className="px-5 py-4 text-sm font-bold text-blue-700">
+                <tr key={order._id} className="hover:bg-slate-50/50 transition">
+                  <td className="px-5 py-3.5 font-bold text-indigo-600">
                     #{String(order._id).slice(-6).toUpperCase()}
                   </td>
-                  <td className="px-5 py-4 text-sm font-semibold text-slate-900">
-                    {order.customerName || "Khách hàng"}
+                  <td className="px-5 py-3.5 font-bold text-slate-900">
+                    {order.customerName || "Khách mua lẻ"}
                   </td>
-                  <td className="px-5 py-4 text-sm text-slate-600">
+                  <td className="px-5 py-3.5 text-slate-500 font-normal">
                     {formatOrderProducts(order.items)}
                   </td>
-                  <td className="px-5 py-4 text-sm font-bold text-slate-900">
+                  <td className="px-5 py-3.5 font-extrabold text-slate-800">
                     {formatCurrency(order.totalAmount)}
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-3.5">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(order.status)}`}
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold border ${getStatusClass(order.status)}`}
                     >
                       {formatStatus(order.status)}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-sm text-slate-500">
+                  <td className="px-5 py-3.5 text-slate-400">
                     {formatOrderDate(order.createdAt)}
                   </td>
                 </tr>
@@ -325,8 +350,8 @@ function AdminDashboardPage() {
 
               {recentOrders.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="px-5 py-10 text-center text-sm text-slate-500">
-                    Chưa có đơn hàng nào để hiển thị.
+                  <td colSpan="6" className="px-5 py-12 text-center text-slate-400 font-semibold">
+                    Chưa có đơn hàng nào phát sinh trên hệ thống.
                   </td>
                 </tr>
               )}
@@ -343,7 +368,7 @@ function StockStatusBadge({ stock }) {
   const { label, className } = getStockStatusMeta(stockNumber);
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-bold ${className}`}>
+    <span className={`rounded-md border px-2 py-0.5 text-[9px] font-extrabold uppercase ${className}`}>
       {label}
     </span>
   );
@@ -353,28 +378,27 @@ function getStockStatusMeta(stock) {
   if (stock === 0) {
     return {
       label: "Hết hàng",
-      className: "bg-rose-100 text-rose-700"
+      className: "bg-rose-50 text-rose-700 border-rose-150"
     };
   }
 
   if (stock > 0 && stock <= 5) {
     return {
       label: "Sắp hết",
-      className: "bg-amber-100 text-amber-700"
+      className: "bg-amber-50 text-amber-700 border-amber-150"
     };
   }
 
   return {
     label: "Còn hàng",
-    className: "bg-emerald-100 text-emerald-700"
+    className: "bg-emerald-50 text-emerald-700 border-emerald-150"
   };
 }
 
 function normalizeBrand(brand) {
   if (!brand) {
-    return "Không rõ hãng";
+    return "Khác";
   }
-
   return brand;
 }
 
@@ -384,23 +408,23 @@ function formatCurrency(value) {
 
 function formatOrderProducts(items = []) {
   if (!Array.isArray(items) || items.length === 0) {
-    return "Đang cập nhật";
+    return "Không rõ sản phẩm";
   }
 
   if (items.length === 1) {
     return items[0].name || "Sản phẩm";
   }
 
-  return `${items[0].name || "Sản phẩm"} +${items.length - 1}`;
+  return `${items[0].name || "Sản phẩm"} (+${items.length - 1})`;
 }
 
 function formatStatus(status) {
   if (status === "confirmed") {
-    return "Đã xác nhận";
+    return "Đã duyệt";
   }
 
   if (status === "cancelled") {
-    return "Đã hủy";
+    return "Hủy bỏ";
   }
 
   return "Chờ xác nhận";
@@ -408,19 +432,19 @@ function formatStatus(status) {
 
 function getStatusClass(status) {
   if (status === "confirmed") {
-    return "bg-blue-100 text-blue-700";
+    return "bg-emerald-50 text-emerald-700 border-emerald-150";
   }
 
   if (status === "cancelled") {
-    return "bg-rose-100 text-rose-700";
+    return "bg-rose-50 text-rose-700 border-rose-150";
   }
 
-  return "bg-amber-100 text-amber-700";
+  return "bg-amber-50 text-amber-700 border-amber-150";
 }
 
 function formatOrderDate(value) {
   if (!value) {
-    return "Đang cập nhật";
+    return "Chưa rõ";
   }
 
   const date = new Date(value);
@@ -428,7 +452,7 @@ function formatOrderDate(value) {
   return `${date.toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit"
-  })} - ${date.toLocaleDateString("vi-VN")}`;
+  })} ${date.toLocaleDateString("vi-VN")}`;
 }
 
 function getAdminApiErrorMessage(status, fallbackMessage) {

@@ -2,37 +2,36 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="mt-12 border-t border-slate-200 bg-gradient-to-b from-white to-slate-50/50">
+    <footer className="mt-16 border-t border-slate-900 bg-slate-950 text-slate-400">
       {/* Top accent line */}
-      <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500" />
+      <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700" />
 
-      <div className="mx-auto max-w-[1360px] px-4 py-12 sm:px-5 lg:px-6">
+      <div className="mx-auto max-w-[1360px] px-4 py-16 sm:px-5 lg:px-6">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1.1fr]">
           {/* Brand */}
           <section>
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-black text-white shadow-md shadow-blue-200">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-sm font-black text-white shadow-lg shadow-indigo-500/20">
                 M
               </span>
               <div>
-                <p className="text-base font-black tracking-tight text-slate-900">MẠNH HƯƠNG</p>
-                <p className="text-xs text-slate-400">Điện thoại chính hãng</p>
+                <p className="text-base font-black tracking-widest text-white">MẠNH HƯƠNG</p>
+                <p className="text-xs text-indigo-400 font-bold">MOBILE RETAIL</p>
               </div>
             </div>
 
-            <p className="mt-5 max-w-xs text-sm leading-7 text-slate-500">
-              Chuyên cung cấp điện thoại, phụ kiện và giải pháp mua sắm công nghệ
-              đáng tin cậy với dịch vụ hỗ trợ tận tâm mỗi ngày.
+            <p className="mt-6 max-w-xs text-sm leading-relaxed text-slate-400">
+              Hệ thống bán lẻ điện thoại cũ/mới uy tín hàng đầu. Cam kết chất lượng nguyên bản, bảo hành minh bạch cùng chế độ thu cũ đổi mới tốt nhất.
             </p>
 
-            <div className="mt-5 flex gap-3">
-              <SocialIcon href="#" label="Facebook" hoverClass="hover:border-transparent hover:bg-[#1877f2] hover:text-white hover:shadow-md hover:shadow-blue-100">
+            <div className="mt-6 flex gap-3">
+              <SocialIcon href="#" label="Facebook" hoverClass="hover:border-transparent hover:bg-[#1877f2] hover:text-white hover:shadow-lg hover:shadow-blue-500/25">
                 <FacebookIcon />
               </SocialIcon>
-              <SocialIcon href="#" label="Zalo" hoverClass="hover:border-transparent hover:bg-[#0068ff] hover:text-white hover:shadow-md hover:shadow-sky-100">
+              <SocialIcon href="#" label="Zalo" hoverClass="hover:border-transparent hover:bg-[#0068ff] hover:text-white hover:shadow-lg hover:shadow-sky-500/25">
                 <ZaloIcon />
               </SocialIcon>
-              <SocialIcon href="#" label="TikTok" hoverClass="hover:border-transparent hover:bg-black hover:text-white hover:shadow-md hover:shadow-slate-350">
+              <SocialIcon href="#" label="TikTok" hoverClass="hover:border-transparent hover:bg-white hover:text-black hover:shadow-lg hover:shadow-white/20">
                 <TiktokIcon />
               </SocialIcon>
             </div>
@@ -54,27 +53,27 @@ function Footer() {
           />
 
           <section>
-            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-900">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
               Liên hệ
             </h3>
 
-            <div className="mt-5 space-y-4 text-sm text-slate-500">
+            <div className="mt-6 space-y-4 text-sm text-slate-400">
               <ContactRow title="123 Lê Đại Hành, Quận 11, TP.HCM" icon={<PinIcon />} />
               <ContactRow title="0909 123 456" icon={<PhoneIcon />} />
               <ContactRow title="contact@manhhuongmobile.vn" icon={<MailIcon />} />
             </div>
 
             {/* Trust badge */}
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span className="text-xs font-semibold text-emerald-700">Mở cửa hàng ngày 8:00 – 21:00</span>
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-bold text-slate-300">Cửa hàng mở cửa: 8:00 – 21:00</span>
             </div>
           </section>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 MẠNH HƯƠNG. Bảo lưu mọi quyền.</p>
-          <p>Thiết kế tối ưu cho trải nghiệm mua sắm trực tuyến.</p>
+        <div className="mt-12 flex flex-col gap-3 border-t border-slate-900 pt-8 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>© 2026 MẠNH HƯƠNG MOBILE. Bảo lưu mọi quyền.</p>
+          <p>Thiết kế tối ưu cho trải nghiệm mua sắm thiết bị công nghệ.</p>
         </div>
       </div>
     </footer>
@@ -84,12 +83,12 @@ function Footer() {
 function FooterColumn({ title, items }) {
   return (
     <section>
-      <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-slate-900">{title}</h3>
+      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">{title}</h3>
 
-      <ul className="mt-5 space-y-3 text-sm text-slate-500">
+      <ul className="mt-6 space-y-3.5 text-sm text-slate-400">
         {items.map((item) => (
           <li key={item}>
-            <Link to="/" className="transition-colors duration-150 hover:text-blue-700">
+            <Link to="/" className="transition-colors duration-200 hover:text-white">
               {item}
             </Link>
           </li>
@@ -102,8 +101,8 @@ function FooterColumn({ title, items }) {
 function ContactRow({ icon, title }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="mt-0.5 shrink-0 text-blue-600">{icon}</span>
-      <span>{title}</span>
+      <span className="mt-0.5 shrink-0 text-indigo-400">{icon}</span>
+      <span className="leading-relaxed">{title}</span>
     </div>
   );
 }
@@ -113,7 +112,7 @@ function SocialIcon({ href, label, hoverClass, children }) {
     <a
       href={href}
       aria-label={label}
-      className={`flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-300 ${hoverClass}`}
+      className={`flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 text-slate-400 transition-all duration-300 ${hoverClass}`}
     >
       {children}
     </a>

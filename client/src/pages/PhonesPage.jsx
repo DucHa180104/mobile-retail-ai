@@ -319,18 +319,21 @@ function PhonesPage() {
 
 function CatalogBanner() {
   return (
-    <section className="overflow-hidden rounded-3xl border border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_50%,#eff6ff_100%)] px-7 py-7 shadow-sm sm:px-8">
-      <div className="max-w-2xl">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700 shadow-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-          Điện thoại cũ
+    <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-950 px-8 py-9 text-white shadow-xl shadow-indigo-950/20 sm:px-10 border border-slate-800">
+      {/* Decorative gradients */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_50%)]" />
+      <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />
+
+      <div className="relative max-w-2xl">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-indigo-400 shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+          Danh mục sản phẩm
         </span>
-        <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
-          Danh sách điện thoại
+        <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          Mua Bán Điện Thoại Cũ / Mới
         </h1>
-        <p className="mt-2 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-          Tìm nhanh theo tên máy, hãng, tình trạng, dung lượng và khoảng giá phù hợp
-          nhu cầu.
+        <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-slate-350">
+          Tìm nhanh theo tên máy, hãng, tình trạng ngoại hình, pin, dung lượng và khoảng giá phù hợp nhu cầu.
         </p>
       </div>
     </section>
@@ -349,20 +352,20 @@ function ProductFilterSidebar({
   onClearFilters
 }) {
   return (
-    <aside className="h-fit rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:sticky lg:top-24 lg:self-start">
+    <aside className="h-fit rounded-2xl border border-slate-100 bg-white p-5 shadow-sm lg:sticky lg:top-24 lg:self-start">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-black text-slate-900">Bộ lọc</h2>
+        <h2 className="text-base font-black text-slate-800">Bộ lọc tìm kiếm</h2>
         <button
           type="button"
           onClick={onClearFilters}
-          className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
+          className="rounded-full bg-slate-50 border border-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100"
         >
           Xóa lọc
         </button>
       </div>
 
       <div className="mt-5 space-y-5">
-        <FilterGroup title="Hãng">
+        <FilterGroup title="Hãng sản xuất">
           {brandOptions.map((brand) => (
             <FilterCheckbox
               key={brand}
@@ -373,7 +376,7 @@ function ProductFilterSidebar({
           ))}
         </FilterGroup>
 
-        <FilterGroup title="Tình trạng">
+        <FilterGroup title="Tình trạng ngoại hình">
           {conditionOptions.map((condition) => (
             <FilterCheckbox
               key={condition.value}
@@ -386,7 +389,7 @@ function ProductFilterSidebar({
           ))}
         </FilterGroup>
 
-        <FilterGroup title="Dung lượng">
+        <FilterGroup title="Dung lượng bộ nhớ">
           {storageOptions.map((storage) => (
             <FilterCheckbox
               key={storage}
@@ -397,7 +400,7 @@ function ProductFilterSidebar({
           ))}
         </FilterGroup>
 
-        <FilterGroup title="Khoảng giá">
+        <FilterGroup title="Khoảng giá sản phẩm">
           {priceRangeOptions.map((range) => (
             <FilterCheckbox
               key={range.value}
@@ -417,42 +420,42 @@ function ProductFilterSidebar({
 function FilterGroup({ title, children }) {
   return (
     <section className="border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
-      <h3 className="text-sm font-bold text-slate-900">{title}</h3>
-      <div className="mt-3 space-y-3">{children}</div>
+      <h3 className="text-xs font-black uppercase tracking-wider text-slate-405">{title}</h3>
+      <div className="mt-3 space-y-2">{children}</div>
     </section>
   );
 }
 
 function FilterCheckbox({ label, checked, onChange }) {
   return (
-    <label className={`flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 text-sm transition-colors duration-150 ${checked ? "text-blue-700" : "text-slate-600 hover:bg-slate-50"}`}>
+    <label className={`flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition-all duration-200 ${checked ? "text-indigo-600 bg-indigo-50/50" : "text-slate-600 hover:bg-slate-50"}`}>
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 rounded border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500"
+        className="h-4.5 w-4.5 rounded border-slate-200 text-indigo-600 accent-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
       />
-      <span className={checked ? "font-semibold" : ""}>{label}</span>
+      <span className={checked ? "font-bold" : "font-medium"}>{label}</span>
     </label>
   );
 }
 
 function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white px-5 py-4.5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-lg font-black text-slate-900">Danh sách sản phẩm</h2>
-        <p className="mt-0.5 text-sm text-slate-500">
-          <span className="font-semibold text-blue-700">{totalProducts}</span> sản phẩm
+        <h2 className="text-base font-black text-slate-800">Danh sách sản phẩm</h2>
+        <p className="mt-0.5 text-xs font-bold text-slate-400">
+          Tìm thấy <span className="text-indigo-600 font-extrabold">{totalProducts}</span> máy
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-slate-500">Sắp xếp:</span>
+      <div className="flex items-center gap-2.5">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sắp xếp:</span>
         <select
           value={selectedSort}
           onChange={(event) => onSelectSort(event.target.value)}
-          className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          className="rounded-full border border-slate-150 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
         >
           {sortOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -467,7 +470,7 @@ function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
 
 function ProductGrid({ products, wishlistIds, onOpenProduct, onToggleWishlist }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4.5 md:grid-cols-2 xl:grid-cols-3">
       {products.map((product) => (
         <CatalogProductCard
           key={product._id}
@@ -486,27 +489,40 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
   const imageUrl =
     product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
+  // Xác định nhãn tình trạng máy
+  const getConditionInfo = (cond) => {
+    switch (cond) {
+      case "used_99":
+        return { label: "Cũ 99%", class: "from-amber-500 to-orange-500 text-white" };
+      case "used_good":
+        return { label: "Cũ đẹp", class: "from-blue-500 to-indigo-500 text-white" };
+      case "used_fair":
+        return { label: "Cũ dùng tốt", class: "from-slate-500 to-slate-600 text-white" };
+      default:
+        return { label: "Mới 100%", class: "from-emerald-500 to-teal-500 text-white" };
+    }
+  };
+
+  const condInfo = getConditionInfo(product.condition);
+
   return (
     <article
       onClick={() => onOpenProduct(product._id)}
-      className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-100 hover:shadow-lg hover:shadow-slate-200/60"
+      className="group cursor-pointer relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-100/30"
     >
-      <div className="relative overflow-hidden rounded-xl bg-slate-50">
-        {badge ? (
-          <span
-            className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${
-              badge === "Cũ 99%"
-                ? "bg-gradient-to-r from-amber-500 to-amber-400"
-                : badge === "Cũ đẹp"
-                  ? "bg-gradient-to-r from-blue-600 to-blue-500"
-                  : badge === "Cũ dùng tốt"
-                    ? "bg-gradient-to-r from-slate-600 to-slate-500"
-                    : "bg-gradient-to-r from-emerald-600 to-emerald-500"
-            }`}
-          >
+      {/* Media area */}
+      <div className="relative overflow-hidden rounded-xl bg-slate-50 aspect-[4/3]">
+        {/* Nhãn máy cũ/mới */}
+        <span className={`absolute left-2.5 top-2.5 z-10 rounded-full bg-gradient-to-r px-2.5 py-1 text-[9px] font-black uppercase tracking-wider shadow-sm ${condInfo.class}`}>
+          {condInfo.label}
+        </span>
+
+        {/* Nhãn bổ sung */}
+        {badge && badge !== condInfo.label && (
+          <span className="absolute left-2.5 top-9 z-10 rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm">
             {badge}
           </span>
-        ) : null}
+        )}
 
         <button
           type="button"
@@ -514,8 +530,10 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
             event.stopPropagation();
             onToggleWishlist(product);
           }}
-          className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-all duration-200 ${
-            isWishlisted ? "text-red-500 shadow-red-100" : "text-slate-400 hover:text-red-500 hover:shadow-red-100"
+          className={`absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md transition-all duration-300 active:scale-95 ${
+            isWishlisted
+              ? "text-red-500 shadow-red-100"
+              : "text-slate-400 hover:text-red-500 hover:shadow-red-100"
           }`}
           aria-label={`${isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"} ${product.name}`}
         >
@@ -525,36 +543,61 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
         <img
           src={imageUrl}
           alt={product.name}
-          className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 
-      <div className="pt-4">
-        <h3 className="line-clamp-2 min-h-[48px] text-sm font-bold leading-6 text-slate-900 sm:text-base">
-          {product.name}
-        </h3>
+      {/* Content area */}
+      <div className="pt-3 flex flex-col justify-between min-h-[160px]">
+        <div>
+          {/* Tags cấu hình nhanh */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            {product.specs?.storage && (
+              <span className="inline-flex items-center rounded-md bg-slate-50 border border-slate-100 px-1.5 py-0.5 text-[10px] font-extrabold text-slate-500">
+                💾 {product.specs.storage}
+              </span>
+            )}
+            {product.usedDetails?.batteryHealth && (
+              <span className="inline-flex items-center rounded-md bg-emerald-50/50 border border-emerald-100 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-600">
+                🔋 Pin {product.usedDetails.batteryHealth}
+              </span>
+            )}
+            {product.brand && (
+              <span className="inline-flex items-center rounded-md bg-indigo-50/50 border border-indigo-100 px-1.5 py-0.5 text-[10px] font-extrabold text-indigo-600">
+                {product.brand}
+              </span>
+            )}
+          </div>
 
-        <p className="mt-2 text-xl font-black text-rose-500">
-          {product.price?.toLocaleString("vi-VN")} đ
-        </p>
+          <h3 className="line-clamp-2 text-sm font-bold leading-5 text-slate-800 transition-colors duration-150 group-hover:text-indigo-650">
+            {product.name}
+          </h3>
+        </div>
 
-        <div className="mt-4 flex items-center gap-2">
-          <Link
-            to={`/products/${product._id}`}
-            onClick={(event) => event.stopPropagation()}
-            className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2.5 text-center text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800"
-          >
-            Mua ngay
-          </Link>
+        <div>
+          {/* Price */}
+          <p className="mt-2.5 text-base sm:text-lg font-black text-rose-500">
+            {product.price?.toLocaleString("vi-VN")} đ
+          </p>
 
-          <Link
-            to={`/products/${product._id}`}
-            onClick={(event) => event.stopPropagation()}
-            className="rounded-xl border border-slate-200 px-3 py-2.5 text-slate-600 transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-            aria-label={`Xem chi tiết ${product.name}`}
-          >
-            <ArrowIcon />
-          </Link>
+          <div className="mt-3 flex items-center gap-2">
+            <Link
+              to={`/products/${product._id}`}
+              onClick={(event) => event.stopPropagation()}
+              className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-center text-xs font-bold text-white shadow-sm shadow-indigo-100 transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-md hover:shadow-indigo-200/50 active:scale-95"
+            >
+              Xem chi tiết
+            </Link>
+
+            <Link
+              to={`/products/${product._id}`}
+              onClick={(event) => event.stopPropagation()}
+              className="rounded-xl border border-slate-200 p-2.5 text-xs font-semibold text-slate-500 transition-all duration-300 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 active:scale-95"
+              aria-label={`Chi tiết ${product.name}`}
+            >
+              <ArrowIcon />
+            </Link>
+          </div>
         </div>
       </div>
     </article>
@@ -567,12 +610,12 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 pt-1">
+    <div className="flex items-center justify-center gap-2 pt-4">
       <button
         type="button"
         onClick={() => onChangePage(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ‹
       </button>
@@ -582,10 +625,10 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
           key={page}
           type="button"
           onClick={() => onChangePage(page)}
-          className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
+          className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold transition-all duration-300 ${
             currentPage === page
-              ? "bg-blue-600 text-white"
-              : "border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700"
+              ? "bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-100"
+              : "border border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50"
           }`}
         >
           {page}
@@ -596,7 +639,7 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
         type="button"
         onClick={() => onChangePage(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ›
       </button>

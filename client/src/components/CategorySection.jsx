@@ -2,42 +2,42 @@ const categories = [
   {
     name: "iPhone",
     icon: <AppleIcon />,
-    bg: "bg-blue-50",
-    text: "text-blue-600",
-    activeBg: "bg-blue-600",
-    ring: "ring-blue-600/30"
+    bg: "bg-slate-50",
+    text: "text-slate-700",
+    activeBg: "from-slate-800 to-slate-950",
+    ring: "ring-slate-900/20"
   },
   {
     name: "Samsung",
     icon: <SamsungIcon />,
-    bg: "bg-emerald-50",
-    text: "text-emerald-600",
-    activeBg: "bg-emerald-600",
-    ring: "ring-emerald-600/30"
+    bg: "bg-blue-50/50",
+    text: "text-blue-600",
+    activeBg: "from-blue-600 to-indigo-600",
+    ring: "ring-indigo-600/20"
   },
   {
     name: "Oppo",
     icon: <OppoIcon />,
-    bg: "bg-teal-50",
-    text: "text-teal-600",
-    activeBg: "bg-teal-600",
-    ring: "ring-teal-600/30"
+    bg: "bg-emerald-50/50",
+    text: "text-emerald-600",
+    activeBg: "from-emerald-500 to-teal-600",
+    ring: "ring-emerald-600/20"
   },
   {
     name: "Xiaomi",
     icon: <XiaomiIcon />,
-    bg: "bg-orange-50",
+    bg: "bg-orange-50/50",
     text: "text-orange-500",
-    activeBg: "bg-orange-500",
-    ring: "ring-orange-500/30"
+    activeBg: "from-orange-500 to-amber-500",
+    ring: "ring-orange-600/20"
   },
   {
     name: "Phụ kiện",
     icon: <HeadphoneIcon />,
-    bg: "bg-violet-50",
+    bg: "bg-violet-50/50",
     text: "text-violet-600",
-    activeBg: "bg-violet-600",
-    ring: "ring-violet-600/30"
+    activeBg: "from-violet-600 to-fuchsia-600",
+    ring: "ring-violet-600/20"
   }
 ];
 
@@ -45,10 +45,10 @@ function CategorySection({ activeCategory, onCategoryChange }) {
   return (
     <section className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-black text-slate-900 sm:text-[1.45rem]">Danh mục nổi bật</h2>
+        <h2 className="text-lg font-black text-slate-850 sm:text-[1.45rem]">Danh mục nổi bật</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
         {categories.map((category, index) => {
           const isActive = activeCategory === category.name;
 
@@ -58,22 +58,22 @@ function CategorySection({ activeCategory, onCategoryChange }) {
               type="button"
               onClick={() => onCategoryChange(isActive ? "" : category.name)}
               style={{ animationDelay: `${index * 60}ms` }}
-              className={`group animate-fade-in rounded-2xl border px-4 py-4 text-center transition-all duration-200 ${
+              className={`group animate-fade-in rounded-2xl border px-4 py-4 text-center transition-all duration-300 ${
                 isActive
-                  ? `border-transparent ${category.activeBg} shadow-lg ring-4 ${category.ring}`
-                  : "border-slate-200 bg-white hover:-translate-y-1 hover:border-slate-300 hover:shadow-md"
+                  ? `border-transparent bg-gradient-to-tr ${category.activeBg} shadow-lg ring-4 ${category.ring}`
+                  : "border-slate-100 bg-white hover:-translate-y-1 hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-500/5"
               }`}
             >
               <span
-                className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:scale-110 ${
+                className={`mx-auto flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 ${
                   isActive ? "bg-white/20 text-white" : `${category.bg} ${category.text}`
                 }`}
               >
                 {category.icon}
               </span>
               <span
-                className={`mt-3 block text-sm font-bold ${
-                  isActive ? "text-white" : "text-slate-800"
+                className={`mt-3 block text-sm font-bold transition-colors duration-300 ${
+                  isActive ? "text-white" : "text-slate-700 group-hover:text-indigo-650"
                 }`}
               >
                 {category.name}

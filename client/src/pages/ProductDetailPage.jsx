@@ -342,38 +342,38 @@ function ProductDetailPage() {
   const isWishlisted = wishlistIds.has(String(product._id));
 
   return (
-    <main className="px-4 py-8 sm:px-6 lg:px-8">
+    <main className="px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Link to="/" className="transition hover:text-blue-700">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-400">
+            <Link to="/" className="transition hover:text-indigo-650">
               Trang chủ
             </Link>
-            <span>/</span>
-            <Link to="/phones" className="transition hover:text-blue-700">
+            <span className="text-slate-300">/</span>
+            <Link to="/phones" className="transition hover:text-indigo-650">
               Điện thoại
             </Link>
-            <span>/</span>
-            <span className="font-medium text-slate-700">{product.name}</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-600 truncate max-w-[200px]">{product.name}</span>
           </div>
 
           <Link
             to="/cart"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+            className="rounded-full border border-slate-100 bg-white px-4.5 py-2 text-xs sm:text-sm font-bold text-slate-600 transition shadow-sm hover:border-indigo-150 hover:text-indigo-600"
           >
             Xem giỏ hàng
           </Link>
         </div>
 
-        <div className="grid gap-8 xl:grid-cols-[1.18fr_0.82fr]">
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <section className="space-y-6">
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-100 bg-slate-50">
+            <article className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+              <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-50 bg-slate-50/50 aspect-[4/3] flex items-center justify-center">
                 <button
                   type="button"
                   onClick={handleToggleWishlist}
-                  className={`absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-sm transition ${
-                    isWishlisted ? "text-red-500" : "text-slate-500 hover:text-red-500"
+                  className={`absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md transition-all duration-300 active:scale-90 ${
+                    isWishlisted ? "text-red-500 shadow-red-100" : "text-slate-400 hover:text-red-500"
                   }`}
                   aria-label={`${
                     isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"
@@ -385,20 +385,20 @@ function ProductDetailPage() {
                   key={selectedImageIndex}
                   src={selectedImage}
                   alt={product.name}
-                  className="h-[360px] w-full object-cover sm:h-[500px] animate-fade-in transition-transform duration-500 hover:scale-102 cursor-zoom-in"
+                  className="h-full w-full object-contain animate-fade-in transition-transform duration-500 hover:scale-[1.02] cursor-zoom-in"
                 />
               </div>
 
-              <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+              <div className="mt-5 flex flex-wrap gap-3">
                 {galleryImages.map((image, index) => (
                   <button
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-200 p-1 bg-white ${
+                    className={`h-16 w-16 overflow-hidden rounded-xl border-2 transition-all duration-300 p-1 bg-white hover:scale-105 ${
                       selectedImageIndex === index
-                        ? "border-blue-600 ring-2 ring-blue-100"
-                        : "border-slate-200 hover:border-blue-350"
+                        ? "border-indigo-600 ring-4 ring-indigo-50"
+                        : "border-slate-100 hover:border-indigo-300"
                     }`}
                   >
                     <img
@@ -411,58 +411,58 @@ function ProductDetailPage() {
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-black text-slate-900">Tình trạng thực tế của máy</h2>
+            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-black text-slate-800">Tình trạng thực tế của máy</h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {highlights.map((item) => (
                   <div
                     key={item.title}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                    className="rounded-2xl border border-slate-55 bg-slate-50/50 p-5 hover:border-indigo-100 hover:bg-white transition-all duration-300"
                   >
-                    <h3 className="font-bold text-slate-900">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                    <h3 className="font-bold text-slate-800 text-sm sm:text-base">{item.title}</h3>
+                    <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500 font-medium">{item.description}</p>
                   </div>
                 ))}
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-black text-slate-900">Mô tả chi tiết sản phẩm</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-600">
+            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-black text-slate-800">Mô tả chi tiết sản phẩm</h2>
+              <div className="mt-4 prose prose-slate max-w-none text-xs sm:text-sm leading-relaxed text-slate-600 font-medium">
                 {product.description || "Thông tin mô tả chi tiết đang được cập nhật."}
-              </p>
+              </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900">Đánh giá từ khách hàng</h2>
-                  <p className="mt-2 text-sm text-slate-500">
-                    Chỉ người đã mua và có đơn đã xác nhận mới được đánh giá.
+                  <h2 className="text-lg font-black text-slate-800">Đánh giá từ khách hàng</h2>
+                  <p className="mt-1 text-xs text-slate-400 font-bold">
+                    Chỉ người dùng đã mua hàng và hoàn thành đơn hàng mới được đánh giá.
                   </p>
                 </div>
 
-                <div className="rounded-3xl bg-amber-50 px-5 py-4 text-center">
-                  <p className="text-3xl font-black text-amber-500">
-                    {reviews.length ? averageRating.toFixed(1) : "0.0"} / 5
+                <div className="rounded-2xl bg-amber-50/70 border border-amber-100 px-5 py-3.5 text-center min-w-[120px]">
+                  <p className="text-3xl font-black text-amber-500 leading-none">
+                    {reviews.length ? averageRating.toFixed(1) : "0.0"}
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-600">
-                    ({reviews.length} đánh giá)
+                  <p className="mt-1.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                    {reviews.length} đánh giá
                   </p>
                 </div>
               </div>
 
               <div className="mt-6">
                 {!isAuthenticated ? (
-                  <div className="rounded-3xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700">
+                  <div className="rounded-2xl border border-indigo-50 bg-indigo-50/40 px-5 py-4 text-xs sm:text-sm font-bold text-indigo-700">
                     Vui lòng đăng nhập để đánh giá sản phẩm
                   </div>
                 ) : purchaseCheckLoading ? (
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-xs sm:text-sm text-slate-500 font-bold animate-pulse">
                     Đang kiểm tra điều kiện đánh giá...
                   </div>
                 ) : reviewsLoading ? (
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-xs sm:text-sm text-slate-500 font-bold animate-pulse">
                     Đang tải dữ liệu đánh giá...
                   </div>
                 ) : editingReview ? (
@@ -476,14 +476,14 @@ function ProductDetailPage() {
                     onCancel={handleCancelEditReview}
                   />
                 ) : hasUserReviewed ? (
-                  <div className="rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-5 py-4 text-xs sm:text-sm font-bold text-emerald-700">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span>Bạn đã đánh giá sản phẩm này</span>
                       {currentUserReview ? (
                         <button
                           type="button"
                           onClick={() => handleStartEditReview(currentUserReview)}
-                          className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                          className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50 hover:scale-105"
                         >
                           Sửa đánh giá
                         </button>
@@ -498,13 +498,13 @@ function ProductDetailPage() {
                     error={reviewSubmitError}
                   />
                 ) : (
-                  <div className="rounded-3xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-700">
-                    Bạn chưa mua sản phẩm này
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50/30 px-5 py-4 text-xs sm:text-sm font-bold text-amber-700">
+                    Bạn cần mua và hoàn thành đơn hàng mới được đánh giá sản phẩm này.
                   </div>
                 )}
 
                 {reviewSuccessMessage ? (
-                  <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                  <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-xs sm:text-sm font-bold text-emerald-700 border border-emerald-100">
                     {reviewSuccessMessage}
                   </p>
                 ) : null}
@@ -521,65 +521,63 @@ function ProductDetailPage() {
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-black text-slate-900">Lưu ý trước khi mua</h2>
-              <div className="mt-4 space-y-3 rounded-2xl bg-slate-50 p-4">
-                <p className="text-sm leading-6 text-slate-600">
-                  Đây là điện thoại cũ nên tình trạng máy, pin và ngoại hình sẽ khác nhau theo
-                  từng máy thực tế.
+            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-black text-slate-800">Lưu ý trước khi mua hàng</h2>
+              <div className="mt-4 space-y-3 rounded-2xl border border-slate-50 bg-slate-50/50 p-5">
+                <p className="text-xs sm:text-sm leading-relaxed text-slate-500 font-medium">
+                  • Đây là sản phẩm điện thoại cũ, hình thức thực tế và hiệu suất pin sẽ có sự khác biệt nhỏ theo từng máy.
                 </p>
-                <p className="text-sm leading-6 text-slate-600">
-                  Cửa hàng khuyến khích khách kiểm tra kỹ ảnh thật, tình trạng màn hình, pin,
-                  Face ID/Touch ID và phụ kiện trước khi chốt đơn.
+                <p className="text-xs sm:text-sm leading-relaxed text-slate-500 font-medium">
+                  • Cửa hàng khuyến khích bạn kiểm tra kỹ thông tin mô tả chi tiết, hình ảnh chụp thực tế và liên hệ nhân viên để được gửi video máy trước khi giao hàng.
                 </p>
               </div>
             </article>
           </section>
 
           <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm sm:p-7 animate-fade-in">
               <div className="flex flex-wrap items-center gap-2">
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${conditionClassName}`}>
+                <span className={`rounded-full px-3.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm ${conditionClassName}`}>
                   {conditionLabel}
                 </span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                  Máy cũ
+                <span className="rounded-full bg-slate-50 border border-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  Điện thoại cũ
                 </span>
               </div>
 
-              <h1 className="mt-4 text-3xl font-black leading-tight text-slate-900">
+              <h1 className="mt-4 text-2xl sm:text-3xl font-black leading-tight text-slate-850">
                 {product.name}
               </h1>
 
-              <div className="mt-5 flex flex-wrap items-end gap-3">
-                <p className="text-4xl font-black text-red-500">
+              <div className="mt-5">
+                <p className="text-3xl sm:text-4xl font-black text-rose-500 tracking-tight">
                   {product.price?.toLocaleString("vi-VN")} đ
                 </p>
               </div>
 
-              <p className="mt-3 text-sm text-slate-500">
-                Thông tin bên dưới được hiển thị theo đúng tình trạng máy đang có tại MẠNH HƯƠNG.
+              <p className="mt-3 text-xs leading-relaxed text-slate-400 font-medium">
+                Mức giá đã bao gồm VAT và gói bảo hành đi kèm. Ngoại hình được ghi nhận trung thực.
               </p>
 
-              <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-900">
+              <div className="mt-6 rounded-[1.5rem] border border-slate-100 bg-slate-50/60 p-5">
+                <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
                   Thông tin máy đang có
                 </h2>
-                <div className="mt-4 grid gap-3">
-                  <DetailRow label="Tình trạng máy" value={conditionLabel} />
+                <div className="mt-4 grid gap-2.5">
+                  <DetailRow label="Tình trạng" value={conditionLabel} />
                   <DetailRow label="Màu sắc" value={usedDetails.color} />
-                  <DetailRow label="Dung lượng" value={specs.storage} />
-                  <DetailRow label="Pin còn" value={usedDetails.batteryHealth || specs.battery} />
-                  <DetailRow label="Tình trạng màn hình" value={usedDetails.screenStatus} />
-                  <DetailRow label="Ngoại hình" value={usedDetails.bodyStatus} />
-                  <DetailRow label="Face ID / Touch ID" value={usedDetails.faceIdStatus} />
-                  <DetailRow label="Lịch sử sửa chữa" value={usedDetails.repairHistory} />
-                  <DetailRow label="Phụ kiện đi kèm" value={usedDetails.accessories} />
+                  <DetailRow label="Bộ nhớ" value={specs.storage} />
+                  <DetailRow label="Sức khỏe Pin" value={usedDetails.batteryHealth || specs.battery} />
+                  <DetailRow label="Màn hình" value={usedDetails.screenStatus} />
+                  <DetailRow label="Thân máy / Vỏ" value={usedDetails.bodyStatus} />
+                  <DetailRow label="Face ID / Vân tay" value={usedDetails.faceIdStatus} />
+                  <DetailRow label="Sửa chữa" value={usedDetails.repairHistory || "Chưa qua sửa chữa"} />
+                  <DetailRow label="Phụ kiện" value={usedDetails.accessories} />
                   <DetailRow label="Bảo hành" value={usedDetails.warranty} />
                   <DetailRow
-                    label="Tồn kho"
+                    label="Trạng thái hàng"
                     value={
-                      Number(product.stock) > 0 ? `${product.stock} máy sẵn có` : "Tạm hết hàng"
+                      Number(product.stock) > 0 ? `${product.stock} máy có sẵn` : "Tạm hết hàng"
                     }
                   />
                   <DetailRow label="Ghi chú thêm" value={usedDetails.note} />
@@ -590,7 +588,7 @@ function ProductDetailPage() {
                 <button
                   type="button"
                   onClick={handleBuyNow}
-                  className="w-full rounded-xl bg-blue-600 px-5 py-4 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:bg-blue-700"
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-750 hover:to-indigo-850 text-xs font-black uppercase tracking-wider text-white py-4 shadow-md shadow-indigo-150 transition-all duration-300 hover:shadow-lg active:scale-98"
                 >
                   Mua ngay
                 </button>
@@ -598,64 +596,66 @@ function ProductDetailPage() {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="w-full rounded-xl border border-blue-200 bg-blue-50 px-5 py-3.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                  className="w-full rounded-xl bg-slate-50 border border-slate-150 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 text-xs font-black uppercase tracking-wider text-slate-650 py-3.5 transition-all duration-300 active:scale-98"
                 >
-                  Thêm vào giỏ
+                  Thêm vào giỏ hàng
                 </button>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 transition hover:bg-amber-100"
+                <div className="grid gap-2.5 grid-cols-2">
+                  <Link
+                    to="/trade-in"
+                    className="flex items-center justify-center rounded-xl border border-orange-100 bg-orange-50/50 hover:bg-orange-50 px-4 py-3 text-center text-xs font-bold text-orange-705 transition hover:border-orange-200"
                   >
                     Thu cũ đổi mới
-                  </button>
+                  </Link>
 
-                  <button
-                    type="button"
-                    className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                  <a
+                    href="https://zalo.me"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center rounded-xl border border-sky-100 bg-sky-50/50 hover:bg-sky-50 px-4 py-3 text-center text-xs font-bold text-sky-705 transition hover:border-sky-200"
                   >
-                    Tư vấn qua Zalo
-                  </button>
+                    Chat Zalo
+                  </a>
                 </div>
               </div>
 
               {message ? (
-                <p className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                  {message}
+                <p className="mt-4 rounded-xl bg-emerald-50 text-center border border-emerald-100 py-3 text-xs sm:text-sm font-bold text-emerald-750 animate-fade-in">
+                  ✓ {message}
                 </p>
               ) : null}
 
-              <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
-                <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-900">
-                  Quyền lợi
+              <div className="mt-6 rounded-[1.5rem] bg-slate-50/60 border border-slate-100 p-5">
+                <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  Cam kết vàng tại cửa hàng
                 </h2>
                 <div className="mt-4 space-y-3">
-                  <BenefitRow text="Miễn phí vận chuyển nội thành cho đơn từ 500.000đ" />
-                  <BenefitRow text="Bảo hành rõ ràng, hỗ trợ nhanh khi cần kiểm tra" />
-                  <BenefitRow text="Hỗ trợ chuyển dữ liệu cơ bản khi nhận máy" />
+                  <BenefitRow text="Miễn phí ship nội thành đơn trên 500k" />
+                  <BenefitRow text="Bảo hành nguồn và màn hình trong 3 tháng" />
+                  <BenefitRow text="Hỗ trợ trả góp 0% lãi suất qua thẻ tín dụng" />
                 </div>
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-650 border border-indigo-100">
                   <SpecsIcon />
                 </span>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">Thông số kỹ thuật</h2>
-                  <p className="text-sm text-slate-500">Thông tin cấu hình cơ bản của máy</p>
+                  <h2 className="text-sm font-black text-slate-800">Thông số kỹ thuật</h2>
+                  <p className="text-[11px] text-slate-400 font-bold">Cấu hình cơ bản của sản phẩm</p>
                 </div>
               </div>
 
-              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100">
                 <SpecRow label="Màn hình" value={specs.screen} />
-                <SpecRow label="Chip" value={specs.chip} />
+                <SpecRow label="Vi xử lý (Chip)" value={specs.chip} />
                 <SpecRow label="RAM" value={specs.ram} />
-                <SpecRow label="Bộ nhớ" value={specs.storage} />
-                <SpecRow label="Pin" value={specs.battery} />
-                <SpecRow label="Camera" value={specs.camera} />
+                <SpecRow label="Bộ nhớ trong" value={specs.storage} />
+                <SpecRow label="Dung lượng pin" value={specs.battery} />
+                <SpecRow label="Hệ thống Camera" value={specs.camera} />
               </div>
             </article>
           </aside>

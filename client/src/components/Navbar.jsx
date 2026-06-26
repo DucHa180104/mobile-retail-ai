@@ -16,18 +16,21 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
   const isAdmin = user?.role === "admin";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/50 bg-white/75 shadow-sm backdrop-blur-lg transition-all duration-300">
+    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300">
       <div className="mx-auto max-w-[1360px] px-4 sm:px-5 lg:px-6">
         <div className="py-3.5">
           <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
             {/* Logo */}
-            <Link to="/" className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-80">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-black text-white shadow-md shadow-blue-200">
+            <Link to="/" className="group flex shrink-0 items-center gap-3 transition-transform duration-300 active:scale-95">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-base font-black text-white shadow-md shadow-indigo-200/50 transition-transform duration-300 group-hover:rotate-6">
                 M
               </span>
               <div className="min-w-0">
-                <p className="truncate text-base font-black tracking-tight text-blue-700">
+                <p className="truncate text-base sm:text-lg font-black tracking-widest text-slate-800 transition-colors duration-300 group-hover:text-indigo-600">
                   MẠNH HƯƠNG
+                </p>
+                <p className="text-[10px] font-bold tracking-wider text-slate-400 -mt-1 group-hover:text-indigo-400">
+                  MOBILE RETAIL
                 </p>
               </div>
             </Link>
@@ -35,15 +38,15 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
             {/* Search */}
             <div className="order-3 w-full lg:order-2 lg:mx-6 lg:flex-1">
               <label className="relative block">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400 transition-colors duration-200 focus-within:text-indigo-600">
                   <SearchIcon />
                 </span>
                 <input
                   type="text"
                   value={searchValue}
                   onChange={onSearchChange}
-                  placeholder="Tìm kiếm sản phẩm..."
-                  className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  placeholder="Tìm kiếm iPhone, Samsung, Xiaomi..."
+                  className="w-full rounded-full border border-slate-100 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-300 focus:border-indigo-200 focus:bg-white focus:ring-4 focus:ring-indigo-100/50 shadow-inner"
                 />
               </label>
             </div>
@@ -52,12 +55,12 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
             <div className="order-2 ml-auto flex items-center gap-2 lg:order-3 lg:ml-0">
               <Link
                 to="/cart"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-blue-50 hover:text-blue-700"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-all duration-300 hover:bg-slate-50 hover:text-indigo-600 hover:scale-105 active:scale-95"
                 aria-label="Giỏ hàng"
               >
                 <CartIcon />
                 {totalItems > 0 ? (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 animate-fade-in items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 animate-bounce items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white shadow-md shadow-rose-200">
                     {totalItems}
                   </span>
                 ) : null}
@@ -71,13 +74,13 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
                 <div className="hidden items-center gap-2 sm:flex">
                   <Link
                     to="/login"
-                    className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                    className="rounded-full border border-slate-200/80 px-5 py-2 text-sm font-bold text-slate-700 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Đăng nhập
                   </Link>
                   <Link
                     to="/register"
-                    className="rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-300"
+                    className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-md shadow-indigo-100 transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-indigo-200/50 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Đăng ký
                   </Link>
@@ -104,26 +107,26 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
             <>
               <Link
                 to="/profile"
-                className="whitespace-nowrap rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200"
+                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
               >
                 Hồ sơ
               </Link>
               <Link
                 to="/my-orders"
-                className="whitespace-nowrap rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200"
+                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
               >
                 Đơn hàng của tôi
               </Link>
               <Link
                 to="/wishlist"
-                className="whitespace-nowrap rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200"
+                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
               >
                 Yêu thích
               </Link>
               {isAdmin ? (
                 <Link
                   to="/admin/dashboard"
-                  className="whitespace-nowrap rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs sm:text-sm font-bold text-white transition duration-300 hover:bg-indigo-700"
                 >
                   Admin Dashboard
                 </Link>
@@ -131,7 +134,7 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
               <button
                 type="button"
                 onClick={logout}
-                className="whitespace-nowrap rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                className="whitespace-nowrap rounded-full bg-rose-50 border border-rose-100 px-4 py-2 text-xs sm:text-sm font-bold text-rose-600 transition duration-300 hover:bg-rose-100"
               >
                 Đăng xuất
               </button>
@@ -140,13 +143,13 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
             <>
               <Link
                 to="/login"
-                className="whitespace-nowrap rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200"
+                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
               >
                 Đăng nhập
               </Link>
               <Link
                 to="/register"
-                className="whitespace-nowrap rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs sm:text-sm font-bold text-white transition duration-300 hover:bg-indigo-700 shadow-md shadow-indigo-100"
               >
                 Đăng ký
               </Link>
@@ -161,30 +164,30 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
 function AccountDropdown({ user, isAdmin, onLogout }) {
   return (
     <details className="group relative">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-xs font-black text-white shadow-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-slate-100 bg-white shadow-sm px-3.5 py-1.5 text-sm text-slate-700 transition-all duration-300 hover:border-slate-200 hover:shadow hover:scale-[1.02] active:scale-[0.98]">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-black text-white shadow-sm">
           {getInitial(user?.name)}
         </span>
-        <span className="max-w-[110px] truncate font-semibold">{user?.name}</span>
-        <span className="text-slate-400 transition-transform duration-200 group-open:rotate-180">
+        <span className="max-w-[110px] truncate font-bold text-slate-800">{user?.name}</span>
+        <span className="text-slate-400 transition-transform duration-300 group-open:rotate-180">
           <ChevronDownIcon />
         </span>
       </summary>
 
-      <div className="absolute right-0 top-[calc(100%+0.65rem)] z-50 w-64 animate-fade-in rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/60">
+      <div className="absolute right-0 top-[calc(100%+0.65rem)] z-50 w-64 animate-fade-in rounded-2xl border border-slate-100 bg-white/95 backdrop-blur-md p-2.5 shadow-xl shadow-slate-200/50">
         <div className="border-b border-slate-100 px-3 py-3">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-sm font-black text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-black text-white">
               {getInitial(user?.name)}
             </span>
             <div>
               <p className="text-sm font-bold text-slate-900">{user?.name}</p>
-              <p className="text-xs text-slate-500">{user?.email || "Tài khoản người dùng"}</p>
+              <p className="text-xs text-slate-400">{user?.email || "Tài khoản người dùng"}</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-1.5 space-y-0.5">
+        <div className="mt-2 space-y-0.5">
           <DropdownLink to="/profile" label="Hồ sơ" />
           <DropdownLink to="/my-orders" label="Đơn hàng của tôi" />
           <DropdownLink to="/wishlist" label="Yêu thích" />
@@ -193,7 +196,7 @@ function AccountDropdown({ user, isAdmin, onLogout }) {
           <button
             type="button"
             onClick={onLogout}
-            className="flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors duration-150 hover:bg-red-50"
+            className="flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-bold text-red-600 transition-colors duration-150 hover:bg-red-50"
           >
             Đăng xuất
           </button>
@@ -207,7 +210,7 @@ function DropdownLink({ to, label }) {
   return (
     <Link
       to={to}
-      className="flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-150 hover:bg-slate-50 hover:text-blue-700"
+      className="flex items-center rounded-xl px-3 py-2.5 text-sm font-bold text-slate-700 transition-colors duration-150 hover:bg-slate-50 hover:text-indigo-600"
     >
       {label}
     </Link>
@@ -220,16 +223,13 @@ function MenuLink({ item, pathname }) {
   return (
     <Link
       to={item.to}
-      className={`relative px-3 py-2 text-sm font-semibold transition-colors duration-200 ${
+      className={`relative px-4 py-2 text-sm font-bold transition-all duration-300 rounded-lg ${
         isActive
-          ? "text-blue-700"
-          : "text-slate-600 hover:text-slate-900"
+          ? "text-indigo-600 bg-indigo-50/50"
+          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
       }`}
     >
       {item.label}
-      <span className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-blue-600 transition-all duration-300 origin-center ${
-        isActive ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
-      }`} />
     </Link>
   );
 }
@@ -240,10 +240,10 @@ function MenuChip({ item, pathname }) {
   return (
     <Link
       to={item.to}
-      className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+      className={`whitespace-nowrap rounded-full px-4.5 py-2 text-xs sm:text-sm font-bold transition-all duration-300 ${
         isActive
-          ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
-          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-100"
+          : "bg-slate-50 border border-slate-100 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
       }`}
     >
       {item.label}
