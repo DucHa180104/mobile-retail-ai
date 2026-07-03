@@ -1,8 +1,14 @@
+import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import { sendOrderConfirmationEmail } from "../services/emailService.js";
 
 const allowedOrderStatuses = ["pending", "confirmed", "cancelled"];
+const VALID_ORDER_STATUS_TRANSITIONS = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["cancelled"],
+  cancelled: []
+};
 
 export const createOrder = async (req, res, next) => {
   try {
@@ -73,61 +79,75 @@ export const createOrder = async (req, res, next) => {
       }
     }
 
-    const productIds = normalizedRequestItems.map((item) => item.productId);
-    const products = await Product.find({ _id: { $in: productIds } });
-    const productMap = new Map(products.map((product) => [String(product._id), product]));
-    const orderItems = [];
-    let calculatedTotalAmount = 0;
-
-    for (const item of normalizedRequestItems) {
-      const product = productMap.get(String(item.productId));
-
-      if (!product) {
-        return res.status(400).json({
-          message: `Product not found for item ${item.productId}`
-        });
-      }
-
-      if ((product.stock ?? 0) < item.quantity) {
-        return res.status(400).json({
-          message: `${product.name} không đủ hàng trong kho`
-        });
-      }
-
-      const orderItem = {
-        productId: product._id,
-        name: product.name,
-        price: Number(product.price || 0),
-        quantity: item.quantity,
-        image: product.images?.[0] || ""
-      };
-
-      orderItems.push(orderItem);
-      calculatedTotalAmount += orderItem.price * orderItem.quantity;
-    }
-
     const paymentData = getPaymentData(paymentMethod);
+    const session = await mongoose.startSession();
+    let order = null;
 
-    const order = await Order.create({
-      user: req.user?._id || null,
-      contactEmail: normalizedEmail,
-      shippingInfo: normalizedShippingInfo,
-      customerName: normalizedShippingInfo.fullName,
-      phoneNumber: normalizedShippingInfo.phoneNumber,
-      address: normalizedShippingInfo.address,
-      note: normalizedShippingInfo.note,
-      items: orderItems,
-      totalAmount: calculatedTotalAmount,
-      paymentMethod,
-      paymentStatus: paymentData.paymentStatus,
-      paidAt: paymentData.paidAt,
-      transactionId: paymentData.transactionId
-    });
+    try {
+      await session.withTransaction(async () => {
+        const orderItems = [];
+        let calculatedTotalAmount = 0;
 
-    for (const item of orderItems) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -item.quantity }
+        for (const item of normalizedRequestItems) {
+          const product = await Product.findById(item.productId).session(session);
+
+          if (!product) {
+            throw createHttpError(400, `Product not found for item ${item.productId}`);
+          }
+
+          const updatedProduct = await Product.findOneAndUpdate(
+            {
+              _id: item.productId,
+              stock: { $gte: item.quantity }
+            },
+            {
+              $inc: { stock: -item.quantity }
+            },
+            {
+              returnDocument: "after",
+              session
+            }
+          );
+
+          if (!updatedProduct) {
+            throw createHttpError(400, `${product.name} khong du hang trong kho`);
+          }
+
+          const orderItem = {
+            productId: product._id,
+            name: product.name,
+            price: Number(product.price || 0),
+            quantity: item.quantity,
+            image: product.images?.[0] || ""
+          };
+
+          orderItems.push(orderItem);
+          calculatedTotalAmount += orderItem.price * orderItem.quantity;
+        }
+
+        [order] = await Order.create(
+          [
+            {
+              user: req.user?._id || null,
+              contactEmail: normalizedEmail,
+              shippingInfo: normalizedShippingInfo,
+              customerName: normalizedShippingInfo.fullName,
+              phoneNumber: normalizedShippingInfo.phoneNumber,
+              address: normalizedShippingInfo.address,
+              note: normalizedShippingInfo.note,
+              items: orderItems,
+              totalAmount: calculatedTotalAmount,
+              paymentMethod,
+              paymentStatus: paymentData.paymentStatus,
+              paidAt: paymentData.paidAt,
+              transactionId: paymentData.transactionId
+            }
+          ],
+          { session }
+        );
       });
+    } finally {
+      await session.endSession();
     }
 
     try {
@@ -138,6 +158,10 @@ export const createOrder = async (req, res, next) => {
 
     res.status(201).json(order);
   } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+
     next(error);
   }
 };
@@ -195,21 +219,57 @@ export const updateOrderStatus = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid order status" });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      {
-        new: true,
-        runValidators: true
-      }
-    );
+    const session = await mongoose.startSession();
+    let updatedOrder = null;
 
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+    try {
+      await session.withTransaction(async () => {
+        const order = await Order.findById(req.params.id).session(session);
+
+        if (!order) {
+          throw createHttpError(404, "Order not found");
+        }
+
+        if (order.status === status) {
+          updatedOrder = order;
+          return;
+        }
+
+        const allowedNextStatuses = VALID_ORDER_STATUS_TRANSITIONS[order.status] || [];
+
+        if (!allowedNextStatuses.includes(status)) {
+          throw createHttpError(
+            400,
+            `Khong the chuyen trang thai don hang tu '${order.status}' sang '${status}'`
+          );
+        }
+
+        if (status === "cancelled") {
+          for (const item of order.items) {
+            await Product.findByIdAndUpdate(
+              item.productId,
+              {
+                $inc: { stock: item.quantity }
+              },
+              { session }
+            );
+          }
+        }
+
+        order.status = status;
+        await order.save({ session });
+        updatedOrder = order;
+      });
+    } finally {
+      await session.endSession();
     }
 
-    res.status(200).json(order);
+    res.status(200).json(updatedOrder);
   } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+
     next(error);
   }
 };
@@ -252,4 +312,10 @@ function buildStatusFilter(status) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function createHttpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
 }

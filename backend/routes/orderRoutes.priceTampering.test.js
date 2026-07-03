@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import orderRoutes from "./orderRoutes.js";
@@ -14,7 +14,7 @@ app.use("/api/orders", orderRoutes);
 let mongoServer;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(mongoServer.getUri());
 });
 
