@@ -5,11 +5,9 @@ import HeroBanner from "../components/HeroBanner.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import TrustBadges from "../components/TrustBadges.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useCart } from "../context/CartContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
 function ProductListPage() {
-  const { addToCart } = useCart();
   const { token, isAuthenticated } = useAuth();
   const { searchTerm } = useOutletContext();
   const [products, setProducts] = useState([]);
@@ -266,7 +264,6 @@ function ProductListPage() {
                   key={product._id}
                   product={product}
                   badge={getProductBadge(product, index)}
-                  onAddToCart={addToCart}
                   isWishlisted={wishlistIds.has(product._id)}
                   onToggleWishlist={handleToggleWishlist}
                 />

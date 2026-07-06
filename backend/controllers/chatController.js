@@ -14,7 +14,7 @@ export async function sendChatReply(req, res) {
 
     if (!String(message).trim()) {
       return res.status(400).json({
-        message: "Vui lòng nhập nội dung câu hỏi"
+        message: "Vui long nhap noi dung cau hoi"
       });
     }
 
@@ -51,7 +51,7 @@ export async function sendChatReply(req, res) {
   }
 }
 
-export async function getMyChatHistory(req, res) {
+export async function getMyChatHistory(req, res, next) {
   try {
     const history = await ChatHistory.findOne({ user: req.user._id });
 
@@ -59,9 +59,7 @@ export async function getMyChatHistory(req, res) {
       messages: formatStoredMessages(history?.messages || [])
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Khong the tai lich su chat"
-    });
+    return next(error);
   }
 }
 
@@ -72,15 +70,17 @@ function mapChatbotError(error) {
   if (normalizedMessage.includes("quota")) {
     return {
       status: 503,
-      message:
-        "AI đang quá tải hoặc đã chạm giới hạn lượt gọi. Bạn thử lại sau ít phút nhé."
+      message: "AI dang qua tai hoac da cham gioi han luot goi. Ban thu lai sau it phut nhe."
     };
   }
 
-  if (normalizedMessage.includes("timed out") || normalizedMessage.includes("fetch failed")) {
+  if (
+    normalizedMessage.includes("timed out") ||
+    normalizedMessage.includes("fetch failed")
+  ) {
     return {
       status: 503,
-      message: "Không thể kết nối tới Gemini API lúc này. Bạn kiểm tra mạng rồi thử lại nhé."
+      message: "Khong the ket noi toi Gemini API luc nay. Ban kiem tra mang roi thu lai nhe."
     };
   }
 
@@ -91,13 +91,13 @@ function mapChatbotError(error) {
   ) {
     return {
       status: 500,
-      message: "Cấu hình Gemini API chưa hợp lệ. Bạn kiểm tra lại API key trong file .env."
+      message: "Cau hinh Gemini API chua hop le. Ban kiem tra lai API key trong file .env."
     };
   }
 
   return {
     status: 500,
-    message: errorMessage || "Chatbot đang gặp lỗi tạm thời. Bạn thử lại sau nhé."
+    message: "Chatbot dang gap loi tam thoi. Ban thu lai sau nhe."
   };
 }
 

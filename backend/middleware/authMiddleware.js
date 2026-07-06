@@ -57,17 +57,13 @@ export const protectOptional = async (req, res, next) => {
     const user = await User.findById(decoded.userId).select("-password");
 
     if (!user) {
-      return res.status(401).json({
-        message: "Not authorized, user not found"
-      });
+      return next();
     }
 
     req.user = user;
-    next();
+    return next();
   } catch (error) {
-    return res.status(401).json({
-      message: "Not authorized, token is invalid"
-    });
+    return next();
   }
 };
 

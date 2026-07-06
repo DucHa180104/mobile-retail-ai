@@ -1,29 +1,25 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 
-export const getWishlist = async (req, res) => {
+export const getWishlist = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id)
-      .select("wishlist")
-      .populate("wishlist");
+    const user = await User.findById(req.user._id).select("wishlist").populate("wishlist");
 
     return res.json({
       wishlist: user?.wishlist || []
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Không thể tải danh sách yêu thích"
-    });
+    return next(error);
   }
 };
 
-export const toggleWishlist = async (req, res) => {
+export const toggleWishlist = async (req, res, next) => {
   try {
     const { productId } = req.body;
 
     if (!productId) {
       return res.status(400).json({
-        message: "Thiếu productId"
+        message: "Thieu productId"
       });
     }
 
@@ -31,7 +27,7 @@ export const toggleWishlist = async (req, res) => {
 
     if (!product) {
       return res.status(404).json({
-        message: "Không tìm thấy sản phẩm"
+        message: "Khong tim thay san pham"
       });
     }
 
@@ -39,7 +35,7 @@ export const toggleWishlist = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        message: "Không tìm thấy người dùng"
+        message: "Khong tim thay nguoi dung"
       });
     }
 
@@ -59,8 +55,6 @@ export const toggleWishlist = async (req, res) => {
       wishlist: user.wishlist
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Không thể cập nhật danh sách yêu thích"
-    });
+    return next(error);
   }
 };

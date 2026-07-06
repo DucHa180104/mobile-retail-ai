@@ -3,7 +3,7 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Review from "../models/Review.js";
 
-export const createReview = async (req, res) => {
+export const createReview = async (req, res, next) => {
   try {
     const { productId, orderId, rating, comment = "", images = [] } = req.body;
     const numericRating = Number(rating);
@@ -98,13 +98,11 @@ export const createReview = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      message: error.message || "Failed to create review"
-    });
+    return next(error);
   }
 };
 
-export const updateReview = async (req, res) => {
+export const updateReview = async (req, res, next) => {
   try {
     const { reviewId } = req.params;
     const { rating, comment = "", images = [] } = req.body;
@@ -163,13 +161,11 @@ export const updateReview = async (req, res) => {
 
     res.status(200).json(populatedReview);
   } catch (error) {
-    res.status(500).json({
-      message: error.message || "Failed to update review"
-    });
+    return next(error);
   }
 };
 
-export const getProductReviews = async (req, res) => {
+export const getProductReviews = async (req, res, next) => {
   try {
     const { productId } = req.params;
 
@@ -185,13 +181,11 @@ export const getProductReviews = async (req, res) => {
 
     res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({
-      message: error.message || "Failed to fetch product reviews"
-    });
+    return next(error);
   }
 };
 
-export const getReviews = async (_req, res) => {
+export const getReviews = async (_req, res, next) => {
   try {
     const reviews = await Review.find()
       .populate("user", "name")
@@ -200,8 +194,6 @@ export const getReviews = async (_req, res) => {
 
     res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({
-      message: error.message || "Failed to fetch reviews"
-    });
+    return next(error);
   }
 };

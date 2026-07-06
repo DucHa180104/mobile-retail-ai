@@ -1,7 +1,7 @@
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 
-export const getCart = async (req, res) => {
+export const getCart = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).populate("cart.productId");
 
@@ -13,11 +13,11 @@ export const getCart = async (req, res) => {
       cartItems: formatCartItems(user.cart)
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return next(error);
   }
 };
 
-export const addToCart = async (req, res) => {
+export const addToCart = async (req, res, next) => {
   try {
     const { productId, quantity = 1 } = req.body;
 
@@ -59,11 +59,11 @@ export const addToCart = async (req, res) => {
       cartItems: formatCartItems(user.cart)
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return next(error);
   }
 };
 
-export const updateCartItemQuantity = async (req, res) => {
+export const updateCartItemQuantity = async (req, res, next) => {
   try {
     const { quantity } = req.body;
     const { productId } = req.params;
@@ -97,11 +97,11 @@ export const updateCartItemQuantity = async (req, res) => {
       cartItems: formatCartItems(user.cart)
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return next(error);
   }
 };
 
-export const removeFromCart = async (req, res) => {
+export const removeFromCart = async (req, res, next) => {
   try {
     const { productId } = req.params;
     const user = await User.findById(req.user._id);
@@ -118,11 +118,11 @@ export const removeFromCart = async (req, res) => {
       cartItems: formatCartItems(user.cart)
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return next(error);
   }
 };
 
-export const clearCart = async (req, res) => {
+export const clearCart = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
 
@@ -137,11 +137,11 @@ export const clearCart = async (req, res) => {
       cartItems: []
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return next(error);
   }
 };
 
-export const syncCart = async (req, res) => {
+export const syncCart = async (req, res, next) => {
   try {
     const { cartItems = [] } = req.body;
     const normalizedItems = normalizeIncomingCartItems(cartItems);
@@ -180,7 +180,7 @@ export const syncCart = async (req, res) => {
       cartItems: formatCartItems(user.cart)
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return next(error);
   }
 };
 
