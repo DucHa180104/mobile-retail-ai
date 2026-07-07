@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, consumeAuthNotice } from "../lib/api.js";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -12,6 +12,14 @@ function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const authNotice = consumeAuthNotice();
+
+    if (authNotice) {
+      setError(authNotice);
+    }
+  }, []);
 
   function handleChange(event) {
     const { name, value } = event.target;

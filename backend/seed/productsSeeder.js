@@ -376,6 +376,8 @@ async function seedDatabase() {
     }
 
     console.log("Inserted demo products and users successfully");
+    console.log(`Total demo products: ${sampleProducts.length}`);
+    console.log(`Total demo users: ${demoUsers.length}`);
     console.log("Admin account: admin@example.com / admin123");
     console.log("User account: user@example.com / user123");
   } catch (error) {

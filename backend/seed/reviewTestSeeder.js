@@ -225,6 +225,8 @@ async function seedReviewTestData() {
     }
 
     console.log("Seeded review test users and diverse orders successfully");
+    console.log(`Total review test users: ${createdUsers.length}`);
+    console.log(`Total review test orders: ${createdOrders.length}`);
     console.log("Tai khoan can test lich su don hang da duoc bo sung:");
     console.log(`- review01@example.com / review123 -> ${review01Orders.length} don hang`);
     review01Orders.forEach((order, index) => {

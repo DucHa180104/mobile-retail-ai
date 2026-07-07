@@ -168,16 +168,27 @@ export const updateProfile = async (req, res, next) => {
     }
 
     if (shippingInfo && typeof shippingInfo === "object") {
-      user.shippingInfo = {
-        fullName: typeof shippingInfo.fullName === "string" ? shippingInfo.fullName.trim() : "",
-        phoneNumber:
-          typeof shippingInfo.phoneNumber === "string" ? shippingInfo.phoneNumber.trim() : "",
-        address: typeof shippingInfo.address === "string" ? shippingInfo.address.trim() : "",
-        city: typeof shippingInfo.city === "string" ? shippingInfo.city.trim() : "",
-        district: typeof shippingInfo.district === "string" ? shippingInfo.district.trim() : "",
-        ward: typeof shippingInfo.ward === "string" ? shippingInfo.ward.trim() : "",
-        note: typeof shippingInfo.note === "string" ? shippingInfo.note.trim() : ""
-      };
+      const currentShippingInfo = user.shippingInfo?.toObject?.() || user.shippingInfo || {};
+      const nextShippingInfo = { ...currentShippingInfo };
+
+      const shippingFields = [
+        "fullName",
+        "phoneNumber",
+        "address",
+        "city",
+        "district",
+        "ward",
+        "note"
+      ];
+
+      for (const field of shippingFields) {
+        if (Object.prototype.hasOwnProperty.call(shippingInfo, field)) {
+          nextShippingInfo[field] =
+            typeof shippingInfo[field] === "string" ? shippingInfo[field].trim() : "";
+        }
+      }
+
+      user.shippingInfo = nextShippingInfo;
     }
 
     await user.save();

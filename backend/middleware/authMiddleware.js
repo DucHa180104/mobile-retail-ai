@@ -28,8 +28,14 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    if (user.isActive === false) {
+      return res.status(403).json({
+        message: "Account has been disabled"
+      });
+    }
+
     req.user = user;
-    next();
+    return next();
   } catch (error) {
     return res.status(401).json({
       message: "Not authorized, token is invalid"
@@ -56,7 +62,7 @@ export const protectOptional = async (req, res, next) => {
 
     const user = await User.findById(decoded.userId).select("-password");
 
-    if (!user) {
+    if (!user || user.isActive === false) {
       return next();
     }
 

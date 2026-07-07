@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { AUTH_REDIRECT_EVENT, installGlobalAuthFetchHandler } from "../lib/api.js";
 
 const AuthContext = createContext(null);
 const AUTH_STORAGE_KEY = "mobile-retail-auth";
@@ -30,6 +31,28 @@ function getStoredAuth() {
 
 export function AuthProvider({ children }) {
   const [{ user, token }, setAuthState] = useState(getStoredAuth);
+
+  useEffect(() => {
+    installGlobalAuthFetchHandler();
+
+    function handleAuthRedirect() {
+      setAuthState({
+        user: null,
+        token: ""
+      });
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+
+      if (window.location.pathname !== "/login" && window.location.pathname !== "/register") {
+        window.location.assign("/login");
+      }
+    }
+
+    window.addEventListener(AUTH_REDIRECT_EVENT, handleAuthRedirect);
+
+    return () => {
+      window.removeEventListener(AUTH_REDIRECT_EVENT, handleAuthRedirect);
+    };
+  }, []);
 
   function login(authUser, authToken) {
     const nextState = {
