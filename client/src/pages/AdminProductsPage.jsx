@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { buildApiUrl } from "../lib/api";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api";
 
 const brandOptions = ["all", "Apple", "Samsung", "Xiaomi", "Oppo"];
 
@@ -587,7 +587,7 @@ function AdminProductTable({ products, onEdit, onDelete }) {
                 <td className="px-6 py-5">
                   {product.images?.[0] ? (
                     <img
-                      src={product.images[0]}
+                      src={resolveMediaUrl(product.images[0])}
                       alt={product.name}
                       className="h-16 w-16 rounded-2xl object-cover"
                     />
@@ -792,7 +792,7 @@ function ProductFormModal({
                     className="overflow-hidden rounded-3xl border border-slate-200 bg-white"
                   >
                     <img
-                      src={image}
+                      src={resolveMediaUrl(image)}
                       alt={`Ảnh sản phẩm ${index + 1}`}
                       className="h-48 w-full object-cover"
                     />

@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
+import { resolveMediaUrl } from "../lib/api.js";
 
 function HeroBanner({ featuredProduct }) {
   const detailLink = featuredProduct ? `/products/${featuredProduct._id}` : "/";
   const imageUrl =
-    featuredProduct?.images?.[0] ||
+    resolveMediaUrl(featuredProduct?.images?.[0]) ||
     "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=1200&q=80";
 
   return (

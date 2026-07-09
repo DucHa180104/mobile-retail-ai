@@ -4,8 +4,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 const menuItems = [
   { label: "Trang chủ", to: "/", activePaths: ["/"] },
   { label: "Điện thoại", to: "/phones", activePaths: ["/phones", "/products"] },
-  { label: "Máy tính bảng", to: "/" },
-  { label: "Phụ kiện", to: "/" },
+  { label: "Máy tính bảng", to: "/tablets", activePaths: ["/tablets"] },
+  { label: "Phụ kiện", to: "/accessories", activePaths: ["/accessories"] },
   { label: "Thu cũ đổi mới", to: "/trade-in", activePaths: ["/trade-in"] },
   { label: "Liên hệ", to: "/contact", activePaths: ["/contact"] }
 ];
@@ -20,22 +20,23 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
       <div className="mx-auto max-w-[1360px] px-4 sm:px-5 lg:px-6">
         <div className="py-3.5">
           <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
-            {/* Logo */}
-            <Link to="/" className="group flex shrink-0 items-center gap-3 transition-transform duration-300 active:scale-95">
+            <Link
+              to="/"
+              className="group flex shrink-0 items-center gap-3 transition-transform duration-300 active:scale-95"
+            >
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-base font-black text-white shadow-md shadow-indigo-200/50 transition-transform duration-300 group-hover:rotate-6">
                 M
               </span>
               <div className="min-w-0">
-                <p className="truncate text-base sm:text-lg font-black tracking-widest text-slate-800 transition-colors duration-300 group-hover:text-indigo-600">
-                  MẠNH HƯƠNG
+                <p className="truncate text-base font-black tracking-widest text-slate-800 transition-colors duration-300 group-hover:text-indigo-600 sm:text-lg">
+                  MẠNH HƯỜNG
                 </p>
-                <p className="text-[10px] font-bold tracking-wider text-slate-400 -mt-1 group-hover:text-indigo-400">
+                <p className="-mt-1 text-[10px] font-bold tracking-wider text-slate-400 group-hover:text-indigo-400">
                   MOBILE RETAIL
                 </p>
               </div>
             </Link>
 
-            {/* Search */}
             <div className="order-3 w-full lg:order-2 lg:mx-6 lg:flex-1">
               <label className="relative block">
                 <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400 transition-colors duration-200 focus-within:text-indigo-600">
@@ -46,16 +47,15 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
                   value={searchValue}
                   onChange={onSearchChange}
                   placeholder="Tìm kiếm iPhone, Samsung, Xiaomi..."
-                  className="w-full rounded-full border border-slate-100 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-300 focus:border-indigo-200 focus:bg-white focus:ring-4 focus:ring-indigo-100/50 shadow-inner"
+                  className="w-full rounded-full border border-slate-100 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-300 shadow-inner focus:border-indigo-200 focus:bg-white focus:ring-4 focus:ring-indigo-100/50"
                 />
               </label>
             </div>
 
-            {/* Actions */}
             <div className="order-2 ml-auto flex items-center gap-2 lg:order-3 lg:ml-0">
               <Link
                 to="/cart"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-all duration-300 hover:bg-slate-50 hover:text-indigo-600 hover:scale-105 active:scale-95"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-all duration-300 hover:scale-105 hover:bg-slate-50 hover:text-indigo-600 active:scale-95"
                 aria-label="Giỏ hàng"
               >
                 <CartIcon />
@@ -74,13 +74,13 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
                 <div className="hidden items-center gap-2 sm:flex">
                   <Link
                     to="/login"
-                    className="rounded-full border border-slate-200/80 px-5 py-2 text-sm font-bold text-slate-700 transition-all duration-300 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:scale-[1.02] active:scale-[0.98]"
+                    className="rounded-full border border-slate-200/80 px-5 py-2 text-sm font-bold text-slate-700 transition-all duration-300 hover:scale-[1.02] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
                   >
                     Đăng nhập
                   </Link>
                   <Link
                     to="/register"
-                    className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-md shadow-indigo-100 transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-indigo-200/50 hover:scale-[1.02] active:scale-[0.98]"
+                    className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-md shadow-indigo-100 transition-all duration-300 hover:scale-[1.02] hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-indigo-200/50 active:scale-[0.98]"
                   >
                     Đăng ký
                   </Link>
@@ -89,7 +89,6 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
             </div>
           </div>
 
-          {/* Desktop nav */}
           <nav className="mt-3.5 hidden items-center gap-1 border-t border-slate-100 pt-3.5 lg:flex">
             {menuItems.map((item) => (
               <MenuLink key={item.label} item={item} pathname={location.pathname} />
@@ -97,7 +96,6 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
           </nav>
         </div>
 
-        {/* Mobile nav chips */}
         <div className="flex gap-2 overflow-x-auto border-t border-slate-100 pb-3.5 pt-3.5 lg:hidden">
           {menuItems.map((item) => (
             <MenuChip key={item.label} item={item} pathname={location.pathname} />
@@ -107,26 +105,26 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
             <>
               <Link
                 to="/profile"
-                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
+                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
               >
                 Hồ sơ
               </Link>
               <Link
                 to="/my-orders"
-                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
+                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
               >
                 Đơn hàng của tôi
               </Link>
               <Link
                 to="/wishlist"
-                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
+                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
               >
                 Yêu thích
               </Link>
               {isAdmin ? (
                 <Link
                   to="/admin/dashboard"
-                  className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs sm:text-sm font-bold text-white transition duration-300 hover:bg-indigo-700"
+                  className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs font-bold text-white transition duration-300 hover:bg-indigo-700 sm:text-sm"
                 >
                   Admin Dashboard
                 </Link>
@@ -134,7 +132,7 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
               <button
                 type="button"
                 onClick={logout}
-                className="whitespace-nowrap rounded-full bg-rose-50 border border-rose-100 px-4 py-2 text-xs sm:text-sm font-bold text-rose-600 transition duration-300 hover:bg-rose-100"
+                className="whitespace-nowrap rounded-full border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600 transition duration-300 hover:bg-rose-100 sm:text-sm"
               >
                 Đăng xuất
               </button>
@@ -143,13 +141,13 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
             <>
               <Link
                 to="/login"
-                className="whitespace-nowrap rounded-full bg-slate-50 border border-slate-100 px-4 py-2 text-xs sm:text-sm font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900"
+                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
               >
                 Đăng nhập
               </Link>
               <Link
                 to="/register"
-                className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs sm:text-sm font-bold text-white transition duration-300 hover:bg-indigo-700 shadow-md shadow-indigo-100"
+                className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-100 transition duration-300 hover:bg-indigo-700 sm:text-sm"
               >
                 Đăng ký
               </Link>
@@ -164,7 +162,7 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
 function AccountDropdown({ user, isAdmin, onLogout }) {
   return (
     <details className="group relative">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-slate-100 bg-white shadow-sm px-3.5 py-1.5 text-sm text-slate-700 transition-all duration-300 hover:border-slate-200 hover:shadow hover:scale-[1.02] active:scale-[0.98]">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-slate-100 bg-white px-3.5 py-1.5 text-sm text-slate-700 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:border-slate-200 hover:shadow active:scale-[0.98]">
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-black text-white shadow-sm">
           {getInitial(user?.name)}
         </span>
@@ -174,7 +172,7 @@ function AccountDropdown({ user, isAdmin, onLogout }) {
         </span>
       </summary>
 
-      <div className="absolute right-0 top-[calc(100%+0.65rem)] z-50 w-64 animate-fade-in rounded-2xl border border-slate-100 bg-white/95 backdrop-blur-md p-2.5 shadow-xl shadow-slate-200/50">
+      <div className="absolute right-0 top-[calc(100%+0.65rem)] z-50 w-64 animate-fade-in rounded-2xl border border-slate-100 bg-white/95 p-2.5 shadow-xl shadow-slate-200/50 backdrop-blur-md">
         <div className="border-b border-slate-100 px-3 py-3">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-black text-white">
@@ -223,10 +221,10 @@ function MenuLink({ item, pathname }) {
   return (
     <Link
       to={item.to}
-      className={`relative px-4 py-2 text-sm font-bold transition-all duration-300 rounded-lg ${
+      className={`relative rounded-lg px-4 py-2 text-sm font-bold transition-all duration-300 ${
         isActive
-          ? "text-indigo-600 bg-indigo-50/50"
-          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+          ? "bg-indigo-50/50 text-indigo-600"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
       {item.label}
@@ -240,10 +238,10 @@ function MenuChip({ item, pathname }) {
   return (
     <Link
       to={item.to}
-      className={`whitespace-nowrap rounded-full px-4.5 py-2 text-xs sm:text-sm font-bold transition-all duration-300 ${
+      className={`whitespace-nowrap rounded-full px-4.5 py-2 text-xs font-bold transition-all duration-300 sm:text-sm ${
         isActive
           ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-100"
-          : "bg-slate-50 border border-slate-100 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+          : "border border-slate-100 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
       }`}
     >
       {item.label}

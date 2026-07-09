@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
 const paymentOptions = [
   {
@@ -400,7 +400,7 @@ function CheckoutPage() {
                   <div className="flex gap-4">
                     <img
                       src={
-                        item.images?.[0] ||
+                        resolveMediaUrl(item.images?.[0]) ||
                         "https://via.placeholder.com/240x180?text=Khong+co+anh"
                       }
                       alt={item.name}

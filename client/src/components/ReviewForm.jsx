@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
 function ReviewForm({
   onSubmit,
@@ -180,7 +180,7 @@ function ReviewForm({
                 className="rounded-2xl border border-slate-200 bg-white p-3"
               >
                 <img
-                  src={imageUrl}
+                  src={resolveMediaUrl(imageUrl)}
                   alt={`Ảnh đánh giá ${index + 1}`}
                   className="h-24 w-full rounded-xl object-cover"
                 />

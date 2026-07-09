@@ -5,6 +5,7 @@ export const getProducts = async (req, res, next) => {
     const {
       keyword = "",
       brand = "",
+      category = "",
       condition = "",
       storage = "",
       minPrice = "",
@@ -32,6 +33,10 @@ export const getProducts = async (req, res, next) => {
 
     if (brand.trim()) {
       query.brand = { $regex: `^${escapeRegex(brand.trim())}$`, $options: "i" };
+    }
+
+    if (category.trim()) {
+      query.category = normalizeCategory(category);
     }
 
     if (condition.trim()) {
@@ -162,6 +167,10 @@ function buildProductPayload(body = {}) {
     payload.brand = normalizeString(body.brand);
   }
 
+  if (hasOwn(body, "category")) {
+    payload.category = normalizeCategory(body.category);
+  }
+
   if (hasOwn(body, "price")) {
     payload.price = normalizeNumber(body.price);
   }
@@ -282,6 +291,16 @@ function normalizeString(value) {
 function normalizeNumber(value) {
   const parsedValue = Number(value);
   return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
+function normalizeCategory(value) {
+  const normalizedValue = normalizeString(value).toLowerCase();
+
+  if (["phone", "tablet", "accessory"].includes(normalizedValue)) {
+    return normalizedValue;
+  }
+
+  return "phone";
 }
 
 function hasOwn(object, key) {

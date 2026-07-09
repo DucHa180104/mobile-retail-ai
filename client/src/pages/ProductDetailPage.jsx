@@ -4,7 +4,7 @@ import ReviewForm from "../components/ReviewForm.jsx";
 import ReviewList from "../components/ReviewList.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -104,7 +104,7 @@ function ProductDetailPage() {
       return ["https://via.placeholder.com/700x560?text=Khong+co+anh"];
     }
 
-    return product.images;
+    return product.images.map((image) => resolveMediaUrl(image));
   }, [product]);
 
   const currentUserId = user?._id || user?.id || "";

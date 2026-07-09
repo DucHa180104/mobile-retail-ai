@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
+import { resolveMediaUrl } from "../lib/api.js";
 
 function ProductCard({ product, badge, isWishlisted = false, onToggleWishlist }) {
   const imageUrl =
-    product.images?.[0] || "https://via.placeholder.com/400x320?text=Khong+co+anh";
+    resolveMediaUrl(product.images?.[0]) ||
+    "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
   // Xác định nhãn tình trạng máy
   const getConditionInfo = (cond) => {

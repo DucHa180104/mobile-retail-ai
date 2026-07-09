@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { resolveMediaUrl } from "../lib/api.js";
 
 function CartPage() {
   const {
@@ -73,7 +74,10 @@ function CartPage() {
                 <div className="grid gap-4 sm:grid-cols-[112px_1fr]">
                   <div className="overflow-hidden rounded-xl border border-slate-50 bg-slate-50 aspect-[4/3] flex items-center justify-center sm:h-28 sm:w-28">
                     <img
-                      src={item.images?.[0] || "https://via.placeholder.com/320x240?text=Khong+co+anh"}
+                      src={
+                        resolveMediaUrl(item.images?.[0]) ||
+                        "https://via.placeholder.com/320x240?text=Khong+co+anh"
+                      }
                       alt={item.name}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"

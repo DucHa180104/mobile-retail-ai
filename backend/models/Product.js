@@ -11,6 +11,11 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    category: {
+      type: String,
+      enum: ["phone", "tablet", "accessory"],
+      default: "phone"
+    },
     price: {
       type: Number,
       required: true,

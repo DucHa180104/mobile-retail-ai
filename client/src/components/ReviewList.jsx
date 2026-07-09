@@ -1,3 +1,5 @@
+import { resolveMediaUrl } from "../lib/api.js";
+
 function ReviewList({
   reviews,
   loading = false,
@@ -66,7 +68,7 @@ function ReviewList({
                 {review.images.map((imageUrl, index) => (
                   <img
                     key={`${review._id}-image-${index}`}
-                    src={imageUrl}
+                    src={resolveMediaUrl(imageUrl)}
                     alt={`Ảnh đánh giá ${index + 1}`}
                     className="h-36 w-full rounded-2xl border border-slate-200 object-cover"
                   />

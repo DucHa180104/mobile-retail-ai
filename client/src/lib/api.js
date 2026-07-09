@@ -18,6 +18,22 @@ export function buildApiUrl(path = "") {
   return API_BASE_URL ? `${API_BASE_URL}${normalizedPath}` : normalizedPath;
 }
 
+export function resolveMediaUrl(path = "") {
+  if (!path || typeof path !== "string") {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  if (path.startsWith("/uploads/")) {
+    return buildApiUrl(path);
+  }
+
+  return path;
+}
+
 let isGlobalFetchHandlerInstalled = false;
 let lastAuthRedirectAt = 0;
 

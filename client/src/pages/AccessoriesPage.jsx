@@ -3,13 +3,20 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
-const brandOptions = ["Apple", "Samsung", "Xiaomi", "Oppo"];
+const brandOptions = ["Apple", "Samsung", "Anker", "Baseus", "JBL"];
 
 const conditionOptions = [
+  { label: "Máy mới", value: "new" },
   { label: "Cũ 99%", value: "used_99" },
   { label: "Cũ đẹp", value: "used_good" },
-  { label: "Cũ dùng tốt", value: "used_fair" },
-  { label: "Máy mới", value: "new" }
+  { label: "Cũ dùng tốt", value: "used_fair" }
+];
+
+const accessoryTypeOptions = [
+  { label: "Tai nghe", value: "audio" },
+  { label: "Sạc / cáp", value: "charger" },
+  { label: "Bút / bàn phím", value: "input" },
+  { label: "Ốp / bao da", value: "case" }
 ];
 
 const sortOptions = [
@@ -18,18 +25,16 @@ const sortOptions = [
   { label: "Giá cao", value: "price_desc" }
 ];
 
-const storageOptions = ["64GB", "128GB", "256GB", "512GB"];
-
 const priceRangeOptions = [
-  { label: "Dưới 10 triệu", value: "under_10m", minPrice: 0, maxPrice: 10000000 },
-  { label: "10 - 15 triệu", value: "10m_15m", minPrice: 10000000, maxPrice: 15000000 },
-  { label: "15 - 20 triệu", value: "15m_20m", minPrice: 15000000, maxPrice: 20000000 },
-  { label: "Trên 20 triệu", value: "above_20m", minPrice: 20000000, maxPrice: null }
+  { label: "Dưới 1 triệu", value: "under_1m", minPrice: 0, maxPrice: 1000000 },
+  { label: "1 - 3 triệu", value: "1m_3m", minPrice: 1000000, maxPrice: 3000000 },
+  { label: "3 - 6 triệu", value: "3m_6m", minPrice: 3000000, maxPrice: 6000000 },
+  { label: "Trên 6 triệu", value: "above_6m", minPrice: 6000000, maxPrice: null }
 ];
 
 const pageSize = 6;
 
-function PhonesPage() {
+function AccessoriesPage() {
   const navigate = useNavigate();
   const { token, isAuthenticated } = useAuth();
   const { searchTerm } = useOutletContext();
@@ -39,12 +44,10 @@ function PhonesPage() {
   const [error, setError] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedCondition, setSelectedCondition] = useState("");
-  const [selectedStorage, setSelectedStorage] = useState("");
+  const [selectedType, setSelectedType] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
   const [selectedSort, setSelectedSort] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -57,7 +60,7 @@ function PhonesPage() {
           (option) => option.value === selectedPriceRange
         );
 
-        params.set("category", "phone");
+        params.set("category", "accessory");
 
         if (searchTerm.trim()) {
           params.set("keyword", searchTerm.trim());
@@ -71,10 +74,6 @@ function PhonesPage() {
           params.set("condition", selectedCondition);
         }
 
-        if (selectedStorage) {
-          params.set("storage", selectedStorage);
-        }
-
         if (selectedPrice) {
           params.set("minPrice", String(selectedPrice.minPrice));
 
@@ -84,52 +83,30 @@ function PhonesPage() {
         }
 
         params.set("sort", selectedSort);
-        params.set("page", String(currentPage));
-        params.set("limit", String(pageSize));
+        params.set("page", "1");
+        params.set("limit", "100");
 
-        const queryString = params.toString();
-        const url = queryString
-          ? buildApiUrl(`/api/products?${queryString}`)
-          : buildApiUrl("/api/products");
-
-        const response = await fetch(url);
+        const response = await fetch(buildApiUrl(`/api/products?${params.toString()}`));
 
         if (!response.ok) {
-          throw new Error("Không thể tải danh sách sản phẩm");
+          throw new Error("Không thể tải danh sách phụ kiện");
         }
 
         const data = await response.json();
-        setProducts(data.products || []);
-        setTotalPages(data.totalPages || 1);
-        setTotalProducts(data.totalProducts || 0);
+        setProducts(Array.isArray(data.products) ? data.products : []);
       } catch (fetchError) {
-        setError(fetchError.message || "Không thể tải danh sách sản phẩm");
+        setError(fetchError.message || "Không thể tải danh sách phụ kiện");
       } finally {
         setLoading(false);
       }
     }
 
     fetchProducts();
-  }, [
-    searchTerm,
-    selectedBrand,
-    selectedCondition,
-    selectedStorage,
-    selectedPriceRange,
-    selectedSort,
-    currentPage
-  ]);
+  }, [searchTerm, selectedBrand, selectedCondition, selectedPriceRange, selectedSort]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    searchTerm,
-    selectedBrand,
-    selectedCondition,
-    selectedStorage,
-    selectedPriceRange,
-    selectedSort
-  ]);
+  }, [searchTerm, selectedBrand, selectedCondition, selectedType, selectedPriceRange, selectedSort]);
 
   useEffect(() => {
     async function fetchWishlist() {
@@ -150,7 +127,7 @@ function PhonesPage() {
         }
 
         const data = await response.json();
-        setWishlist(data.wishlist || []);
+        setWishlist(Array.isArray(data.wishlist) ? data.wishlist : []);
       } catch {
         setWishlist([]);
       }
@@ -160,6 +137,21 @@ function PhonesPage() {
   }, [isAuthenticated, token]);
 
   const wishlistIds = useMemo(() => new Set(wishlist.map((product) => product._id)), [wishlist]);
+
+  const filteredProducts = useMemo(() => {
+    if (!selectedType) {
+      return products;
+    }
+
+    return products.filter((product) => detectAccessoryType(product) === selectedType);
+  }, [products, selectedType]);
+
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / pageSize));
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   async function handleToggleWishlist(product) {
     if (!isAuthenticated || !token) {
@@ -185,7 +177,7 @@ function PhonesPage() {
         throw new Error(data.message || "Không thể cập nhật danh sách yêu thích");
       }
 
-      setWishlist(data.wishlist || []);
+      setWishlist(Array.isArray(data.wishlist) ? data.wishlist : []);
     } catch (toggleError) {
       window.alert(toggleError.message || "Không thể cập nhật danh sách yêu thích");
     }
@@ -197,15 +189,17 @@ function PhonesPage() {
         <div className="mx-auto max-w-[1120px] space-y-5">
           <div className="skeleton h-36 rounded-3xl" />
           <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
-            {/* Filter sidebar skeleton */}
-            <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
+            <div className="h-fit space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="skeleton h-5 w-16 rounded" />
+                <div className="skeleton h-5 w-20 rounded" />
                 <div className="skeleton h-7 w-16 rounded-full" />
               </div>
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="space-y-2.5 border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-                  <div className="skeleton h-4.5 w-16 rounded" />
+                <div
+                  key={i}
+                  className="space-y-2.5 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
+                >
+                  <div className="skeleton h-4.5 w-20 rounded" />
                   <div className="space-y-2">
                     {[...Array(4)].map((_, idx) => (
                       <div key={idx} className="flex items-center gap-2.5 py-0.5">
@@ -217,6 +211,7 @@ function PhonesPage() {
                 </div>
               ))}
             </div>
+
             <div className="space-y-4">
               <div className="skeleton h-20 rounded-2xl" />
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -225,17 +220,7 @@ function PhonesPage() {
                     <div className="skeleton h-52 rounded-xl" />
                     <div className="mt-4 space-y-2.5">
                       <div className="skeleton h-4 w-full rounded" />
-                      {/* Rating placeholder skeleton */}
-                      <div className="flex gap-1 py-1">
-                        {[...Array(5)].map((_, idx) => (
-                          <div key={idx} className="skeleton h-3 w-3 rounded-full" />
-                        ))}
-                      </div>
                       <div className="skeleton h-5.5 w-1/2 rounded" />
-                      <div className="flex gap-2 pt-2">
-                        <div className="skeleton h-9.5 flex-1 rounded-xl" />
-                        <div className="skeleton h-9.5 w-10 rounded-xl" />
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -251,12 +236,6 @@ function PhonesPage() {
     return (
       <main className="px-4 py-5 sm:px-5 lg:px-6">
         <div className="mx-auto max-w-[1120px] rounded-2xl border border-red-100 bg-red-50 px-6 py-14 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-7 w-7 text-red-500">
-              <circle cx="12" cy="12" r="10" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 9l-6 6M9 9l6 6" />
-            </svg>
-          </div>
           <p className="font-semibold text-red-700">{error}</p>
         </div>
       </main>
@@ -274,14 +253,14 @@ function PhonesPage() {
             onSelectBrand={setSelectedBrand}
             selectedCondition={selectedCondition}
             onSelectCondition={setSelectedCondition}
-            selectedStorage={selectedStorage}
-            onSelectStorage={setSelectedStorage}
+            selectedType={selectedType}
+            onSelectType={setSelectedType}
             selectedPriceRange={selectedPriceRange}
             onSelectPriceRange={setSelectedPriceRange}
             onClearFilters={() => {
               setSelectedBrand("");
               setSelectedCondition("");
-              setSelectedStorage("");
+              setSelectedType("");
               setSelectedPriceRange("");
               setSelectedSort("newest");
             }}
@@ -294,17 +273,16 @@ function PhonesPage() {
               onSelectSort={setSelectedSort}
             />
 
-            {products.length === 0 ? (
-              <EmptyState message="Không tìm thấy sản phẩm" />
+            {paginatedProducts.length === 0 ? (
+              <EmptyState message="Không tìm thấy phụ kiện phù hợp" />
             ) : (
               <>
                 <ProductGrid
-                  products={products}
+                  products={paginatedProducts}
                   wishlistIds={wishlistIds}
                   onOpenProduct={(productId) => navigate(`/products/${productId}`)}
                   onToggleWishlist={handleToggleWishlist}
                 />
-
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -321,21 +299,18 @@ function PhonesPage() {
 
 function CatalogBanner() {
   return (
-    <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-950 px-8 py-9 text-white shadow-xl shadow-indigo-950/20 sm:px-10 border border-slate-800">
-      {/* Decorative gradients */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.12),transparent_50%)]" />
-      <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />
-
+    <section className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-tr from-slate-900 via-fuchsia-950 to-slate-950 px-8 py-9 text-white shadow-xl shadow-fuchsia-950/20 sm:px-10">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(217,70,239,0.12),transparent_50%)]" />
       <div className="relative max-w-2xl">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-indigo-400 shadow-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-          Danh mục sản phẩm
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-500/20 bg-fuchsia-500/10 px-3.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-300 shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-300 animate-pulse" />
+          Danh mục phụ kiện
         </span>
         <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
-          Mua Bán Điện Thoại Cũ / Mới
+          Phụ kiện công nghệ cho điện thoại và máy tính bảng
         </h1>
-        <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-slate-350">
-          Tìm nhanh theo tên máy, hãng, tình trạng ngoại hình, pin, dung lượng và khoảng giá phù hợp nhu cầu.
+        <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-slate-300">
+          Tìm nhanh tai nghe, sạc, cáp, bút cảm ứng và các phụ kiện phổ biến theo nhu cầu sử dụng.
         </p>
       </div>
     </section>
@@ -347,8 +322,8 @@ function ProductFilterSidebar({
   onSelectBrand,
   selectedCondition,
   onSelectCondition,
-  selectedStorage,
-  onSelectStorage,
+  selectedType,
+  onSelectType,
   selectedPriceRange,
   onSelectPriceRange,
   onClearFilters
@@ -360,14 +335,14 @@ function ProductFilterSidebar({
         <button
           type="button"
           onClick={onClearFilters}
-          className="rounded-full bg-slate-50 border border-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100"
+          className="rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-fuchsia-100 hover:bg-fuchsia-50 hover:text-fuchsia-700"
         >
           Xóa lọc
         </button>
       </div>
 
       <div className="mt-5 space-y-5">
-        <FilterGroup title="Hãng sản xuất">
+        <FilterGroup title="Hãng">
           {brandOptions.map((brand) => (
             <FilterCheckbox
               key={brand}
@@ -378,7 +353,18 @@ function ProductFilterSidebar({
           ))}
         </FilterGroup>
 
-        <FilterGroup title="Tình trạng ngoại hình">
+        <FilterGroup title="Nhóm phụ kiện">
+          {accessoryTypeOptions.map((type) => (
+            <FilterCheckbox
+              key={type.value}
+              label={type.label}
+              checked={selectedType === type.value}
+              onChange={() => onSelectType(selectedType === type.value ? "" : type.value)}
+            />
+          ))}
+        </FilterGroup>
+
+        <FilterGroup title="Tình trạng">
           {conditionOptions.map((condition) => (
             <FilterCheckbox
               key={condition.value}
@@ -391,18 +377,7 @@ function ProductFilterSidebar({
           ))}
         </FilterGroup>
 
-        <FilterGroup title="Dung lượng bộ nhớ">
-          {storageOptions.map((storage) => (
-            <FilterCheckbox
-              key={storage}
-              label={storage}
-              checked={selectedStorage === storage}
-              onChange={() => onSelectStorage(selectedStorage === storage ? "" : storage)}
-            />
-          ))}
-        </FilterGroup>
-
-        <FilterGroup title="Khoảng giá sản phẩm">
+        <FilterGroup title="Khoảng giá">
           {priceRangeOptions.map((range) => (
             <FilterCheckbox
               key={range.value}
@@ -422,7 +397,7 @@ function ProductFilterSidebar({
 function FilterGroup({ title, children }) {
   return (
     <section className="border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
-      <h3 className="text-xs font-black uppercase tracking-wider text-slate-405">{title}</h3>
+      <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{title}</h3>
       <div className="mt-3 space-y-2">{children}</div>
     </section>
   );
@@ -430,12 +405,16 @@ function FilterGroup({ title, children }) {
 
 function FilterCheckbox({ label, checked, onChange }) {
   return (
-    <label className={`flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition-all duration-200 ${checked ? "text-indigo-600 bg-indigo-50/50" : "text-slate-600 hover:bg-slate-50"}`}>
+    <label
+      className={`flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition-all duration-200 ${
+        checked ? "bg-fuchsia-50/60 text-fuchsia-700" : "text-slate-600 hover:bg-slate-50"
+      }`}
+    >
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="h-4.5 w-4.5 rounded border-slate-200 text-indigo-600 accent-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
+        className="h-4.5 w-4.5 rounded border-slate-200 accent-fuchsia-600 focus:ring-fuchsia-500 focus:ring-offset-0"
       />
       <span className={checked ? "font-bold" : "font-medium"}>{label}</span>
     </label>
@@ -446,18 +425,18 @@ function ProductSortBar({ totalProducts, selectedSort, onSelectSort }) {
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white px-5 py-4.5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-base font-black text-slate-800">Danh sách sản phẩm</h2>
+        <h2 className="text-base font-black text-slate-800">Danh sách phụ kiện</h2>
         <p className="mt-0.5 text-xs font-bold text-slate-400">
-          Tìm thấy <span className="text-indigo-600 font-extrabold">{totalProducts}</span> máy
+          Tìm thấy <span className="font-extrabold text-fuchsia-700">{totalProducts}</span> sản phẩm
         </p>
       </div>
 
       <div className="flex items-center gap-2.5">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sắp xếp:</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Sắp xếp:</span>
         <select
           value={selectedSort}
           onChange={(event) => onSelectSort(event.target.value)}
-          className="rounded-full border border-slate-150 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+          className="rounded-full border border-slate-150 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 outline-none transition-all duration-300 focus:border-fuchsia-300 focus:bg-white focus:ring-4 focus:ring-fuchsia-50"
         >
           {sortOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -477,7 +456,7 @@ function ProductGrid({ products, wishlistIds, onOpenProduct, onToggleWishlist })
         <CatalogProductCard
           key={product._id}
           product={product}
-          badge={getProductBadge(product)}
+          accessoryType={getAccessoryTypeLabel(product)}
           isWishlisted={wishlistIds.has(product._id)}
           onOpenProduct={onOpenProduct}
           onToggleWishlist={onToggleWishlist}
@@ -487,45 +466,26 @@ function ProductGrid({ products, wishlistIds, onOpenProduct, onToggleWishlist })
   );
 }
 
-function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onToggleWishlist }) {
+function CatalogProductCard({
+  product,
+  accessoryType,
+  isWishlisted,
+  onOpenProduct,
+  onToggleWishlist
+}) {
   const imageUrl =
     resolveMediaUrl(product.images?.[0]) ||
     "https://via.placeholder.com/400x320?text=Khong+co+anh";
 
-  // Xác định nhãn tình trạng máy
-  const getConditionInfo = (cond) => {
-    switch (cond) {
-      case "used_99":
-        return { label: "Cũ 99%", class: "from-amber-500 to-orange-500 text-white" };
-      case "used_good":
-        return { label: "Cũ đẹp", class: "from-blue-500 to-indigo-500 text-white" };
-      case "used_fair":
-        return { label: "Cũ dùng tốt", class: "from-slate-500 to-slate-600 text-white" };
-      default:
-        return { label: "Mới 100%", class: "from-emerald-500 to-teal-500 text-white" };
-    }
-  };
-
-  const condInfo = getConditionInfo(product.condition);
-
   return (
     <article
       onClick={() => onOpenProduct(product._id)}
-      className="group cursor-pointer relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-100/30"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-fuchsia-100 hover:shadow-lg hover:shadow-fuchsia-100/30"
     >
-      {/* Media area */}
-      <div className="relative overflow-hidden rounded-xl bg-slate-50 aspect-[4/3]">
-        {/* Nhãn máy cũ/mới */}
-        <span className={`absolute left-2.5 top-2.5 z-10 rounded-full bg-gradient-to-r px-2.5 py-1 text-[9px] font-black uppercase tracking-wider shadow-sm ${condInfo.class}`}>
-          {condInfo.label}
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-50">
+        <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm">
+          {accessoryType}
         </span>
-
-        {/* Nhãn bổ sung */}
-        {badge && badge !== condInfo.label && (
-          <span className="absolute left-2.5 top-9 z-10 rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm">
-            {badge}
-          </span>
-        )}
 
         <button
           type="button"
@@ -533,7 +493,7 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
             event.stopPropagation();
             onToggleWishlist(product);
           }}
-          className={`absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md transition-all duration-300 active:scale-95 ${
+          className={`absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-sm transition-all duration-300 active:scale-95 ${
             isWishlisted
               ? "text-red-500 shadow-red-100"
               : "text-slate-400 hover:text-red-500 hover:shadow-red-100"
@@ -550,36 +510,28 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
         />
       </div>
 
-      {/* Content area */}
-      <div className="pt-3 flex flex-col justify-between min-h-[160px]">
+      <div className="flex min-h-[160px] flex-col justify-between pt-3">
         <div>
-          {/* Tags cấu hình nhanh */}
-          <div className="flex flex-wrap items-center gap-1.5 mb-2">
-            {product.specs?.storage && (
-              <span className="inline-flex items-center rounded-md bg-slate-50 border border-slate-100 px-1.5 py-0.5 text-[10px] font-extrabold text-slate-500">
-                💾 {product.specs.storage}
-              </span>
-            )}
-            {product.usedDetails?.batteryHealth && (
-              <span className="inline-flex items-center rounded-md bg-emerald-50/50 border border-emerald-100 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-600">
-                🔋 Pin {product.usedDetails.batteryHealth}
-              </span>
-            )}
-            {product.brand && (
-              <span className="inline-flex items-center rounded-md bg-indigo-50/50 border border-indigo-100 px-1.5 py-0.5 text-[10px] font-extrabold text-indigo-600">
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            {product.brand ? (
+              <span className="inline-flex items-center rounded-md border border-fuchsia-100 bg-fuchsia-50/50 px-1.5 py-0.5 text-[10px] font-extrabold text-fuchsia-700">
                 {product.brand}
               </span>
-            )}
+            ) : null}
+            {product.usedDetails?.warranty ? (
+              <span className="inline-flex items-center rounded-md border border-emerald-100 bg-emerald-50/50 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-600">
+                {product.usedDetails.warranty}
+              </span>
+            ) : null}
           </div>
 
-          <h3 className="line-clamp-2 text-sm font-bold leading-5 text-slate-800 transition-colors duration-150 group-hover:text-indigo-650">
+          <h3 className="line-clamp-2 text-sm font-bold leading-5 text-slate-800 transition-colors duration-150 group-hover:text-fuchsia-700">
             {product.name}
           </h3>
         </div>
 
         <div>
-          {/* Price */}
-          <p className="mt-2.5 text-base sm:text-lg font-black text-rose-500">
+          <p className="mt-2.5 text-base font-black text-rose-500 sm:text-lg">
             {product.price?.toLocaleString("vi-VN")} đ
           </p>
 
@@ -587,7 +539,7 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
             <Link
               to={`/products/${product._id}`}
               onClick={(event) => event.stopPropagation()}
-              className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-center text-xs font-bold text-white shadow-sm shadow-indigo-100 transition-all duration-300 hover:from-blue-700 hover:to-indigo-700 hover:shadow-md hover:shadow-indigo-200/50 active:scale-95"
+              className="flex-1 rounded-xl bg-gradient-to-r from-fuchsia-600 to-pink-600 py-2.5 text-center text-xs font-bold text-white shadow-sm shadow-fuchsia-100 transition-all duration-300 hover:from-fuchsia-700 hover:to-pink-700 hover:shadow-md hover:shadow-fuchsia-200/50 active:scale-95"
             >
               Xem chi tiết
             </Link>
@@ -595,7 +547,7 @@ function CatalogProductCard({ product, badge, isWishlisted, onOpenProduct, onTog
             <Link
               to={`/products/${product._id}`}
               onClick={(event) => event.stopPropagation()}
-              className="rounded-xl border border-slate-200 p-2.5 text-xs font-semibold text-slate-500 transition-all duration-300 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 active:scale-95"
+              className="rounded-xl border border-slate-200 p-2.5 text-xs font-semibold text-slate-500 transition-all duration-300 hover:border-fuchsia-200 hover:bg-fuchsia-50 hover:text-fuchsia-700 active:scale-95"
               aria-label={`Chi tiết ${product.name}`}
             >
               <ArrowIcon />
@@ -618,7 +570,7 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
         type="button"
         onClick={() => onChangePage(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:border-fuchsia-300 hover:bg-fuchsia-50 hover:text-fuchsia-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ‹
       </button>
@@ -630,8 +582,8 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
           onClick={() => onChangePage(page)}
           className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold transition-all duration-300 ${
             currentPage === page
-              ? "bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-100"
-              : "border border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50"
+              ? "bg-gradient-to-tr from-fuchsia-600 to-pink-600 text-white shadow-md shadow-fuchsia-100"
+              : "border border-slate-200 bg-white text-slate-600 hover:border-fuchsia-300 hover:bg-fuchsia-50 hover:text-fuchsia-700"
           }`}
         >
           {page}
@@ -642,7 +594,7 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
         type="button"
         onClick={() => onChangePage(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
-        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:border-fuchsia-300 hover:bg-fuchsia-50 hover:text-fuchsia-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ›
       </button>
@@ -653,32 +605,76 @@ function Pagination({ currentPage, totalPages, onChangePage }) {
 function EmptyState({ message }) {
   return (
     <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-blue-400">
+      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-fuchsia-50">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="h-8 w-8 text-fuchsia-500"
+        >
           <circle cx="11" cy="11" r="7" />
           <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
         </svg>
       </div>
       <p className="font-semibold text-slate-700">{message}</p>
-      <p className="mt-1 text-sm text-slate-400">Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
+      <p className="mt-1 text-sm text-slate-400">
+        Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác.
+      </p>
     </div>
   );
 }
 
-function getProductBadge(product) {
-  if (product.condition === "used_99") {
-    return "Cũ 99%";
+function detectAccessoryType(product) {
+  const source = `${product.name || ""} ${product.description || ""}`.toLowerCase();
+
+  if (
+    source.includes("airpods") ||
+    source.includes("tai nghe") ||
+    source.includes("buds") ||
+    source.includes("loa")
+  ) {
+    return "audio";
   }
 
-  if (product.condition === "used_good") {
-    return "Cũ đẹp";
+  if (
+    source.includes("sac") ||
+    source.includes("cap") ||
+    source.includes("charger") ||
+    source.includes("adapter")
+  ) {
+    return "charger";
   }
 
-  if (product.condition === "used_fair") {
-    return "Cũ dùng tốt";
+  if (
+    source.includes("pencil") ||
+    source.includes("but") ||
+    source.includes("ban phim") ||
+    source.includes("keyboard")
+  ) {
+    return "input";
   }
 
-  return "Máy mới";
+  return "case";
+}
+
+function getAccessoryTypeLabel(product) {
+  const type = detectAccessoryType(product);
+
+  if (type === "audio") {
+    return "Tai nghe";
+  }
+
+  if (type === "charger") {
+    return "Sạc / cáp";
+  }
+
+  if (type === "input") {
+    return "Bút / bàn phím";
+  }
+
+  return "Ốp / bao da";
 }
 
 function HeartIcon({ isFilled }) {
@@ -715,4 +711,4 @@ function ArrowIcon() {
   );
 }
 
-export default PhonesPage;
+export default AccessoriesPage;

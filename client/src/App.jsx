@@ -15,7 +15,9 @@ import LoginPage from "./pages/LoginPage.jsx";
 import MyOrdersPage from "./pages/MyOrdersPage.jsx";
 import OrderDetailPage from "./pages/OrderDetailPage.jsx";
 import OrderSuccessPage from "./pages/OrderSuccessPage.jsx";
+import AccessoriesPage from "./pages/AccessoriesPage.jsx";
 import PhonesPage from "./pages/PhonesPage.jsx";
+import TabletsPage from "./pages/TabletsPage.jsx";
 import ProductDetailPage from "./pages/ProductDetailPage.jsx";
 import ProductListPage from "./pages/ProductListPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
@@ -33,6 +35,8 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<ProductListPage />} />
           <Route path="/phones" element={<PhonesPage />} />
+          <Route path="/tablets" element={<TabletsPage />} />
+          <Route path="/accessories" element={<AccessoriesPage />} />
           <Route path="/products" element={<PhonesPage />} />
           <Route path="/trade-in" element={<TradeInPage />} />
           <Route path="/contact" element={<ContactPage />} />
