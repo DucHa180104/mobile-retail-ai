@@ -6,6 +6,7 @@ function AdminLayout() {
   const quickLinks = [
     { label: "Dashboard", to: "/admin/dashboard" },
     { label: "Chatbot Logs", to: "/admin/chatbot-logs" },
+    { label: "Support Chat", to: "/admin/support-chat" },
     { label: "Orders", to: "/admin/orders" },
     { label: "Products", to: "/admin/products" },
     { label: "Users", to: "/admin/users" }

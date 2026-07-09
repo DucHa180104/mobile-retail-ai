@@ -6,6 +6,7 @@ import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
 import AdminChatbotLogsPage from "./pages/AdminChatbotLogsPage.jsx";
 import AdminOrdersPage from "./pages/AdminOrdersPage.jsx";
 import AdminProductsPage from "./pages/AdminProductsPage.jsx";
+import AdminSupportChatPage from "./pages/AdminSupportChatPage.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
@@ -58,6 +59,7 @@ function App() {
           <Route path="chatbot-logs" element={<AdminChatbotLogsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="products" element={<AdminProductsPage />} />
+          <Route path="support-chat" element={<AdminSupportChatPage />} />
           <Route path="users" element={<AdminUsersPage />} />
         </Route>
       </Routes>

@@ -11,7 +11,7 @@ const initialMessages = [
   {
     id: "bot-welcome",
     role: "bot",
-    text: "Xin chào! Mình là trợ lý AI Mạnh Hương Mobile. Bạn có thể hỏi mình các câu hỏi như: \n\n* *iPhone 13 Pro Max cũ giá bao nhiêu?*\n* *Điện thoại chơi game mượt dưới 12 triệu?*\n* *Chính sách bảo hành máy cũ ra sao?*\n\nMình có thể tìm kiếm trực tiếp trong kho máy của cửa hàng để báo giá chính xác cho bạn đấy! 👇"
+    text: "Xin chào! Mình là trợ lý AI Mạnh Hường Mobile. Bạn có thể hỏi mình các câu như:\n\n- **iPhone 13 Pro Max cũ giá bao nhiêu?**\n- **Điện thoại chơi game mượt dưới 12 triệu?**\n- **Chính sách bảo hành máy cũ ra sao?**\n\nMình có thể tìm trực tiếp trong kho máy của cửa hàng để báo giá và gợi ý đúng nhu cầu cho bạn."
   }
 ];
 
@@ -25,13 +25,23 @@ const defaultSuggestedQuestions = [
 function ChatbotWidget({ floating = false }) {
   const { token, isAuthenticated } = useAuth();
   const location = useLocation();
+
   const [isOpen, setIsOpen] = useState(!floating);
+  const [activeTab, setActiveTab] = useState("ai");
+
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState(() => readStoredMessages());
   const [recentQuestions, setRecentQuestions] = useState(() => readStoredRecentQuestions());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastFailedMessage, setLastFailedMessage] = useState("");
+
+  const [supportInput, setSupportInput] = useState("");
+  const [supportConversation, setSupportConversation] = useState(null);
+  const [supportMessages, setSupportMessages] = useState([]);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportError, setSupportError] = useState("");
 
   const wrapperClassName = useMemo(() => {
     if (!floating) {
@@ -106,6 +116,94 @@ function ChatbotWidget({ floating = false }) {
     };
   }, [isAuthenticated, token]);
 
+  useEffect(() => {
+    if (activeTab !== "support") {
+      return;
+    }
+
+    if (!isAuthenticated || !token) {
+      setSupportConversation(null);
+      setSupportMessages([]);
+      setSupportLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function fetchSupportConversation() {
+      try {
+        setSupportLoading(true);
+        setSupportError("");
+
+        const response = await fetch(buildApiUrl("/api/support-chat/me"), {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Không thể tải hội thoại với admin");
+        }
+
+        if (isCancelled) {
+          return;
+        }
+
+        setSupportConversation(data.conversation || null);
+        setSupportMessages(Array.isArray(data.messages) ? data.messages : []);
+      } catch (fetchError) {
+        if (isCancelled) {
+          return;
+        }
+
+        setSupportError(fetchError.message || "Không thể tải hội thoại với admin");
+      } finally {
+        if (!isCancelled) {
+          setSupportLoading(false);
+        }
+      }
+    }
+
+    fetchSupportConversation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeTab, isAuthenticated, token]);
+
+  useEffect(() => {
+    if (activeTab !== "support" || !isAuthenticated || !token) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const response = await fetch(buildApiUrl("/api/support-chat/me"), {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Không thể tải hội thoại với admin");
+        }
+
+        setSupportConversation(data.conversation || null);
+        setSupportMessages(Array.isArray(data.messages) ? data.messages : []);
+      } catch (fetchError) {
+        setSupportError(fetchError.message || "Không thể tải hội thoại với admin");
+      }
+    }, 4000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [activeTab, isAuthenticated, token]);
+
   async function sendMessage(messageText) {
     const trimmedMessage = String(messageText || "").trim();
 
@@ -178,6 +276,44 @@ function ChatbotWidget({ floating = false }) {
     }
   }
 
+  async function sendSupportMessage(messageText) {
+    const trimmedMessage = String(messageText || "").trim();
+
+    if (!trimmedMessage || supportSending || !token) {
+      return;
+    }
+
+    setSupportError("");
+    setSupportSending(true);
+
+    try {
+      const response = await fetch(buildApiUrl("/api/support-chat/me/messages"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: trimmedMessage
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể gửi tin nhắn tới admin");
+      }
+
+      setSupportInput("");
+      setSupportConversation(data.conversation || supportConversation);
+      setSupportMessages((current) => [...current, data.message]);
+    } catch (submitError) {
+      setSupportError(submitError.message || "Không thể gửi tin nhắn tới admin");
+    } finally {
+      setSupportSending(false);
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     await sendMessage(input);
@@ -191,14 +327,21 @@ function ChatbotWidget({ floating = false }) {
     await sendMessage(lastFailedMessage);
   }
 
+  async function handleSupportSubmit(event) {
+    event.preventDefault();
+    await sendSupportMessage(supportInput);
+  }
+
   const suggestedQuestions = useMemo(() => {
     const merged = [...recentQuestions, ...defaultSuggestedQuestions];
     return Array.from(new Set(merged)).slice(0, 5);
   }, [recentQuestions]);
 
-  if (!floating) {
-    return (
-      <section className={wrapperClassName}>
+  const panelContent = (
+    <div className="space-y-4">
+      <ChatTabs activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === "ai" ? (
         <ChatPanel
           input={input}
           messages={messages}
@@ -210,27 +353,47 @@ function ChatbotWidget({ floating = false }) {
           onSubmit={handleSubmit}
           onRetry={handleRetry}
           onSuggestedQuestion={handleSuggestedQuestion}
+          compact={floating}
         />
-      </section>
-    );
+      ) : (
+        <SupportChatPanel
+          isAuthenticated={isAuthenticated}
+          loading={supportLoading}
+          sending={supportSending}
+          error={supportError}
+          conversation={supportConversation}
+          messages={supportMessages}
+          input={supportInput}
+          onInputChange={setSupportInput}
+          onSubmit={handleSupportSubmit}
+          compact={floating}
+        />
+      )}
+    </div>
+  );
+
+  if (!floating) {
+    return <section className={wrapperClassName}>{panelContent}</section>;
   }
 
   return (
     <div className={wrapperClassName}>
       {isOpen ? (
         <div className="animate-fade-in overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-2xl shadow-slate-900/10">
-          
-          {/* Header */}
           <div className="flex items-center justify-between bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-4 py-4 text-white">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/20 border border-indigo-400/30">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-400/30 bg-indigo-500/20">
                 <ChatIcon />
                 <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900" />
               </div>
               <div>
-                <h3 className="text-sm font-black leading-none">Mạnh Hương AI</h3>
-                <p className="text-[10px] text-slate-300 mt-1.5 font-medium">
-                  {isAuthenticated ? "Lịch sử chat đã đồng bộ" : "Hỗ trợ chọn máy cũ 24/7"}
+                <h3 className="text-sm font-black leading-none">Mạnh Hường Support</h3>
+                <p className="mt-1.5 text-[10px] font-medium text-slate-300">
+                  {activeTab === "ai"
+                    ? isAuthenticated
+                      ? "Lịch sử chat AI đã đồng bộ"
+                      : "Hỗ trợ chọn máy cũ 24/7"
+                    : "Trao đổi trực tiếp với admin"}
                 </p>
               </div>
             </div>
@@ -239,7 +402,7 @@ function ChatbotWidget({ floating = false }) {
               type="button"
               onClick={() => setIsOpen(false)}
               className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20"
-              aria-label="Đóng chatbot"
+              aria-label="Đóng hộp chat"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 6 6 18M6 6l12 12" />
@@ -247,44 +410,54 @@ function ChatbotWidget({ floating = false }) {
             </button>
           </div>
 
-          {/* Body panel */}
-          <div className="p-4 bg-slate-50/30">
-            <ChatPanel
-              input={input}
-              messages={messages}
-              loading={loading}
-              error={error}
-              lastFailedMessage={lastFailedMessage}
-              suggestedQuestions={suggestedQuestions}
-              onInputChange={setInput}
-              onSubmit={handleSubmit}
-              onRetry={handleRetry}
-              onSuggestedQuestion={handleSuggestedQuestion}
-              compact
-            />
-          </div>
+          <div className="bg-slate-50/30 p-4">{panelContent}</div>
         </div>
       ) : (
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="group relative ml-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-xl shadow-indigo-950/20 transition-all duration-300 hover:scale-105 active:scale-95 border border-slate-800"
-          aria-label="Mở chatbot"
+          className="group relative ml-auto flex h-14 w-14 items-center justify-center rounded-full border border-slate-800 bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-xl shadow-indigo-950/20 transition-all duration-300 hover:scale-105 active:scale-95"
+          aria-label="Mở hộp chat"
         >
           <ChatIcon />
-          
-          {/* Label alert */}
-          <span className="absolute -left-16 top-3 bg-white/90 backdrop-blur border border-slate-100 text-[10px] font-bold text-slate-700 px-2 py-0.5 rounded-md shadow-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            Hỏi AI ⚡
+          <span className="pointer-events-none absolute -left-16 top-3 rounded-md border border-slate-100 bg-white/90 px-2 py-0.5 text-[10px] font-bold text-slate-700 opacity-0 shadow-sm backdrop-blur transition-opacity duration-200 group-hover:opacity-100">
+            Chat hỗ trợ
           </span>
-
-          {/* Online green indicator */}
           <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-white" />
           </span>
         </button>
       )}
+    </div>
+  );
+}
+
+function ChatTabs({ activeTab, onChange }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-100 bg-white p-1.5 shadow-sm">
+      <button
+        type="button"
+        onClick={() => onChange("ai")}
+        className={`rounded-xl px-3 py-2 text-sm font-bold transition ${
+          activeTab === "ai"
+            ? "bg-indigo-600 text-white shadow-sm"
+            : "text-slate-600 hover:bg-slate-50"
+        }`}
+      >
+        Chat với AI
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("support")}
+        className={`rounded-xl px-3 py-2 text-sm font-bold transition ${
+          activeTab === "support"
+            ? "bg-slate-900 text-white shadow-sm"
+            : "text-slate-600 hover:bg-slate-50"
+        }`}
+      >
+        Chat với admin
+      </button>
     </div>
   );
 }
@@ -315,22 +488,21 @@ function ChatPanel({
 
   return (
     <div className="space-y-4">
-      {!compact && (
+      {!compact ? (
         <div className="space-y-1">
-          <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
-            🤖 Trợ lý thông minh
+          <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-600">
+            Trợ lý thông minh
           </span>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Tư vấn chọn máy</h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">Tư vấn chọn máy</h1>
           <p className="text-sm text-slate-500">
-            Hỏi đáp thông minh về dòng máy, dung lượng pin, ngoại hình trầy xước và so sánh các dòng máy cũ.
+            Hỏi đáp thông minh về dòng máy, pin, ngoại hình và so sánh các mẫu điện thoại phù hợp với nhu cầu.
           </p>
         </div>
-      )}
+      ) : null}
 
-      {/* Suggested Questions Grid */}
-      <div className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm space-y-2">
+      <div className="space-y-2 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm">
         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-          💡 Gợi ý câu hỏi nhanh
+          Gợi ý câu hỏi nhanh
         </p>
         <div className="flex flex-wrap gap-1.5">
           {suggestedQuestions.map((question) => (
@@ -347,10 +519,9 @@ function ChatPanel({
         </div>
       </div>
 
-      {/* Messages Box */}
       <div
         ref={messageContainerRef}
-        className={`space-y-4.5 overflow-y-auto rounded-2xl bg-slate-100/50 p-4 border border-slate-100/50 ${
+        className={`space-y-4 overflow-y-auto rounded-2xl border border-slate-100/50 bg-slate-100/50 p-4 ${
           compact ? "max-h-[290px]" : "max-h-[460px]"
         }`}
       >
@@ -358,18 +529,17 @@ function ChatPanel({
           <ChatMessage key={message.id} message={message} />
         ))}
 
-        {loading && <LoadingSkeleton />}
+        {loading ? <LoadingSkeleton /> : null}
       </div>
 
-      {/* Error message */}
-      {error && (
+      {error ? (
         <div className={`rounded-xl border px-4 py-3 text-xs ${errorPresentation.wrapperClassName}`}>
           <div className="flex items-start gap-2.5">
             <div className="mt-0.5 shrink-0">{errorPresentation.icon}</div>
             <div className="min-w-0 flex-1">
               <p className="font-bold">{errorPresentation.title}</p>
               <p className="mt-1 leading-relaxed">{error}</p>
-              {lastFailedMessage && (
+              {lastFailedMessage ? (
                 <button
                   type="button"
                   onClick={onRetry}
@@ -378,37 +548,129 @@ function ChatPanel({
                 >
                   Gửi lại
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Message Form */}
       <form onSubmit={onSubmit} className="flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
-          placeholder="Bạn muốn hỏi gì về điện thoại cũ hôm nay..."
+          placeholder="Bạn muốn hỏi gì về điện thoại hôm nay..."
           disabled={loading}
           className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 disabled:cursor-not-allowed disabled:bg-slate-50"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4.5 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/10 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-indigo-600 px-4.5 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/10 transition hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? (
-            <svg className="h-4.5 w-4.5 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4.5 w-4.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-            </svg>
-          )}
+          {loading ? <SpinnerIcon /> : <SendIcon />}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function SupportChatPanel({
+  isAuthenticated,
+  loading,
+  sending,
+  error,
+  conversation,
+  messages,
+  input,
+  onInputChange,
+  onSubmit,
+  compact = false
+}) {
+  const messageContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (!messageContainerRef.current) {
+      return;
+    }
+    messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+  }, [messages, loading, error]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-800">
+          <p className="font-bold">Bạn cần đăng nhập để chat với admin.</p>
+          <p className="mt-1">Sau khi đăng nhập, bạn có thể gửi câu hỏi và xem lại lịch sử hỗ trợ.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {!compact ? (
+        <div className="space-y-1">
+          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-slate-700">
+            Hỗ trợ trực tiếp
+          </span>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">Chat với admin</h1>
+          <p className="text-sm text-slate-500">
+            Gửi câu hỏi về đơn hàng, tình trạng máy, bảo hành hoặc xin tư vấn trực tiếp từ cửa hàng.
+          </p>
+        </div>
+      ) : null}
+
+      <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-xs text-slate-500 shadow-sm">
+        <p className="font-bold text-slate-700">
+          {conversation ? "Hội thoại hỗ trợ đã sẵn sàng" : "Đang tạo hội thoại hỗ trợ"}
+        </p>
+        <p className="mt-1">
+          Admin sẽ thấy tin nhắn của bạn trong trang quản trị và có thể trả lời trực tiếp tại đây.
+        </p>
+      </div>
+
+      <div
+        ref={messageContainerRef}
+        className={`space-y-3 overflow-y-auto rounded-2xl border border-slate-100/50 bg-slate-100/50 p-4 ${
+          compact ? "max-h-[290px]" : "max-h-[460px]"
+        }`}
+      >
+        {loading ? <LoadingSkeleton /> : null}
+
+        {!loading && messages.length === 0 ? (
+          <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm text-slate-500">
+            Chưa có tin nhắn nào. Bạn có thể mở đầu cuộc trò chuyện với admin ngay bây giờ.
+          </div>
+        ) : null}
+
+        {messages.map((message) => (
+          <SupportMessageBubble key={message._id} message={message} />
+        ))}
+      </div>
+
+      {error ? (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          <p className="font-bold">Không thể tải hoặc gửi tin nhắn hỗ trợ</p>
+          <p className="mt-1 leading-relaxed">{error}</p>
+        </div>
+      ) : null}
+
+      <form onSubmit={onSubmit} className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(event) => onInputChange(event.target.value)}
+          placeholder="Nhập nội dung cần admin hỗ trợ..."
+          disabled={sending}
+          className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-800 focus:ring-4 focus:ring-slate-900/5 disabled:cursor-not-allowed disabled:bg-slate-50"
+        />
+        <button
+          type="submit"
+          disabled={sending || !input.trim()}
+          className="rounded-xl bg-slate-900 px-4.5 py-3 text-sm font-bold text-white shadow-md shadow-slate-900/10 transition hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {sending ? <SpinnerIcon /> : <SendIcon />}
         </button>
       </form>
     </div>
@@ -419,12 +681,12 @@ function ChatMessage({ message }) {
   const isUserMessage = message.role === "user";
 
   return (
-    <div className={isUserMessage ? "ml-auto max-w-[85%] animate-slide-in-right" : "max-w-[90%] animate-fade-in"}>
+    <div className={isUserMessage ? "ml-auto max-w-[85%]" : "max-w-[90%]"}>
       <div
         className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
           isUserMessage
             ? "rounded-tr-none bg-gradient-to-tr from-indigo-600 to-indigo-700 text-white"
-            : "rounded-tl-none bg-white text-slate-800 border border-slate-100"
+            : "rounded-tl-none border border-slate-100 bg-white text-slate-800"
         }`}
       >
         {isUserMessage ? (
@@ -434,45 +696,40 @@ function ChatMessage({ message }) {
         )}
       </div>
 
-      {/* Suggested Products List inside Bot messages */}
       {!isUserMessage && Array.isArray(message.products) && message.products.length > 0 ? (
         <div className="mt-3.5 space-y-2.5">
           {message.products.map((product) => (
             <article
               key={`${message.id}-${product.id}`}
-              className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:shadow-md hover:border-slate-200"
+              className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:border-slate-200 hover:shadow-md"
             >
               <div className="flex gap-3.5 p-3.5">
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                   {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-[10px] font-bold text-slate-400">Không ảnh</span>
                   )}
                 </div>
 
-                <div className="min-w-0 flex-1 flex flex-col justify-between">
+                <div className="flex min-w-0 flex-1 flex-col justify-between">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[9px] font-extrabold text-indigo-700 border border-indigo-100 uppercase">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-md border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9px] font-extrabold uppercase text-indigo-700">
                         {product.conditionLabel || "Zin 99%"}
                       </span>
                       <span
-                        className={`rounded-md px-2 py-0.5 text-[9px] font-extrabold border uppercase ${
+                        className={`rounded-md border px-2 py-0.5 text-[9px] font-extrabold uppercase ${
                           product.stock > 0
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                            : "bg-rose-50 text-rose-700 border-rose-100"
+                            ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                            : "border-rose-100 bg-rose-50 text-rose-700"
                         }`}
                       >
                         {product.stockText || "Sẵn hàng"}
                       </span>
                     </div>
 
-                    <h4 className="line-clamp-2 text-xs font-bold text-slate-900 leading-tight">
+                    <h4 className="line-clamp-2 text-xs font-bold leading-tight text-slate-900">
                       {product.name}
                     </h4>
 
@@ -481,15 +738,15 @@ function ChatMessage({ message }) {
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 pt-2.5 mt-1.5 border-t border-slate-100">
-                    <div className="flex gap-2 text-[10px] text-slate-400 font-semibold">
+                  <div className="mt-1.5 flex items-center justify-between gap-3 border-t border-slate-100 pt-2.5">
+                    <div className="flex gap-2 text-[10px] font-semibold text-slate-400">
                       {product.storage ? <span>💾 {product.storage}</span> : null}
                       {product.batteryHealth ? <span>🔋 {product.batteryHealth}%</span> : null}
                     </div>
-                    
+
                     <Link
                       to={product.path || `/products/${product.id}`}
-                      className="inline-flex items-center rounded-lg bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 text-[10px] font-bold text-indigo-700 transition"
+                      className="inline-flex items-center rounded-lg bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-700 transition hover:bg-indigo-100"
                     >
                       Xem chi tiết
                     </Link>
@@ -504,6 +761,33 @@ function ChatMessage({ message }) {
   );
 }
 
+function SupportMessageBubble({ message }) {
+  const isUserMessage = message.senderType === "user";
+  const createdAtText = formatTime(message.createdAt);
+
+  return (
+    <div className={isUserMessage ? "ml-auto max-w-[85%]" : "max-w-[85%]"}>
+      <div
+        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+          isUserMessage
+            ? "rounded-tr-none bg-gradient-to-tr from-slate-800 to-slate-900 text-white"
+            : "rounded-tl-none border border-slate-100 bg-white text-slate-800"
+        }`}
+      >
+        <div className="mb-1 flex items-center gap-2">
+          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isUserMessage ? "text-slate-200" : "text-indigo-600"}`}>
+            {isUserMessage ? "Bạn" : "Admin"}
+          </span>
+          <span className={`text-[10px] ${isUserMessage ? "text-slate-300" : "text-slate-400"}`}>
+            {createdAtText}
+          </span>
+        </div>
+        <p className="whitespace-pre-line break-words">{message.content}</p>
+      </div>
+    </div>
+  );
+}
+
 function MarkdownMessage({ content }) {
   return (
     <div className="chatbot-markdown break-words text-sm leading-relaxed text-slate-805">
@@ -513,17 +797,13 @@ function MarkdownMessage({ content }) {
           h2: ({ node, ...props }) => <h4 className="mb-2 text-sm font-extrabold text-slate-900" {...props} />,
           h3: ({ node, ...props }) => <h5 className="mb-2 text-sm font-bold text-slate-800" {...props} />,
           p: ({ node, ...props }) => <p className="mb-2.5 last:mb-0" {...props} />,
-          ul: ({ node, ...props }) => <ul className="mb-2.5 list-disc pl-5 last:mb-0 space-y-1" {...props} />,
+          ul: ({ node, ...props }) => <ul className="mb-2.5 list-disc space-y-1 pl-5 last:mb-0" {...props} />,
           ol: ({ node, ...props }) => (
-            <ol className="mb-2.5 list-decimal pl-5 last:mb-0 space-y-1" {...props} />
+            <ol className="mb-2.5 list-decimal space-y-1 pl-5 last:mb-0" {...props} />
           ),
           li: ({ node, ...props }) => <li className="mb-0.5 last:mb-0" {...props} />,
-          strong: ({ node, ...props }) => (
-            <strong className="font-extrabold text-indigo-950" {...props} />
-          ),
-          em: ({ node, ...props }) => (
-            <em className="text-slate-500 font-semibold" {...props} />
-          ),
+          strong: ({ node, ...props }) => <strong className="font-extrabold text-indigo-950" {...props} />,
+          em: ({ node, ...props }) => <em className="font-semibold text-slate-500" {...props} />,
           a: ({ node, ...props }) => (
             <a
               className="font-bold text-indigo-600 underline underline-offset-2 hover:text-indigo-850"
@@ -542,7 +822,7 @@ function MarkdownMessage({ content }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="max-w-[85%] rounded-2xl rounded-tl-none bg-white px-4 py-3.5 border border-slate-100 shadow-sm animate-pulse">
+    <div className="max-w-[85%] animate-pulse rounded-2xl rounded-tl-none border border-slate-100 bg-white px-4 py-3.5 shadow-sm">
       <div className="flex items-center gap-1.5 py-1">
         <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400 [animation-delay:-0.3s]" />
         <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400 [animation-delay:-0.15s]" />
@@ -568,6 +848,7 @@ function normalizeStoredMessages(messages) {
   if (!Array.isArray(messages) || messages.length === 0) {
     return initialMessages;
   }
+
   return messages.map((message) => ({
     ...message,
     products: Array.isArray(message.products) ? message.products : []
@@ -613,7 +894,7 @@ function getErrorPresentation(error) {
   ) {
     return {
       title: "Cấu hình AI lỗi",
-      wrapperClassName: "border-rose-250 bg-rose-50 text-rose-700",
+      wrapperClassName: "border-rose-200 bg-rose-50 text-rose-700",
       buttonClassName: "bg-rose-100 text-rose-800 hover:bg-rose-200",
       icon: <ErrorIcon className="text-rose-500" />
     };
@@ -634,6 +915,21 @@ function getErrorPresentation(error) {
     buttonClassName: "bg-slate-200 text-slate-800 hover:bg-slate-300",
     icon: <InfoIcon className="text-slate-500" />
   };
+}
+
+function formatTime(value) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    return new Date(value).toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch {
+    return "";
+  }
 }
 
 function ChatIcon() {
@@ -728,6 +1024,34 @@ function InfoIcon({ className = "" }) {
       <circle cx="12" cy="12" r="10" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8h.01" />
+    </svg>
+  );
+}
+
+function SpinnerIcon() {
+  return (
+    <svg className="h-4.5 w-4.5 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      className="h-4.5 w-4.5"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
+      />
     </svg>
   );
 }

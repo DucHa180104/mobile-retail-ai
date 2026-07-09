@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 const menuItems = [
   { label: "Dashboard", to: "/admin/dashboard", icon: <DashboardIcon /> },
   { label: "Chatbot Logs", to: "/admin/chatbot-logs", icon: <ChatbotIcon /> },
+  { label: "Support Chat", to: "/admin/support-chat", icon: <SupportChatIcon /> },
   { label: "Products", to: "/admin/products", icon: <ProductIcon /> },
   { label: "Orders", to: "/admin/orders", icon: <OrderIcon /> },
   { label: "Users", to: "/admin/users", icon: <UserIcon /> },
@@ -142,6 +143,22 @@ function ChatbotIcon() {
       <path d="M10 3v3M14 3v3" />
       <rect x="4" y="6" width="16" height="12" rx="3" />
       <path d="M9 18v3l3-2 3 2v-3" />
+    </svg>
+  );
+}
+
+function SupportChatIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-5 w-5"
+    >
+      <path d="M21 15a3 3 0 0 1-3 3H8l-5 3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3z" />
+      <path d="M8 9h8M8 13h5" />
     </svg>
   );
 }
