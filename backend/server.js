@@ -17,6 +17,7 @@ import cartRoutes from "./routes/cartRoutes.js";
 import userAdminRoutes from "./routes/userAdminRoutes.js";
 import chatAdminRoutes from "./routes/chatAdminRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import contactSettingsRoutes from "./routes/contactSettingsRoutes.js";
 import supportChatRoutes from "./routes/supportChatRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -50,6 +51,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/admin/users", userAdminRoutes);
 app.use("/api/admin/chat-logs", chatAdminRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/contact-settings", contactSettingsRoutes);
 app.use("/api/support-chat", supportChatRoutes);
 app.use(errorHandler);
 

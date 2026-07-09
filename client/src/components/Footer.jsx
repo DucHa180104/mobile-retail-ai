@@ -1,14 +1,53 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { buildApiUrl } from "../lib/api.js";
 
 function Footer() {
+  const [contactSettings, setContactSettings] = useState(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function fetchContactSettings() {
+      try {
+        const response = await fetch(buildApiUrl("/api/contact-settings"));
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Không thể tải thông tin liên hệ");
+        }
+
+        if (!isCancelled) {
+          setContactSettings(data);
+        }
+      } catch {
+        if (!isCancelled) {
+          setContactSettings(null);
+        }
+      }
+    }
+
+    fetchContactSettings();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const footerContactInfo = useMemo(() => {
+    return {
+      storeAddress: String(contactSettings?.storeAddress || "").trim() || "Đang cập nhật",
+      storePhone: String(contactSettings?.storePhone || "").trim() || "Đang cập nhật",
+      supportEmail: String(contactSettings?.supportEmail || "").trim() || "Đang cập nhật"
+    };
+  }, [contactSettings]);
+
   return (
     <footer className="mt-16 border-t border-slate-900 bg-slate-950 text-slate-400">
-      {/* Top accent line */}
       <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700" />
 
       <div className="mx-auto max-w-[1360px] px-4 py-16 sm:px-5 lg:px-6">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1.1fr]">
-          {/* Brand */}
           <section>
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-sm font-black text-white shadow-lg shadow-indigo-500/20">
@@ -16,12 +55,12 @@ function Footer() {
               </span>
               <div>
                 <p className="text-base font-black tracking-widest text-white">MẠNH HƯƠNG</p>
-                <p className="text-xs text-indigo-400 font-bold">MOBILE RETAIL</p>
+                <p className="text-xs font-bold text-indigo-400">MOBILE RETAIL</p>
               </div>
             </div>
 
             <p className="mt-6 max-w-xs text-sm leading-relaxed text-slate-400">
-              Hệ thống bán lẻ điện thoại cũ/mới uy tín hàng đầu. Cam kết chất lượng nguyên bản, bảo hành minh bạch cùng chế độ thu cũ đổi mới tốt nhất.
+              Hệ thống bán lẻ điện thoại cũ/mới uy tín. Cam kết chất lượng rõ ràng, bảo hành minh bạch và hỗ trợ khách hàng tận tâm.
             </p>
 
             <div className="mt-6 flex gap-3">
@@ -58,15 +97,14 @@ function Footer() {
             </h3>
 
             <div className="mt-6 space-y-4 text-sm text-slate-400">
-              <ContactRow title="123 Lê Đại Hành, Quận 11, TP.HCM" icon={<PinIcon />} />
-              <ContactRow title="0909 123 456" icon={<PhoneIcon />} />
-              <ContactRow title="contact@manhhuongmobile.vn" icon={<MailIcon />} />
+              <ContactRow title={footerContactInfo.storeAddress} icon={<PinIcon />} />
+              <ContactRow title={footerContactInfo.storePhone} icon={<PhoneIcon />} />
+              <ContactRow title={footerContactInfo.supportEmail} icon={<MailIcon />} />
             </div>
 
-            {/* Trust badge */}
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold text-slate-300">Cửa hàng mở cửa: 8:00 – 21:00</span>
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+              <span className="text-xs font-bold text-slate-300">Cửa hàng mở cửa: 8:00 - 21:00</span>
             </div>
           </section>
         </div>

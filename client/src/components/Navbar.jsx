@@ -7,7 +7,7 @@ const menuItems = [
   { label: "Máy tính bảng", to: "/" },
   { label: "Phụ kiện", to: "/" },
   { label: "Thu cũ đổi mới", to: "/trade-in", activePaths: ["/trade-in"] },
-  { label: "Liên hệ", to: "/" }
+  { label: "Liên hệ", to: "/contact", activePaths: ["/contact"] }
 ];
 
 function Navbar({ searchValue, onSearchChange, totalItems }) {
