@@ -26,7 +26,9 @@ function ChatbotWidget({ floating = false }) {
   const { token, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  const [isOpen, setIsOpen] = useState(!floating);
+  // Separated states for floating panels
+  const [isAiOpen, setIsAiOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("ai");
 
   const [input, setInput] = useState("");
@@ -47,8 +49,8 @@ function ChatbotWidget({ floating = false }) {
     if (!floating) {
       return "rounded-3xl border border-slate-100 bg-white p-6 shadow-sm";
     }
-
-    return "fixed bottom-6 right-6 z-50 w-[calc(100vw-2rem)] max-w-[390px]";
+    // Wider frame width: changed to max-w-[500px] as requested to give plenty of space
+    return "fixed bottom-6 right-6 z-50 w-[calc(100vw-2rem)] max-w-[500px]";
   }, [floating]);
 
   const currentProductId = useMemo(() => {
@@ -60,7 +62,6 @@ function ChatbotWidget({ floating = false }) {
     if (isAuthenticated && token) {
       return;
     }
-
     window.localStorage.setItem(CHATBOT_MESSAGES_STORAGE_KEY, JSON.stringify(messages));
   }, [messages, isAuthenticated, token]);
 
@@ -116,8 +117,16 @@ function ChatbotWidget({ floating = false }) {
     };
   }, [isAuthenticated, token]);
 
+  // Load and poll support chat when tab or panel is active
+  const isSupportActive = useMemo(() => {
+    if (floating) {
+      return isSupportOpen;
+    }
+    return activeTab === "support";
+  }, [floating, isSupportOpen, activeTab]);
+
   useEffect(() => {
-    if (activeTab !== "support") {
+    if (!isSupportActive) {
       return;
     }
 
@@ -171,10 +180,10 @@ function ChatbotWidget({ floating = false }) {
     return () => {
       isCancelled = true;
     };
-  }, [activeTab, isAuthenticated, token]);
+  }, [isSupportActive, isAuthenticated, token]);
 
   useEffect(() => {
-    if (activeTab !== "support" || !isAuthenticated || !token) {
+    if (!isSupportActive || !isAuthenticated || !token) {
       return undefined;
     }
 
@@ -202,7 +211,7 @@ function ChatbotWidget({ floating = false }) {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [activeTab, isAuthenticated, token]);
+  }, [isSupportActive, isAuthenticated, token]);
 
   async function sendMessage(messageText) {
     const trimmedMessage = String(messageText || "").trim();
@@ -337,97 +346,220 @@ function ChatbotWidget({ floating = false }) {
     return Array.from(new Set(merged)).slice(0, 5);
   }, [recentQuestions]);
 
-  const panelContent = (
-    <div className="space-y-4">
-      <ChatTabs activeTab={activeTab} onChange={setActiveTab} />
-
-      {activeTab === "ai" ? (
-        <ChatPanel
-          input={input}
-          messages={messages}
-          loading={loading}
-          error={error}
-          lastFailedMessage={lastFailedMessage}
-          suggestedQuestions={suggestedQuestions}
-          onInputChange={setInput}
-          onSubmit={handleSubmit}
-          onRetry={handleRetry}
-          onSuggestedQuestion={handleSuggestedQuestion}
-          compact={floating}
-        />
-      ) : (
-        <SupportChatPanel
-          isAuthenticated={isAuthenticated}
-          loading={supportLoading}
-          sending={supportSending}
-          error={supportError}
-          conversation={supportConversation}
-          messages={supportMessages}
-          input={supportInput}
-          onInputChange={setSupportInput}
-          onSubmit={handleSupportSubmit}
-          compact={floating}
-        />
-      )}
-    </div>
-  );
-
+  // Standard non-floating view (embedded in full-page)
   if (!floating) {
-    return <section className={wrapperClassName}>{panelContent}</section>;
+    return (
+      <section className={wrapperClassName}>
+        <div className="space-y-5">
+          <ChatTabs activeTab={activeTab} onChange={setActiveTab} />
+
+          {activeTab === "ai" ? (
+            <ChatPanel
+              input={input}
+              messages={messages}
+              loading={loading}
+              error={error}
+              lastFailedMessage={lastFailedMessage}
+              suggestedQuestions={suggestedQuestions}
+              onInputChange={setInput}
+              onSubmit={handleSubmit}
+              onRetry={handleRetry}
+              onSuggestedQuestion={handleSuggestedQuestion}
+              compact={false}
+            />
+          ) : (
+            <SupportChatPanel
+              isAuthenticated={isAuthenticated}
+              loading={supportLoading}
+              sending={supportSending}
+              error={supportError}
+              conversation={supportConversation}
+              messages={supportMessages}
+              input={supportInput}
+              onInputChange={setSupportInput}
+              onSubmit={handleSupportSubmit}
+              compact={false}
+            />
+          )}
+        </div>
+      </section>
+    );
   }
 
+  // Floating Mode Rendering
   return (
     <div className={wrapperClassName}>
-      {isOpen ? (
-        <div className="animate-fade-in overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-2xl shadow-slate-900/10">
-          <div className="flex items-center justify-between bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-4 py-4 text-white">
+      {/* 1. AI Chat Panel Window */}
+      {isAiOpen && (
+        <div className="animate-fade-in overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-2xl shadow-slate-900/10 mb-2">
+          {/* Header styled premium blue gradient as requested */}
+          <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-800 px-5 py-5 text-white">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-400/30 bg-indigo-500/20">
-                <ChatIcon />
-                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner">
+                <SparkIcon className="h-6 w-6 text-white animate-pulse" />
               </div>
               <div>
-                <h3 className="text-sm font-black leading-none">Mạnh Hường Support</h3>
-                <p className="mt-1.5 text-[10px] font-medium text-slate-300">
-                  {activeTab === "ai"
-                    ? isAuthenticated
-                      ? "Lịch sử chat AI đã đồng bộ"
-                      : "Hỗ trợ chọn máy cũ 24/7"
-                    : "Trao đổi trực tiếp với admin"}
+                <h3 className="text-sm font-black leading-none">Mạnh Hường AI</h3>
+                <p className="mt-1.5 text-[10px] font-semibold text-blue-100">
+                  Tư vấn chọn máy, so sánh & báo giá
                 </p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => setIsAiOpen(false)}
               className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20"
               aria-label="Đóng hộp chat"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <div className="bg-slate-50/30 p-4">{panelContent}</div>
+          {/* Quick suggestions directly under the header - whitespace-nowrap prevents cut-off */}
+          <div className="grid grid-cols-3 gap-1.5 px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+            <button
+              onClick={() => sendMessage("iPhone nào dưới 15 triệu?")}
+              className="flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-700 hover:border-blue-300 hover:text-blue-600 transition whitespace-nowrap"
+            >
+              🔍 Dưới 15tr
+            </button>
+            <button
+              onClick={() => sendMessage("Máy pin trâu chơi game tốt")}
+              className="flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-700 hover:border-indigo-300 hover:text-indigo-600 transition whitespace-nowrap"
+            >
+              🎮 Chơi game
+            </button>
+            <button
+              onClick={() => sendMessage("Chính sách bảo hành máy cũ")}
+              className="flex items-center justify-center gap-1 py-1.5 rounded-lg border border-slate-200 bg-white text-[10px] font-bold text-slate-700 hover:border-violet-300 hover:text-violet-600 transition whitespace-nowrap"
+            >
+              🛡️ Bảo hành
+            </button>
+          </div>
+
+          <div className="bg-white p-4">
+            <ChatPanel
+              input={input}
+              messages={messages}
+              loading={loading}
+              error={error}
+              lastFailedMessage={lastFailedMessage}
+              suggestedQuestions={suggestedQuestions}
+              onInputChange={setInput}
+              onSubmit={handleSubmit}
+              onRetry={handleRetry}
+              onSuggestedQuestion={handleSuggestedQuestion}
+              compact={true}
+            />
+          </div>
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="group relative ml-auto flex h-14 w-14 items-center justify-center rounded-full border border-slate-800 bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-xl shadow-indigo-950/20 transition-all duration-300 hover:scale-105 active:scale-95"
-          aria-label="Mở hộp chat"
-        >
-          <ChatIcon />
-          <span className="pointer-events-none absolute -left-16 top-3 rounded-md border border-slate-100 bg-white/90 px-2 py-0.5 text-[10px] font-bold text-slate-700 opacity-0 shadow-sm backdrop-blur transition-opacity duration-200 group-hover:opacity-100">
-            Chat hỗ trợ
-          </span>
-          <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-white" />
-          </span>
-        </button>
+      )}
+
+      {/* 2. Admin Support Chat Panel Window */}
+      {isSupportOpen && (
+        <div className="animate-fade-in overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-2xl shadow-slate-900/10 mb-2">
+          {/* Header styled dark slate as in Image 3 */}
+          <div className="flex items-center justify-between bg-slate-900 px-5 py-5 text-white">
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5 text-white">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black leading-none">Chat trực tiếp</h3>
+                <p className="mt-1.5 text-[10px] font-semibold text-slate-400">
+                  Hỗ trợ khách hàng trực tuyến 24/7
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsSupportOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20"
+              aria-label="Đóng hộp chat"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Info banner directly below the header */}
+          {isAuthenticated && (
+            <div className="bg-slate-50 border-b border-slate-100 px-4 py-2.5 text-[10px] text-slate-500 font-medium">
+              <span className="font-bold text-slate-700">Hỗ trợ: </span>
+              Admin sẽ đọc và trả lời trực tiếp tin nhắn của bạn tại đây.
+            </div>
+          )}
+
+          <div className="bg-white p-4">
+            <SupportChatPanel
+              isAuthenticated={isAuthenticated}
+              loading={supportLoading}
+              sending={supportSending}
+              error={supportError}
+              conversation={supportConversation}
+              messages={supportMessages}
+              input={supportInput}
+              onInputChange={setSupportInput}
+              onSubmit={handleSupportSubmit}
+              compact={true}
+              onClose={() => setIsSupportOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 3. Floating Control Buttons - Rendered side-by-side as in Image 1 */}
+      {!isAiOpen && !isSupportOpen && (
+        <div className="flex items-center justify-end gap-3">
+          {/* Left Pill Button: AI Assistant */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsAiOpen(true);
+              setIsSupportOpen(false);
+              setActiveTab("ai");
+            }}
+            className="flex h-14 items-center gap-3 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 pl-4 pr-5 text-white shadow-xl shadow-indigo-500/25 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-indigo-500/35"
+            aria-label="Chatbot AI"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 shadow-inner">
+              <SparkIcon className="h-5 w-5 text-white animate-pulse" />
+            </div>
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-xs font-black tracking-wide">Mạnh Hường AI</span>
+              <span className="text-[9px] text-white/80 font-medium">Tư vấn chọn máy</span>
+            </div>
+          </button>
+
+          {/* Right Circle Button: Admin Support */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsSupportOpen(true);
+              setIsAiOpen(false);
+              setActiveTab("support");
+            }}
+            className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-slate-800/10 bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-xl shadow-indigo-950/20 transition-all duration-300 hover:scale-105 active:scale-95"
+            aria-label="Hỗ trợ trực tiếp từ Admin"
+          >
+            <ChatIcon />
+            <span className="pointer-events-none absolute -top-11 rounded-md border border-slate-100 bg-white/90 px-2.5 py-1 text-[10px] font-bold text-slate-700 opacity-0 shadow-md backdrop-blur transition-opacity duration-200 group-hover:opacity-100 whitespace-nowrap">
+              Chat trực tiếp
+            </span>
+            <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+            </span>
+          </button>
+        </div>
       )}
     </div>
   );
@@ -439,7 +571,7 @@ function ChatTabs({ activeTab, onChange }) {
       <button
         type="button"
         onClick={() => onChange("ai")}
-        className={`rounded-xl px-3 py-2 text-sm font-bold transition ${
+        className={`rounded-xl px-3 py-2.5 text-sm font-bold transition ${
           activeTab === "ai"
             ? "bg-indigo-600 text-white shadow-sm"
             : "text-slate-600 hover:bg-slate-50"
@@ -450,7 +582,7 @@ function ChatTabs({ activeTab, onChange }) {
       <button
         type="button"
         onClick={() => onChange("support")}
-        className={`rounded-xl px-3 py-2 text-sm font-bold transition ${
+        className={`rounded-xl px-3 py-2.5 text-sm font-bold transition ${
           activeTab === "support"
             ? "bg-slate-900 text-white shadow-sm"
             : "text-slate-600 hover:bg-slate-50"
@@ -500,29 +632,11 @@ function ChatPanel({
         </div>
       ) : null}
 
-      <div className="space-y-2 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-          Gợi ý câu hỏi nhanh
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {suggestedQuestions.map((question) => (
-            <button
-              key={question}
-              type="button"
-              onClick={() => onSuggestedQuestion(question)}
-              disabled={loading}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {question}
-            </button>
-          ))}
-        </div>
-      </div>
-
+      {/* Increased height for messages wrapper: from 360px to 420px for greater spaciousness */}
       <div
         ref={messageContainerRef}
         className={`space-y-4 overflow-y-auto rounded-2xl border border-slate-100/50 bg-slate-100/50 p-4 ${
-          compact ? "max-h-[290px]" : "max-h-[460px]"
+          compact ? "h-[420px] max-h-[420px]" : "max-h-[460px]"
         }`}
       >
         {messages.map((message) => (
@@ -554,6 +668,48 @@ function ChatPanel({
         </div>
       ) : null}
 
+      {/* Suggestion tags horizontal scroll directly above input bar in compact mode */}
+      {compact && suggestedQuestions.length > 0 && (
+        <div 
+          className="flex gap-2 overflow-x-auto py-2"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {suggestedQuestions.map((question) => (
+            <button
+              key={question}
+              type="button"
+              onClick={() => onSuggestedQuestion(question)}
+              disabled={loading}
+              className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-700 hover:border-indigo-400 hover:text-indigo-655 hover:bg-slate-50 transition disabled:opacity-50 font-medium shadow-sm"
+            >
+              {question}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Non-compact suggests */}
+      {!compact && (
+        <div className="space-y-2 rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Gợi ý câu hỏi nhanh
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {suggestedQuestions.map((question) => (
+              <button
+                key={question}
+                type="button"
+                onClick={() => onSuggestedQuestion(question)}
+                disabled={loading}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={onSubmit} className="flex gap-2">
         <input
           type="text"
@@ -566,7 +722,7 @@ function ChatPanel({
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-xl bg-indigo-600 px-4.5 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/10 transition hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/10 transition hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? <SpinnerIcon /> : <SendIcon />}
         </button>
@@ -585,7 +741,8 @@ function SupportChatPanel({
   input,
   onInputChange,
   onSubmit,
-  compact = false
+  compact = false,
+  onClose
 }) {
   const messageContainerRef = useRef(null);
 
@@ -596,13 +753,26 @@ function SupportChatPanel({
     messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
   }, [messages, loading, error]);
 
+  // Premium login prompt matched to Image 3
   if (!isAuthenticated) {
     return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-800">
-          <p className="font-bold">Bạn cần đăng nhập để chat với admin.</p>
-          <p className="mt-1">Sau khi đăng nhập, bạn có thể gửi câu hỏi và xem lại lịch sử hỗ trợ.</p>
+      <div className="flex flex-col items-center justify-center p-8 text-center h-[350px] bg-white">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600 mb-4 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-8 w-8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
         </div>
+        <h3 className="text-base font-bold text-slate-800">Bạn cần đăng nhập để chat</h3>
+        <p className="mt-2 text-xs leading-relaxed text-slate-500 max-w-[240px]">
+          Hãy đăng nhập tài khoản của bạn để trao đổi trực tiếp với nhân viên hỗ trợ.
+        </p>
+        <Link
+          to="/login"
+          onClick={onClose}
+          className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition active:scale-95"
+        >
+          Đăng nhập
+        </Link>
       </div>
     );
   }
@@ -621,26 +791,29 @@ function SupportChatPanel({
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-xs text-slate-500 shadow-sm">
-        <p className="font-bold text-slate-700">
-          {conversation ? "Hội thoại hỗ trợ đã sẵn sàng" : "Đang tạo hội thoại hỗ trợ"}
-        </p>
-        <p className="mt-1">
-          Admin sẽ thấy tin nhắn của bạn trong trang quản trị và có thể trả lời trực tiếp tại đây.
-        </p>
-      </div>
+      {!compact && (
+        <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-xs text-slate-500 shadow-sm">
+          <p className="font-bold text-slate-700">
+            {conversation ? "Hội thoại hỗ trợ đã sẵn sàng" : "Đang tạo hội thoại hỗ trợ"}
+          </p>
+          <p className="mt-1">
+            Admin sẽ thấy tin nhắn của bạn trong trang quản trị và có thể trả lời trực tiếp tại đây.
+          </p>
+        </div>
+      )}
 
+      {/* Spacious messaging container height: increased from 360px to 420px */}
       <div
         ref={messageContainerRef}
         className={`space-y-3 overflow-y-auto rounded-2xl border border-slate-100/50 bg-slate-100/50 p-4 ${
-          compact ? "max-h-[290px]" : "max-h-[460px]"
+          compact ? "h-[420px] max-h-[420px]" : "max-h-[460px]"
         }`}
       >
         {loading ? <LoadingSkeleton /> : null}
 
         {!loading && messages.length === 0 ? (
-          <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm text-slate-500">
-            Chưa có tin nhắn nào. Bạn có thể mở đầu cuộc trò chuyện với admin ngay bây giờ.
+          <div className="flex h-full items-center justify-center p-6 text-center text-xs text-slate-400">
+            Chưa có tin nhắn nào. Bắt đầu hội thoại với Admin bên dưới nhé!
           </div>
         ) : null}
 
@@ -668,7 +841,7 @@ function SupportChatPanel({
         <button
           type="submit"
           disabled={sending || !input.trim()}
-          className="rounded-xl bg-slate-900 px-4.5 py-3 text-sm font-bold text-white shadow-md shadow-slate-900/10 transition hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-md shadow-slate-900/10 transition hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {sending ? <SpinnerIcon /> : <SendIcon />}
         </button>
@@ -768,21 +941,21 @@ function SupportMessageBubble({ message }) {
   return (
     <div className={isUserMessage ? "ml-auto max-w-[85%]" : "max-w-[85%]"}>
       <div
-        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+        className={`rounded-2xl px-4 py-3.5 text-sm leading-relaxed shadow-sm ${
           isUserMessage
-            ? "rounded-tr-none bg-gradient-to-tr from-slate-800 to-slate-900 text-white"
+            ? "rounded-tr-none bg-gradient-to-tr from-blue-600 to-indigo-600 text-white"
             : "rounded-tl-none border border-slate-100 bg-white text-slate-800"
         }`}
       >
         <div className="mb-1 flex items-center gap-2">
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isUserMessage ? "text-slate-200" : "text-indigo-600"}`}>
+          <span className={`text-[9px] font-extrabold uppercase tracking-wider ${isUserMessage ? "text-blue-100" : "text-indigo-600"}`}>
             {isUserMessage ? "Bạn" : "Admin"}
           </span>
-          <span className={`text-[10px] ${isUserMessage ? "text-slate-300" : "text-slate-400"}`}>
+          <span className={`text-[9px] ${isUserMessage ? "text-blue-200/80" : "text-slate-400"}`}>
             {createdAtText}
           </span>
         </div>
-        <p className="whitespace-pre-line break-words">{message.content}</p>
+        <p className="whitespace-pre-line break-words text-sm">{message.content}</p>
       </div>
     </div>
   );
@@ -790,7 +963,7 @@ function SupportMessageBubble({ message }) {
 
 function MarkdownMessage({ content }) {
   return (
-    <div className="chatbot-markdown break-words text-sm leading-relaxed text-slate-805">
+    <div className="chatbot-markdown break-words text-sm leading-relaxed text-slate-800">
       <ReactMarkdown
         components={{
           h1: ({ node, ...props }) => <h3 className="mb-2 text-base font-extrabold text-slate-900" {...props} />,
@@ -855,6 +1028,7 @@ function normalizeStoredMessages(messages) {
   }));
 }
 
+// Keep support for default storage functionality unchanged
 function readStoredRecentQuestions() {
   try {
     const rawValue = window.localStorage.getItem(CHATBOT_RECENT_QUESTIONS_STORAGE_KEY);
@@ -940,13 +1114,32 @@ function ChatIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="2.5"
-      className="h-5 w-5"
+      className="h-5.5 w-5.5"
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M7 10h10M7 14h6" />
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4 4v-4H6.5A2.5 2.5 0 0 1 4 13.5z"
+      />
+    </svg>
+  );
+}
+
+function SparkIcon({ className = "" }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      className={className}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.813 15.904L9 21l-.813-5.096L3 15l5.096-.813L9 9l.813 5.096L15 15l-5.187.904zM19.071 4.929l-.382 2.396-.382-2.396-2.396-.382 2.396-.382.382-2.396.382 2.396 2.396.382-2.396.382z"
       />
     </svg>
   );
@@ -960,7 +1153,7 @@ function WarningIcon({ className = "" }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="2.5"
-      className={`h-4.5 w-4.5 ${className}`}
+      className={`h-5 w-5 ${className}`}
     >
       <path
         strokeLinecap="round"
@@ -973,6 +1166,7 @@ function WarningIcon({ className = "" }) {
   );
 }
 
+// Keep other warning and status icons unchanged
 function ErrorIcon({ className = "" }) {
   return (
     <svg
@@ -981,7 +1175,7 @@ function ErrorIcon({ className = "" }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="2.5"
-      className={`h-4.5 w-4.5 ${className}`}
+      className={`h-5 w-5 ${className}`}
     >
       <circle cx="12" cy="12" r="10" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v5" />
@@ -998,7 +1192,7 @@ function WifiOffIcon({ className = "" }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="2.5"
-      className={`h-4.5 w-4.5 ${className}`}
+      className={`h-5 w-5 ${className}`}
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="m2 8.82 2.36 2.36" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 4.5a16 16 0 0 1 11 4.32" />
@@ -1019,7 +1213,7 @@ function InfoIcon({ className = "" }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="2.5"
-      className={`h-4.5 w-4.5 ${className}`}
+      className={`h-5 w-5 ${className}`}
     >
       <circle cx="12" cy="12" r="10" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4" />
@@ -1030,7 +1224,7 @@ function InfoIcon({ className = "" }) {
 
 function SpinnerIcon() {
   return (
-    <svg className="h-4.5 w-4.5 animate-spin" viewBox="0 0 24 24" fill="none">
+    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
@@ -1045,7 +1239,7 @@ function SendIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="2.5"
-      className="h-4.5 w-4.5"
+      className="h-5 w-5"
     >
       <path
         strokeLinecap="round"
