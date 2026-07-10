@@ -5,9 +5,10 @@ const VALID_BODY_CONDITION = ["clean", "light_scratches", "heavy_scratches"];
 const VALID_FACE_ID_STATUS = ["working", "broken"];
 const VALID_ACCESSORY_STATUS = ["full", "missing_box_or_cable"];
 
-export const estimateTradeIn = (req, res) => {
+export const estimateTradeIn = async (req, res) => {
   try {
     const {
+      brand,
       modelName,
       storage,
       batteryHealth,
@@ -57,13 +58,18 @@ export const estimateTradeIn = (req, res) => {
       });
     }
 
-    const basePrice = getBasePrice(modelName);
+    const basePrice = await getBasePrice({
+      brand,
+      modelName,
+      storage
+    });
 
     if (!basePrice) {
-      return res.status(400).json({ message: "Unsupported modelName" });
+      return res.status(400).json({ message: "Unsupported modelName or storage" });
     }
 
-    const estimate = calculateTradeInEstimate({
+    const estimate = await calculateTradeInEstimate({
+      brand,
       modelName,
       storage,
       batteryHealth,

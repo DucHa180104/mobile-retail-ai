@@ -1,22 +1,43 @@
-const BASE_PRICES = {
-  "iphone 11": 5000000,
-  "iphone 12": 7000000,
-  "iphone 13": 9000000,
-  "iphone 14": 12000000,
-  "iphone 15 pro max": 20000000
-};
+import TradeInPricingRule from "../models/TradeInPricingRule.js";
 
-function normalizeModelName(modelName) {
-  return modelName.trim().toLowerCase();
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
-function getBasePrice(modelName) {
-  return BASE_PRICES[normalizeModelName(modelName)] || 0;
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function calculateTradeInEstimate(input) {
+async function findTradeInPricingRule({ brand, modelName, storage }) {
+  const normalizedBrand = normalizeText(brand);
+  const normalizedModelName = normalizeText(modelName);
+  const normalizedStorage = normalizeText(storage);
+
+  if (!normalizedModelName || !normalizedStorage) {
+    return null;
+  }
+
+  const query = {
+    isActive: true,
+    modelName: new RegExp(`^${escapeRegex(normalizedModelName)}$`, "i"),
+    storage: new RegExp(`^${escapeRegex(normalizedStorage)}$`, "i")
+  };
+
+  if (normalizedBrand) {
+    query.brand = new RegExp(`^${escapeRegex(normalizedBrand)}$`, "i");
+  }
+
+  return TradeInPricingRule.findOne(query);
+}
+
+export async function getBasePrice(input) {
+  const pricingRule = await findTradeInPricingRule(input);
+
+  return pricingRule?.basePrice || 0;
+}
+
+function buildDeductionsFromRule(input, pricingRule) {
   const {
-    modelName,
     batteryHealth,
     displayStatus,
     bodyCondition,
@@ -24,59 +45,66 @@ function calculateTradeInEstimate(input) {
     accessoryStatus
   } = input;
 
-  const basePrice = getBasePrice(modelName);
   const deductions = [];
+  const rules = pricingRule?.deductionRules || {};
 
   if (batteryHealth < 80) {
     deductions.push({
-      reason: "Pin duoi 80%",
-      amount: 700000
+      reason: "Pin dưới 80%",
+      amount: rules.batteryBelow80 || 0
     });
   } else if (batteryHealth >= 80 && batteryHealth <= 85) {
     deductions.push({
-      reason: "Pin tu 80% den 85%",
-      amount: 400000
+      reason: "Pin từ 80% đến 85%",
+      amount: rules.battery80To85 || 0
     });
   }
 
   if (displayStatus === "replaced") {
     deductions.push({
-      reason: "Man hinh da thay",
-      amount: 1000000
+      reason: "Màn hình đã thay",
+      amount: rules.displayReplaced || 0
     });
   } else if (displayStatus === "unknown") {
     deductions.push({
-      reason: "Khong ro tinh trang man hinh",
-      amount: 500000
+      reason: "Không rõ tình trạng màn hình",
+      amount: rules.displayUnknown || 0
     });
   }
 
   if (bodyCondition === "light_scratches") {
     deductions.push({
-      reason: "Than may xuoc nhe",
-      amount: 300000
+      reason: "Thân máy xước nhẹ",
+      amount: rules.bodyLightScratches || 0
     });
   } else if (bodyCondition === "heavy_scratches") {
     deductions.push({
-      reason: "Than may xuoc nhieu",
-      amount: 800000
+      reason: "Thân máy xước nhiều",
+      amount: rules.bodyHeavyScratches || 0
     });
   }
 
   if (faceIdStatus === "broken") {
     deductions.push({
-      reason: "Face ID hong",
-      amount: 1200000
+      reason: "Face ID hỏng",
+      amount: rules.faceIdBroken || 0
     });
   }
 
   if (accessoryStatus === "missing_box_or_cable") {
     deductions.push({
-      reason: "Thieu hop hoac cap sac",
-      amount: 300000
+      reason: "Thiếu hộp hoặc cáp sạc",
+      amount: rules.missingBoxOrCable || 0
     });
   }
 
+  return deductions.filter((item) => item.amount > 0);
+}
+
+export async function calculateTradeInEstimate(input) {
+  const pricingRule = await findTradeInPricingRule(input);
+  const basePrice = pricingRule?.basePrice || 0;
+  const deductions = buildDeductionsFromRule(input, pricingRule);
   const totalDeductions = deductions.reduce(
     (total, item) => total + item.amount,
     0
@@ -85,8 +113,7 @@ function calculateTradeInEstimate(input) {
   return {
     basePrice,
     deductions,
-    estimatedPrice: Math.max(basePrice - totalDeductions, 0)
+    estimatedPrice: Math.max(basePrice - totalDeductions, 0),
+    pricingRuleId: pricingRule?._id || null
   };
 }
-
-export { BASE_PRICES, calculateTradeInEstimate, getBasePrice };

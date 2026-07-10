@@ -7,6 +7,7 @@ function AdminLayout() {
     { label: "Tổng quan", to: "/admin/dashboard" },
     { label: "Nhật ký Chatbot", to: "/admin/chatbot-logs" },
     { label: "Chat hỗ trợ", to: "/admin/support-chat" },
+    { label: "Giá thu cũ", to: "/admin/tradein-pricing" },
     { label: "Cài đặt", to: "/admin/settings" },
     { label: "Đơn hàng", to: "/admin/orders" },
     { label: "Sản phẩm", to: "/admin/products" },
@@ -27,10 +28,10 @@ function AdminLayout() {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `rounded-xl px-4 py-2 text-[10px] font-bold tracking-wider uppercase transition-all duration-200 focus:outline-none ${
+                    `rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 focus:outline-none ${
                       isActive
                         ? "border border-blue-200/60 bg-white text-blue-600 shadow-sm ring-2 ring-blue-100/50"
-                        : "border border-slate-200/40 bg-slate-50 text-slate-550 hover:bg-white hover:text-slate-800 hover:shadow-sm focus:ring-2 focus:ring-slate-200"
+                        : "border border-slate-200/40 bg-slate-50 text-slate-600 hover:bg-white hover:text-slate-800 hover:shadow-sm focus:ring-2 focus:ring-slate-200"
                     }`
                   }
                 >

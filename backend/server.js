@@ -9,6 +9,7 @@ import { createCorsOptions, parseAllowedOrigins } from "./config/corsOptions.js"
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import tradeInRoutes from "./routes/tradeInRoutes.js";
+import tradeInAdminRoutes from "./routes/tradeInAdminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
@@ -43,6 +44,7 @@ app.use("/uploads", express.static(uploadsPath));
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/tradein", tradeInRoutes);
+app.use("/api/admin/tradein/pricing", tradeInAdminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/reviews", reviewRoutes);

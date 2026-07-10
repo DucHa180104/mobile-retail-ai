@@ -8,6 +8,7 @@ import AdminOrdersPage from "./pages/AdminOrdersPage.jsx";
 import AdminProductsPage from "./pages/AdminProductsPage.jsx";
 import AdminSettingsPage from "./pages/AdminSettingsPage.jsx";
 import AdminSupportChatPage from "./pages/AdminSupportChatPage.jsx";
+import AdminTradeInPricingPage from "./pages/AdminTradeInPricingPage.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
@@ -68,6 +69,7 @@ function App() {
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="support-chat" element={<AdminSupportChatPage />} />
+          <Route path="tradein-pricing" element={<AdminTradeInPricingPage />} />
           <Route path="users" element={<AdminUsersPage />} />
         </Route>
       </Routes>
