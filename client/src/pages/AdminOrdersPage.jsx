@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
@@ -17,12 +18,14 @@ const statusOptions = [
 
 function AdminOrdersPage() {
   const { token } = useAuth();
+  const [searchParams] = useSearchParams();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [updatingOrderId, setUpdatingOrderId] = useState("");
+  const targetOrderId = searchParams.get("orderId") || "";
 
   useEffect(() => {
     async function fetchOrders() {
@@ -57,7 +60,17 @@ function AdminOrdersPage() {
 
         const data = await response.json();
         setOrders(data);
-        setSelectedOrderId(data[0]?._id || "");
+        setSelectedOrderId(() => {
+          if (targetOrderId) {
+            const targetOrder = data.find((order) => order._id === targetOrderId);
+
+            if (targetOrder) {
+              return targetOrderId;
+            }
+          }
+
+          return data[0]?._id || "";
+        });
       } catch (fetchError) {
         setError(fetchError.message || "Không thể tải danh sách đơn hàng");
       } finally {
@@ -66,7 +79,7 @@ function AdminOrdersPage() {
     }
 
     fetchOrders();
-  }, [activeTab, token]);
+  }, [activeTab, token, targetOrderId]);
 
   const filteredOrders = useMemo(() => orders, [orders]);
 

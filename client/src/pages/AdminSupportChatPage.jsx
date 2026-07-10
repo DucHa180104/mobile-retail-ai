@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { buildApiUrl } from "../lib/api.js";
 
 function AdminSupportChatPage() {
   const { token } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [conversations, setConversations] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState("");
   const [messages, setMessages] = useState([]);
@@ -16,6 +18,7 @@ function AdminSupportChatPage() {
   const [replyError, setReplyError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const targetConversationId = searchParams.get("conversation") || "";
 
   const messageEndRef = useRef(null);
 
@@ -87,6 +90,20 @@ function AdminSupportChatPage() {
     });
   }, [conversations, searchQuery]);
 
+  useEffect(() => {
+    if (!targetConversationId || conversations.length === 0) {
+      return;
+    }
+
+    const targetExists = conversations.some(
+      (conversation) => getConversationId(conversation) === targetConversationId
+    );
+
+    if (targetExists) {
+      setSelectedConversationId(targetConversationId);
+    }
+  }, [targetConversationId, conversations]);
+
   async function fetchConversations(options = {}) {
     const { silent = false } = options;
 
@@ -122,6 +139,16 @@ function AdminSupportChatPage() {
       }
 
       setSelectedConversationId((currentValue) => {
+        if (targetConversationId) {
+          const targetExists = nextConversations.some(
+            (conversation) => getConversationId(conversation) === targetConversationId
+          );
+
+          if (targetExists) {
+            return targetConversationId;
+          }
+        }
+
         const stillExists = nextConversations.some(
           (conversation) => getConversationId(conversation) === currentValue
         );
@@ -319,6 +346,7 @@ function AdminSupportChatPage() {
                     type="button"
                     onClick={() => {
                       setSelectedConversationId(conversationId);
+                      setSearchParams({ conversation: conversationId });
                       setSuccessMessage("");
                       setReplyError("");
                     }}

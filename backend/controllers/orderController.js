@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import { createOrderCreatedNotification } from "../services/adminNotificationService.js";
 import { sendOrderConfirmationEmail } from "../services/emailService.js";
 
 const allowedOrderStatuses = ["pending", "confirmed", "cancelled"];
@@ -154,6 +155,12 @@ export const createOrder = async (req, res, next) => {
       await sendOrderConfirmationEmail(order, order.contactEmail);
     } catch (emailError) {
       console.error("Order confirmation email error:", emailError.message);
+    }
+
+    try {
+      await createOrderCreatedNotification(order);
+    } catch (notificationError) {
+      console.error("Create order notification error:", notificationError.message);
     }
 
     res.status(201).json(order);

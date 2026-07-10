@@ -1,5 +1,6 @@
 import SupportConversation from "../models/SupportConversation.js";
 import SupportMessage from "../models/SupportMessage.js";
+import { createSupportMessageNotification } from "../services/adminNotificationService.js";
 
 async function findOrCreateConversationForUser(userId) {
   let conversation = await SupportConversation.findOne({ user: userId });
@@ -56,6 +57,19 @@ export const sendMySupportMessage = async (req, res, next) => {
     conversation.lastSenderType = "user";
     conversation.status = "open";
     await conversation.save();
+
+    try {
+      await createSupportMessageNotification({
+        conversation,
+        user: req.user,
+        message
+      });
+    } catch (notificationError) {
+      console.error(
+        "Create support message notification error:",
+        notificationError.message
+      );
+    }
 
     return res.status(201).json({
       conversation,
