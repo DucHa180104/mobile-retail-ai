@@ -1,9 +1,32 @@
+import TradeInPricingRule from "../models/TradeInPricingRule.js";
 import { calculateTradeInEstimate, getBasePrice } from "../services/tradeInService.js";
 
 const VALID_DISPLAY_STATUS = ["original", "replaced", "unknown"];
 const VALID_BODY_CONDITION = ["clean", "light_scratches", "heavy_scratches"];
 const VALID_FACE_ID_STATUS = ["working", "broken"];
 const VALID_ACCESSORY_STATUS = ["full", "missing_box_or_cable"];
+
+export const getActiveTradeInPricingRules = async (req, res) => {
+  try {
+    const pricingRules = await TradeInPricingRule.find({ isActive: true })
+      .sort({ brand: 1, modelName: 1, storage: 1 })
+      .select("brand modelName storage basePrice");
+
+    return res.status(200).json({
+      pricingRules: pricingRules.map((rule) => ({
+        id: rule._id,
+        brand: rule.brand,
+        modelName: rule.modelName,
+        storage: rule.storage,
+        basePrice: rule.basePrice
+      }))
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Failed to fetch trade-in pricing rules"
+    });
+  }
+};
 
 export const estimateTradeIn = async (req, res) => {
   try {
