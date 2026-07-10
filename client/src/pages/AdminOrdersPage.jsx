@@ -16,6 +16,12 @@ const statusOptions = [
   { label: "Đã hủy", value: "cancelled" }
 ];
 
+const validStatusTransitions = {
+  pending: ["pending", "confirmed", "cancelled"],
+  confirmed: ["confirmed", "cancelled"],
+  cancelled: ["cancelled"]
+};
+
 function AdminOrdersPage() {
   const { token } = useAuth();
   const [searchParams] = useSearchParams();
@@ -296,18 +302,32 @@ function OrdersTable({
                   </div>
                 </td>
                 <td className="px-5 py-4">
+                  {(() => {
+                    const allowedStatuses = getAllowedStatusOptions(order.status);
+
+                    return (
                   <select
                     value={order.status || "pending"}
                     onChange={(event) => onStatusChange(order._id, event.target.value)}
                     disabled={updatingOrderId === order._id}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                   >
-                    {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                    {statusOptions.map((option) => {
+                      const isDisabled = !allowedStatuses.includes(option.value);
+
+                      return (
+                        <option
+                          key={option.value}
+                          value={option.value}
+                          disabled={isDisabled}
+                        >
+                          {isDisabled ? `${option.label} (không khả dụng)` : option.label}
+                        </option>
+                      );
+                    })}
                   </select>
+                    );
+                  })()}
                 </td>
                 <td className="px-5 py-4 text-sm text-slate-500">
                   {formatDate(order.createdAt)}
@@ -367,18 +387,32 @@ function OrderDetailPanel({ order, updatingOrderId, onStatusChange }) {
 
         <div className="flex items-center gap-3">
           <StatusBadge status={order.status} />
+          {(() => {
+            const allowedStatuses = getAllowedStatusOptions(order.status);
+
+            return (
           <select
             value={order.status || "pending"}
             onChange={(event) => onStatusChange(order._id, event.target.value)}
             disabled={updatingOrderId === order._id}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100"
           >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {statusOptions.map((option) => {
+              const isDisabled = !allowedStatuses.includes(option.value);
+
+              return (
+                <option
+                  key={option.value}
+                  value={option.value}
+                  disabled={isDisabled}
+                >
+                  {isDisabled ? `${option.label} (không khả dụng)` : option.label}
+                </option>
+              );
+            })}
           </select>
+            );
+          })()}
         </div>
       </div>
 
@@ -643,6 +677,10 @@ function getAdminApiErrorMessage(status, fallbackMessage) {
   }
 
   return fallbackMessage;
+}
+
+function getAllowedStatusOptions(currentStatus) {
+  return validStatusTransitions[currentStatus] || validStatusTransitions.pending;
 }
 
 export default AdminOrdersPage;

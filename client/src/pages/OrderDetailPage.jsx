@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
 function OrderDetailPage() {
   const { id } = useParams();
@@ -219,7 +219,10 @@ function OrderDetailPage() {
                     className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/30 p-3.5 transition hover:bg-slate-50"
                   >
                     <img
-                      src={item.image || "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=160&q=80"}
+                      src={
+                        resolveMediaUrl(item.image) ||
+                        "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=160&q=80"
+                      }
                       alt={item.name}
                       className="h-16 w-16 rounded-xl object-cover bg-white border border-slate-150"
                     />

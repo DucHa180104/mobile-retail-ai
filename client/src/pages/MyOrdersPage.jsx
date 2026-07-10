@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
 const orderTabs = [
   { label: "Tất cả đơn", value: "all" },
@@ -189,7 +189,10 @@ function MyOrdersPage() {
                           className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/30 p-3"
                         >
                           <img
-                            src={item.image || "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=160&q=80"}
+                            src={
+                              resolveMediaUrl(item.image) ||
+                              "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=160&q=80"
+                            }
                             alt={item.name}
                             className="h-14 w-14 rounded-lg object-cover bg-white border border-slate-100"
                           />
