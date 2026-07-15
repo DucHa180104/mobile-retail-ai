@@ -76,7 +76,8 @@ export function CartProvider({ children }) {
     }
   }, [cartItems, isAuthenticated]);
 
-  async function addToCart(product) {
+  async function addToCart(product, quantityToAdd = 1) {
+    const qty = Number(quantityToAdd) || 1;
     if (!isAuthenticated || !token) {
       setCartItems((currentItems) => {
         const safeItems = sanitizeCartItems(currentItems);
@@ -84,11 +85,11 @@ export function CartProvider({ children }) {
 
         if (existingProduct) {
           return safeItems.map((item) =>
-            item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+            item._id === product._id ? { ...item, quantity: item.quantity + qty } : item
           );
         }
 
-        return [{ ...product, quantity: 1 }, ...safeItems];
+        return [{ ...product, quantity: qty }, ...safeItems];
       });
       return;
     }
@@ -98,7 +99,7 @@ export function CartProvider({ children }) {
         method: "POST",
         body: {
           productId: product._id,
-          quantity: 1
+          quantity: qty
         }
       });
 

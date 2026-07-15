@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useCart } from "../context/CartContext.jsx";
+import { resolveMediaUrl } from "../lib/api.js";
 
 const menuItems = [
   { label: "Trang chủ", to: "/", activePaths: ["/"] },
@@ -13,144 +15,125 @@ const menuItems = [
 function Navbar({ searchValue, onSearchChange, totalItems }) {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  const { cartItems, removeFromCart } = useCart();
   const isAdmin = user?.role === "admin";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/80 shadow-sm backdrop-blur-md transition-all duration-300">
-      <div className="mx-auto max-w-[1360px] px-4 sm:px-5 lg:px-6">
-        <div className="py-3.5">
-          <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
-            <Link
-              to="/"
-              className="group flex shrink-0 items-center gap-3 transition-transform duration-300 active:scale-95"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-indigo-700 text-base font-black text-white shadow-md shadow-indigo-200/50 transition-transform duration-300 group-hover:rotate-6">
-                M
+    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white shadow-sm transition-all duration-300">
+      {/* Top micro bar links matching mockup top links */}
+      <div className="border-b border-slate-100/60 bg-slate-50/50 py-2 text-[11px] text-slate-500 hidden lg:block">
+        <div className="mx-auto max-w-[1360px] px-4 sm:px-6 flex justify-between items-center">
+          <div className="flex gap-5 items-center">
+            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+              Khuyến mãi
+            </span>
+            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+              Bán chạy nhất
+            </span>
+            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+              Hàng mới về
+            </span>
+            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V5A2.5 2.5 0 0 1 6.5 2.5H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z" /></svg>
+              Tư vấn AI
+            </span>
+          </div>
+          <div className="flex gap-4 items-center">
+            <Link to="/trade-in" className="hover:text-slate-900 transition font-medium">Thu cũ đổi mới</Link>
+            <Link to="/contact" className="hover:text-slate-900 transition font-medium">Liên hệ</Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6">
+        <div className="flex flex-wrap items-center gap-4 py-3 lg:flex-nowrap">
+          <Link to="/" className="flex shrink-0 items-center gap-2.5 group">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-black text-white shadow-none transition-all duration-300">
+              M
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-base font-black tracking-tight text-slate-900 sm:text-lg">
+                Mạnh Hương Mobile
+              </p>
+              <p className="-mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                AI Powered
+              </p>
+            </div>
+          </Link>
+
+          <div className="order-3 w-full lg:order-2 lg:mx-5 lg:flex-1">
+            <label className="relative block">
+              <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400 transition-colors">
+                <SearchIcon />
               </span>
-              <div className="min-w-0">
-                <p className="truncate text-base font-black tracking-widest text-slate-800 transition-colors duration-300 group-hover:text-indigo-600 sm:text-lg">
-                  MẠNH HƯỜNG
-                </p>
-                <p className="-mt-1 text-[10px] font-bold tracking-wider text-slate-400 group-hover:text-indigo-400">
-                  MOBILE RETAIL
-                </p>
-              </div>
-            </Link>
-
-            <div className="order-3 w-full lg:order-2 lg:mx-6 lg:flex-1">
-              <label className="relative block">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400 transition-colors duration-200 focus-within:text-indigo-600">
-                  <SearchIcon />
-                </span>
-                <input
-                  type="text"
-                  value={searchValue}
-                  onChange={onSearchChange}
-                  placeholder="Tìm kiếm iPhone, Samsung, Xiaomi..."
-                  className="w-full rounded-full border border-slate-100 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-300 shadow-inner focus:border-indigo-200 focus:bg-white focus:ring-4 focus:ring-indigo-100/50"
-                />
-              </label>
-            </div>
-
-            <div className="order-2 ml-auto flex items-center gap-2 lg:order-3 lg:ml-0">
-              <Link
-                to="/cart"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-all duration-300 hover:scale-105 hover:bg-slate-50 hover:text-indigo-600 active:scale-95"
-                aria-label="Giỏ hàng"
-              >
-                <CartIcon />
-                {totalItems > 0 ? (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 animate-bounce items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white shadow-md shadow-rose-200">
-                    {totalItems}
-                  </span>
-                ) : null}
-              </Link>
-
-              {isAuthenticated ? (
-                <div className="hidden items-center gap-2 sm:flex">
-                  <AccountDropdown user={user} isAdmin={isAdmin} onLogout={logout} />
-                </div>
-              ) : (
-                <div className="hidden items-center gap-2 sm:flex">
-                  <Link
-                    to="/login"
-                    className="rounded-full border border-slate-200/80 px-5 py-2 text-sm font-bold text-slate-700 transition-all duration-300 hover:scale-[1.02] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
-                  >
-                    Đăng nhập
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-md shadow-indigo-100 transition-all duration-300 hover:scale-[1.02] hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-indigo-200/50 active:scale-[0.98]"
-                  >
-                    Đăng ký
-                  </Link>
-                </div>
-              )}
-            </div>
+              <input
+                type="text"
+                value={searchValue}
+                onChange={onSearchChange}
+                placeholder="Tìm sản phẩm, thương hiệu..."
+                className="w-full rounded-full border border-slate-200/80 bg-slate-50/50 py-2 pl-11 pr-4 text-xs text-slate-700 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-0"
+              />
+            </label>
           </div>
 
-          <nav className="mt-3.5 hidden items-center gap-1 border-t border-slate-100 pt-3.5 lg:flex">
-            {menuItems.map((item) => (
-              <MenuLink key={item.label} item={item} pathname={location.pathname} />
-            ))}
-          </nav>
+          <div className="order-2 ml-auto flex items-center gap-2 lg:order-3 lg:ml-0">
+            <MiniCart totalItems={totalItems} cartItems={cartItems} onRemove={removeFromCart} />
+
+            {isAuthenticated ? (
+              <div className="hidden items-center gap-2 sm:flex">
+                <AccountDropdown user={user} isAdmin={isAdmin} onLogout={logout} />
+              </div>
+            ) : (
+              <div className="hidden items-center gap-1 sm:flex">
+                <Link
+                  to="/login"
+                  className="rounded-full px-4 py-2 text-xs font-bold text-slate-600 transition hover:text-slate-900"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-full bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800 shadow-none"
+                >
+                  Đăng ký
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto border-t border-slate-100 pb-3.5 pt-3.5 lg:hidden">
+        <nav className="hidden items-center gap-1.5 border-t border-slate-100/60 py-2.5 lg:flex">
+          {menuItems.map((item) => (
+            <MenuLink key={item.label} item={item} pathname={location.pathname} />
+          ))}
+        </nav>
+
+        <div className="flex gap-2 overflow-x-auto border-t border-slate-100 pb-3 pt-3 lg:hidden">
           {menuItems.map((item) => (
             <MenuChip key={item.label} item={item} pathname={location.pathname} />
           ))}
-
           {isAuthenticated ? (
             <>
-              <Link
-                to="/profile"
-                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
-              >
-                Hồ sơ
-              </Link>
-              <Link
-                to="/my-orders"
-                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
-              >
-                Đơn hàng của tôi
-              </Link>
-              <Link
-                to="/wishlist"
-                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
-              >
-                Yêu thích
-              </Link>
+              <MenuChip item={{ label: "Hồ sơ", to: "/profile", activePaths: ["/profile"] }} pathname={location.pathname} />
+              <MenuChip item={{ label: "Đơn hàng", to: "/my-orders", activePaths: ["/my-orders"] }} pathname={location.pathname} />
               {isAdmin ? (
-                <Link
-                  to="/admin/dashboard"
-                  className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs font-bold text-white transition duration-300 hover:bg-indigo-700 sm:text-sm"
-                >
-                  Admin Dashboard
-                </Link>
+                <MenuChip item={{ label: "Admin", to: "/admin/dashboard", activePaths: ["/admin/dashboard"] }} pathname={location.pathname} />
               ) : null}
               <button
                 type="button"
                 onClick={logout}
-                className="whitespace-nowrap rounded-full border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600 transition duration-300 hover:bg-rose-100 sm:text-sm"
+                className="whitespace-nowrap rounded-lg border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-extrabold text-rose-600"
               >
                 Đăng xuất
               </button>
             </>
           ) : (
             <>
-              <Link
-                to="/login"
-                className="whitespace-nowrap rounded-full border border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 transition duration-300 hover:bg-slate-100 hover:text-slate-900 sm:text-sm"
-              >
-                Đăng nhập
-              </Link>
-              <Link
-                to="/register"
-                className="whitespace-nowrap rounded-full bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-100 transition duration-300 hover:bg-indigo-700 sm:text-sm"
-              >
-                Đăng ký
-              </Link>
+              <MenuChip item={{ label: "Đăng nhập", to: "/login", activePaths: ["/login"] }} pathname={location.pathname} />
+              <MenuChip item={{ label: "Đăng ký", to: "/register", activePaths: ["/register"] }} pathname={location.pathname} />
             </>
           )}
         </div>
@@ -159,42 +142,121 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
   );
 }
 
+function MiniCart({ totalItems, cartItems, onRemove }) {
+  const previewItems = cartItems.slice(0, 3);
+  const totalPrice = cartItems.reduce(
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+    0
+  );
+
+  return (
+    <details className="group relative">
+      <summary className="relative flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl text-slate-600 transition-all duration-300 hover:bg-slate-100 hover:text-indigo-600">
+        <CartIcon />
+        {totalItems > 0 ? (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-black text-white ring-2 ring-white animate-pulse">
+            {totalItems}
+          </span>
+        ) : null}
+      </summary>
+
+      <div className="absolute right-0 top-[calc(100%+0.7rem)] z-50 w-[340px] rounded-2xl border border-slate-200/60 bg-white/95 p-4 shadow-xl backdrop-blur-xl transition-all duration-300">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <p className="font-black text-slate-950 text-sm">Giỏ hàng</p>
+            <p className="text-xs text-slate-500">{totalItems} sản phẩm đang chọn</p>
+          </div>
+          <Link to="/cart" className="text-xs font-black text-indigo-600 hover:underline">
+            Xem giỏ hàng
+          </Link>
+        </div>
+
+        {previewItems.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="font-bold text-sm text-slate-700">Giỏ hàng đang trống</p>
+            <p className="mt-1 text-xs text-slate-500">Chọn sản phẩm để bắt đầu đặt hàng.</p>
+          </div>
+        ) : (
+          <div className="space-y-3 py-3">
+            {previewItems.map((item) => (
+              <MiniCartItem key={item._id} item={item} onRemove={onRemove} />
+            ))}
+            {cartItems.length > previewItems.length ? (
+              <p className="text-center text-[11px] font-bold text-slate-400">
+                Còn {cartItems.length - previewItems.length} sản phẩm khác trong giỏ
+              </p>
+            ) : null}
+          </div>
+        )}
+
+        <div className="border-t border-slate-100/80 pt-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-extrabold text-slate-400 uppercase tracking-wider">Tạm tính</span>
+            <span className="font-black text-sm text-rose-600">{totalPrice.toLocaleString("vi-VN")} đ</span>
+          </div>
+          <Link
+            to="/checkout"
+            className="mt-3 block rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-center text-xs font-black text-white shadow-sm hover:from-indigo-700 hover:to-violet-700 hover:shadow-indigo-200/50 hover:shadow-md transition-all duration-300"
+          >
+            Thanh toán
+          </Link>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function MiniCartItem({ item, onRemove }) {
+  const imageUrl =
+    resolveMediaUrl(item.images?.[0]) ||
+    "https://via.placeholder.com/80x80?text=Phone";
+
+  return (
+    <div className="grid grid-cols-[56px_1fr_auto] gap-3 items-center">
+      <img src={imageUrl} alt={item.name} className="h-14 w-14 rounded-xl object-cover border border-slate-100" />
+      <div className="min-w-0">
+        <p className="line-clamp-1 text-xs font-black text-slate-900">{item.name}</p>
+        <p className="mt-1 text-[11px] text-slate-500">
+          SL: {item.quantity} × {Number(item.price || 0).toLocaleString("vi-VN")} đ
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => onRemove(item._id)}
+        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 font-bold"
+        aria-label={`Xóa ${item.name} khỏi giỏ hàng`}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 function AccountDropdown({ user, isAdmin, onLogout }) {
   return (
     <details className="group relative">
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-slate-100 bg-white px-3.5 py-1.5 text-sm text-slate-700 shadow-sm transition-all duration-300 hover:scale-[1.02] hover:border-slate-200 hover:shadow active:scale-[0.98]">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-black text-white shadow-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-950 text-[10px] font-black text-white">
           {getInitial(user?.name)}
         </span>
-        <span className="max-w-[110px] truncate font-bold text-slate-800">{user?.name}</span>
-        <span className="text-slate-400 transition-transform duration-300 group-open:rotate-180">
-          <ChevronDownIcon />
-        </span>
+        <span className="max-w-[120px] truncate font-bold text-slate-800">{user?.name}</span>
+        <ChevronDownIcon />
       </summary>
 
-      <div className="absolute right-0 top-[calc(100%+0.65rem)] z-50 w-64 animate-fade-in rounded-2xl border border-slate-100 bg-white/95 p-2.5 shadow-xl shadow-slate-200/50 backdrop-blur-md">
+      <div className="absolute right-0 top-[calc(100%+0.7rem)] z-50 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
         <div className="border-b border-slate-100 px-3 py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-sm font-black text-white">
-              {getInitial(user?.name)}
-            </span>
-            <div>
-              <p className="text-sm font-bold text-slate-900">{user?.name}</p>
-              <p className="text-xs text-slate-400">{user?.email || "Tài khoản người dùng"}</p>
-            </div>
-          </div>
+          <p className="text-xs font-black text-slate-950">{user?.name}</p>
+          <p className="text-[11px] text-slate-500 truncate">{user?.email || "Tài khoản người dùng"}</p>
         </div>
-
         <div className="mt-2 space-y-0.5">
           <DropdownLink to="/profile" label="Hồ sơ" />
           <DropdownLink to="/my-orders" label="Đơn hàng của tôi" />
           <DropdownLink to="/wishlist" label="Yêu thích" />
           {isAdmin ? <DropdownLink to="/admin/dashboard" label="Admin Dashboard" /> : null}
-          <div className="my-1 border-t border-slate-100" />
           <button
             type="button"
             onClick={onLogout}
-            className="flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-bold text-red-600 transition-colors duration-150 hover:bg-red-50"
+            className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-xs font-bold text-rose-600 transition hover:bg-rose-50"
           >
             Đăng xuất
           </button>
@@ -206,10 +268,7 @@ function AccountDropdown({ user, isAdmin, onLogout }) {
 
 function DropdownLink({ to, label }) {
   return (
-    <Link
-      to={to}
-      className="flex items-center rounded-xl px-3 py-2.5 text-sm font-bold text-slate-700 transition-colors duration-150 hover:bg-slate-50 hover:text-indigo-600"
-    >
+    <Link to={to} className="flex items-center rounded-lg px-3 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">
       {label}
     </Link>
   );
@@ -221,10 +280,10 @@ function MenuLink({ item, pathname }) {
   return (
     <Link
       to={item.to}
-      className={`relative rounded-lg px-4 py-2 text-sm font-bold transition-all duration-300 ${
+      className={`px-3 py-1 text-xs font-bold transition-all duration-200 ${
         isActive
-          ? "bg-indigo-50/50 text-indigo-600"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          ? "text-slate-950 font-black border-b-2 border-slate-950"
+          : "text-slate-500 hover:text-slate-950"
       }`}
     >
       {item.label}
@@ -238,10 +297,10 @@ function MenuChip({ item, pathname }) {
   return (
     <Link
       to={item.to}
-      className={`whitespace-nowrap rounded-full px-4.5 py-2 text-xs font-bold transition-all duration-300 sm:text-sm ${
+      className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-extrabold transition-all duration-300 sm:text-sm ${
         isActive
-          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-100"
-          : "border border-slate-100 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm shadow-indigo-100"
+          : "border border-slate-200/80 bg-white text-slate-600 hover:border-slate-300"
       }`}
     >
       {item.label}
@@ -251,15 +310,8 @@ function MenuChip({ item, pathname }) {
 
 function SearchIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="h-4 w-4"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <path d="m21 21-4.35-4.35" strokeLinecap="round" />
       <circle cx="11" cy="11" r="6" />
     </svg>
   );
@@ -267,36 +319,18 @@ function SearchIcon() {
 
 function CartIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="h-5 w-5"
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
       <circle cx="9" cy="20" r="1" />
       <circle cx="18" cy="20" r="1" />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 4h2l2.2 10.3a1 1 0 0 0 1 .7h9.9a1 1 0 0 0 1-.8L21 7H7.1"
-      />
+      <path d="M3 4h2l2.2 10.3a1 1 0 0 0 1 .7h9.9a1 1 0 0 0 1-.8L21 7H7.1" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function ChevronDownIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="h-4 w-4"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-slate-400">
+      <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

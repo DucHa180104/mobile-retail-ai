@@ -185,7 +185,7 @@ function CheckoutPage() {
       <main className="px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
         <div className="mx-auto max-w-3xl">
           <section className="rounded-[2rem] border border-slate-100 bg-white px-6 py-16 text-center shadow-sm sm:px-10">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-50/50 text-blue-600 border border-blue-100/50">
               <CheckoutIcon />
             </div>
 
@@ -197,7 +197,7 @@ function CheckoutPage() {
 
             <Link
               to="/"
-              className="mt-8 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-indigo-100 hover:from-blue-700 hover:to-indigo-750 transition-all duration-300 hover:scale-105 active:scale-95"
+              className="mt-8 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-blue-100 hover:from-blue-750 hover:to-blue-800 transition-all duration-300 hover:scale-105 active:scale-95"
             >
               Quay lại mua hàng
             </Link>
@@ -212,7 +212,7 @@ function CheckoutPage() {
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-indigo-600">
+            <p className="text-xs font-black uppercase tracking-widest text-blue-600">
               Thanh toán đơn hàng
             </p>
             <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-850">
@@ -225,7 +225,7 @@ function CheckoutPage() {
 
           <Link
             to="/cart"
-            className="rounded-full border border-slate-100 bg-white px-4.5 py-2 text-xs sm:text-sm font-bold text-slate-655 transition shadow-sm hover:border-indigo-150 hover:text-indigo-600"
+            className="rounded-full border border-slate-100 bg-white px-4.5 py-2 text-xs sm:text-sm font-bold text-slate-655 transition shadow-sm hover:border-blue-200 hover:text-blue-600"
           >
             Quay lại giỏ hàng
           </Link>
@@ -234,7 +234,7 @@ function CheckoutPage() {
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-655 border border-indigo-100">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50/50 text-blue-650 border border-blue-100/50">
                 <UserIcon />
               </span>
               <div>
@@ -260,7 +260,7 @@ function CheckoutPage() {
                   type="email"
                   value={contactEmail}
                   onChange={(event) => setContactEmail(event.target.value)}
-                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition-all duration-300 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50/30"
                   placeholder="example@email.com"
                 />
               </div>
@@ -312,7 +312,7 @@ function CheckoutPage() {
                   value={shippingInfo.note}
                   onChange={handleShippingChange}
                   rows="3"
-                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm outline-none transition-all duration-300 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50/30"
                   placeholder="Ví dụ: Giao ngoài giờ hành chính, gọi trước 15 phút..."
                 />
               </div>
@@ -329,21 +329,21 @@ function CheckoutPage() {
                         key={option.value}
                         className={`block cursor-pointer rounded-2xl border p-4 transition-all duration-300 ${
                           isSelected
-                            ? "border-indigo-650 bg-indigo-50/30 shadow-sm ring-1 ring-indigo-650"
-                            : "border-slate-100 bg-white hover:border-indigo-150 hover:bg-slate-50/30"
+                            ? "border-blue-600 bg-blue-50/20 shadow-sm ring-1 ring-blue-600"
+                            : "border-slate-100 bg-white hover:border-blue-200 hover:bg-slate-50/30"
                         }`}
                       >
                         <div className="flex items-start gap-3.5">
                           <input
-                            type="radio"
-                            name="paymentMethod"
-                            value={option.value}
-                            checked={isSelected}
-                            onChange={(event) => setPaymentMethod(event.target.value)}
-                            className="mt-1 h-4.5 w-4.5 border-slate-200 text-indigo-650 accent-indigo-650 focus:ring-indigo-500 focus:ring-offset-0"
+                             type="radio"
+                             name="paymentMethod"
+                             value={option.value}
+                             checked={isSelected}
+                             onChange={(event) => setPaymentMethod(event.target.value)}
+                             className="mt-1 h-4.5 w-4.5 border-slate-200 text-blue-600 accent-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                           />
                           <div>
-                            <p className={`font-bold text-sm ${isSelected ? "text-indigo-950" : "text-slate-800"}`}>{option.title}</p>
+                            <p className={`font-bold text-sm ${isSelected ? "text-blue-950" : "text-slate-800"}`}>{option.title}</p>
                             <p className="mt-1 text-xs leading-relaxed text-slate-500 font-medium">{option.description}</p>
                           </div>
                         </div>
@@ -354,15 +354,15 @@ function CheckoutPage() {
               </div>
 
               {paymentMethod === "bank_transfer" && (
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 text-sm text-indigo-950 animate-fade-in space-y-2">
-                  <p className="font-black text-indigo-800">Thông tin chuyển khoản thanh toán</p>
+                <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-5 text-blue-950 animate-fade-in space-y-2">
+                  <p className="font-black text-blue-800">Thông tin chuyển khoản thanh toán</p>
                   <div className="grid gap-1.5 text-xs sm:text-sm font-bold text-slate-650 pt-1">
                     <p>• Ngân hàng: <span className="text-slate-800 font-black">Vietcombank (VCB)</span></p>
                     <p>• Số tài khoản: <span className="text-slate-850 font-black text-base">1234567890</span></p>
                     <p>• Chủ tài khoản: <span className="text-slate-850 font-black">CỬA HÀNG MẠNH HƯƠNG MOBILE</span></p>
                     <p>• Nội dung chuyển khoản: <span className="text-rose-600 font-black">MHB {shippingInfo.phoneNumber || "SỐ ĐIỆN THOẠI"}</span></p>
                   </div>
-                  <p className="text-[11px] font-bold text-indigo-600/90 pt-1 leading-relaxed">
+                  <p className="text-[11px] font-bold text-blue-600/90 pt-1 leading-relaxed">
                     * Đơn hàng sẽ được xử lý lập tức ngay sau khi nhận được biến động số dư. Cửa hàng sẽ gọi điện xác thực.
                   </p>
                 </div>
@@ -371,7 +371,7 @@ function CheckoutPage() {
               <button
                 type="submit"
                 disabled={submitting || cartItems.length === 0}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-750 hover:to-indigo-750 text-xs font-black uppercase tracking-wider text-white py-4 shadow-md shadow-indigo-150 transition-all duration-300 hover:shadow-lg active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-750 hover:to-blue-800 text-xs font-black uppercase tracking-wider text-white py-4 shadow-md shadow-blue-100 transition-all duration-300 hover:shadow-lg active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? "Đang xử lý đặt hàng..." : "Xác nhận đặt hàng"}
               </button>
@@ -380,7 +380,7 @@ function CheckoutPage() {
 
           <section className="h-fit rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-7 lg:sticky lg:top-24">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-655 border border-indigo-100">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50/50 text-blue-650 border border-blue-100/50">
                 <ReceiptIcon />
               </span>
               <div>
@@ -395,7 +395,7 @@ function CheckoutPage() {
               {cartItems.map((item) => (
                 <article
                   key={item._id}
-                  className="rounded-2xl border border-slate-50 bg-slate-50/50 p-4 hover:border-indigo-100 transition-all duration-300"
+                  className="rounded-2xl border border-slate-55 bg-slate-50/50 p-4 hover:border-blue-100 transition-all duration-300"
                 >
                   <div className="flex gap-4">
                     <img
@@ -447,7 +447,7 @@ function CheckoutPage() {
                           </button>
                         </div>
 
-                        <p className="text-sm font-black text-indigo-655">
+                        <p className="text-sm font-black text-blue-650">
                           {formatCurrency(item.price * item.quantity)}
                         </p>
                       </div>
@@ -489,7 +489,7 @@ function FormField({ label, name, value, onChange }) {
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition-all duration-300 focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+        className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition-all duration-300 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-50/30"
       />
     </div>
   );

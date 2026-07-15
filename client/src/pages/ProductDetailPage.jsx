@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ReviewForm from "../components/ReviewForm.jsx";
 import ReviewList from "../components/ReviewList.jsx";
+import ProductCard from "../components/ProductCard.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
@@ -18,6 +19,7 @@ function ProductDetailPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -28,6 +30,23 @@ function ProductDetailPage() {
   const [purchaseCheckLoading, setPurchaseCheckLoading] = useState(false);
   const [eligibleOrderId, setEligibleOrderId] = useState("");
   const [editingReview, setEditingReview] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+  useEffect(() => {
+    if (!product?.category) return;
+    async function fetchRelated() {
+      try {
+        const response = await fetch(buildApiUrl(`/api/products?category=${product.category}&limit=8`));
+        if (!response.ok) return;
+        const data = await response.json();
+        const filtered = (data.products || []).filter(p => String(p._id) !== String(product._id)).slice(0, 5);
+        setRelatedProducts(filtered);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchRelated();
+  }, [product?.category, product?._id]);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -187,12 +206,12 @@ function ProductDetailPage() {
   }
 
   function handleAddToCart() {
-    addToCart(product);
-    setMessage("Đã thêm vào giỏ hàng");
+    addToCart(product, quantity);
+    setMessage(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`);
   }
 
   function handleBuyNow() {
-    addToCart(product);
+    addToCart(product, quantity);
     navigate("/checkout");
   }
 
@@ -340,90 +359,95 @@ function ProductDetailPage() {
   const conditionLabel = getConditionLabel(product.condition);
   const conditionClassName = getConditionClassName(product.condition);
   const highlights = isUsedProduct ? buildUsedHighlights(product) : buildNewHighlights(product);
+  const originalPrice = product.price ? product.price + 1000050 : null;
+  const categoryLabel = product.category === "phone" ? "Điện thoại" : product.category === "tablet" ? "Máy tính bảng" : "Phụ kiện";
+  const categoryLink = product.category === "phone" ? "/phones" : product.category === "tablet" ? "/tablets" : "/accessories";
+  const isWishlisted = wishlistIds.has(String(product._id));
   const machineDetailRows = buildMachineDetailRows(product, isUsedProduct);
   const purchaseNotes = buildPurchaseNotes(isUsedProduct);
-  const isWishlisted = wishlistIds.has(String(product._id));
 
   return (
-    <main className="px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <main className="px-4 py-8 sm:px-6 lg:px-8 bg-white min-h-screen">
+      <div className="mx-auto max-w-[1360px] space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400 sm:text-sm">
-            <Link to="/" className="transition hover:text-indigo-650">
+            <Link to="/" className="transition hover:text-slate-900">
               Trang chủ
             </Link>
             <span className="text-slate-300">/</span>
-            <Link to="/phones" className="transition hover:text-indigo-650">
-              Điện thoại
+            <Link to={categoryLink} className="transition hover:text-slate-900">
+              {categoryLabel}
             </Link>
             <span className="text-slate-300">/</span>
-            <span className="max-w-[200px] truncate text-slate-600">{product.name}</span>
+            <span className="max-w-[240px] truncate text-slate-900 font-extrabold">{product.name}</span>
           </div>
 
           <Link
             to="/cart"
-            className="rounded-full border border-slate-100 bg-white px-4.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-indigo-150 hover:text-indigo-600 sm:text-sm"
+            className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:border-slate-900 hover:text-slate-900"
           >
             Xem giỏ hàng
           </Link>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid gap-8 lg:grid-cols-[1.18fr_0.82fr]">
           <section className="space-y-6">
-            <article className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
-              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[1.5rem] border border-slate-50 bg-slate-50/50">
-                <button
-                  type="button"
-                  onClick={handleToggleWishlist}
-                  className={`absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-sm transition-all duration-300 active:scale-90 ${
-                    isWishlisted ? "text-red-500 shadow-red-100" : "text-slate-400 hover:text-red-500"
-                  }`}
-                  aria-label={`${isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"} ${product.name}`}
-                >
-                  <HeartIcon isFilled={isWishlisted} />
-                </button>
-                <img
-                  key={selectedImageIndex}
-                  src={selectedImage}
-                  alt={product.name}
-                  className="h-full w-full cursor-zoom-in object-contain transition-transform duration-500 hover:scale-[1.02]"
-                />
-              </div>
+            <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="grid grid-cols-[80px_1fr] gap-5">
+                <div className="flex flex-col gap-3 max-h-[480px] overflow-y-auto no-scrollbar">
+                  {galleryImages.map((image, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`aspect-square w-full overflow-hidden rounded-xl border bg-white p-1 transition-all duration-300 ${
+                        selectedImageIndex === index
+                          ? "border-slate-900 ring-2 ring-slate-100"
+                          : "border-slate-150 hover:border-slate-400"
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${product.name} thumbnail ${index + 1}`}
+                        className="h-full w-full rounded-lg object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
 
-              <div className="mt-5 flex flex-wrap gap-3">
-                {galleryImages.map((image, index) => (
+                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/60 flex items-center justify-center">
                   <button
-                    key={`${image}-${index}`}
                     type="button"
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`h-16 w-16 overflow-hidden rounded-xl border-2 bg-white p-1 transition-all duration-300 hover:scale-105 ${
-                      selectedImageIndex === index
-                        ? "border-indigo-600 ring-4 ring-indigo-50"
-                        : "border-slate-100 hover:border-indigo-300"
+                    onClick={handleToggleWishlist}
+                    className={`absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-sm transition-all duration-300 active:scale-90 ${
+                      isWishlisted ? "text-red-500 shadow-red-100" : "text-slate-400 hover:text-red-500"
                     }`}
+                    aria-label={`${isWishlisted ? "Bỏ yêu thích" : "Thêm yêu thích"} ${product.name}`}
                   >
-                    <img
-                      src={image}
-                      alt={`${product.name} ${index + 1}`}
-                      className="h-full w-full rounded-lg object-cover"
-                    />
+                    <HeartIcon isFilled={isWishlisted} />
                   </button>
-                ))}
+                  <img
+                    key={selectedImageIndex}
+                    src={selectedImage}
+                    alt={product.name}
+                    className="h-[85%] w-[85%] object-contain transition-transform duration-500 hover:scale-[1.02]"
+                  />
+                </div>
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-black text-slate-800">
+            <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-base font-black text-slate-900 tracking-tight">
                 {isUsedProduct ? "Tình trạng thực tế của máy" : "Điểm nổi bật của sản phẩm"}
               </h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {highlights.map((item) => (
                   <div
                     key={item.title}
-                    className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 transition-all duration-300 hover:border-indigo-100 hover:bg-white"
+                    className="rounded-2xl border border-slate-100 bg-slate-50/30 p-5 transition-all duration-300 hover:border-slate-200 hover:bg-white"
                   >
-                    <h3 className="text-sm font-bold text-slate-800 sm:text-base">{item.title}</h3>
-                    <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 sm:text-sm">
+                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">{item.title}</h3>
+                    <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-500">
                       {item.description}
                     </p>
                   </div>
@@ -431,66 +455,62 @@ function ProductDetailPage() {
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-black text-slate-800">
+            <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-base font-black text-slate-900 tracking-tight">
                 {isUsedProduct ? "Mô tả chi tiết sản phẩm" : "Giới thiệu sản phẩm"}
               </h2>
-              <div className="prose prose-slate mt-4 max-w-none text-xs font-medium leading-relaxed text-slate-600 sm:text-sm">
+              <div className="prose prose-slate mt-4 max-w-none text-xs font-semibold leading-relaxed text-slate-500 sm:text-sm">
                 {product.description || "Thông tin mô tả chi tiết đang được cập nhật."}
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+            <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
-                  <h2 className="text-lg font-black text-slate-800">Đánh giá từ khách hàng</h2>
+                  <h2 className="text-base font-black text-slate-900 tracking-tight">Đánh giá từ khách hàng</h2>
                   <p className="mt-1 text-xs font-bold text-slate-400">
                     Chỉ người dùng đã mua hàng và hoàn thành đơn hàng mới được đánh giá.
-                  </p>
-                </div>
-
-                <div className="min-w-[120px] rounded-2xl border border-amber-100 bg-amber-50/70 px-5 py-3.5 text-center">
-                  <p className="text-3xl font-black leading-none text-amber-500">
-                    {reviews.length ? averageRating.toFixed(1) : "0.0"}
-                  </p>
-                  <p className="mt-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                    {reviews.length} đánh giá
                   </p>
                 </div>
               </div>
 
               <div className="mt-6">
                 {!isAuthenticated ? (
-                  <div className="rounded-2xl border border-indigo-50 bg-indigo-50/40 px-5 py-4 text-xs font-bold text-indigo-700 sm:text-sm">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/40 px-5 py-4 text-xs font-bold text-slate-500">
                     Vui lòng đăng nhập để đánh giá sản phẩm
                   </div>
                 ) : purchaseCheckLoading ? (
-                  <div className="animate-pulse rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-xs font-bold text-slate-500 sm:text-sm">
+                  <div className="animate-pulse rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-xs font-bold text-slate-400">
                     Đang kiểm tra điều kiện đánh giá...
                   </div>
                 ) : reviewsLoading ? (
-                  <div className="animate-pulse rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-xs font-bold text-slate-500 sm:text-sm">
+                  <div className="animate-pulse rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-xs font-bold text-slate-400">
                     Đang tải dữ liệu đánh giá...
                   </div>
                 ) : editingReview ? (
-                  <ReviewForm
-                    onSubmit={handleSubmitReview}
-                    token={token}
-                    loading={reviewSubmitLoading}
-                    error={reviewSubmitError}
-                    initialValues={editingReview}
-                    isEditing
-                    onCancel={handleCancelEditReview}
-                  />
+                  <div className="border border-slate-100/80 rounded-2xl p-5 bg-slate-50/20">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">
+                      {editingReview._id ? "Chỉnh sửa đánh giá" : "Thêm đánh giá mới"}
+                    </h3>
+                    <ReviewForm
+                      onSubmit={handleSubmitReview}
+                      token={token}
+                      loading={reviewSubmitLoading}
+                      error={reviewSubmitError}
+                      initialValues={editingReview}
+                      isEditing
+                      onCancel={handleCancelEditReview}
+                    />
+                  </div>
                 ) : hasUserReviewed ? (
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-5 py-4 text-xs font-bold text-emerald-700 sm:text-sm">
+                  <div className="rounded-2xl border border-slate-150 bg-slate-50/30 px-5 py-4 text-xs font-bold text-slate-700">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span>Bạn đã đánh giá sản phẩm này</span>
                       {currentUserReview ? (
                         <button
                           type="button"
                           onClick={() => handleStartEditReview(currentUserReview)}
-                          className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50 hover:scale-105"
+                          className="rounded-full border border-slate-900 bg-slate-900 px-4.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-850"
                         >
                           Sửa đánh giá
                         </button>
@@ -498,26 +518,29 @@ function ProductDetailPage() {
                     </div>
                   </div>
                 ) : eligibleOrderId ? (
-                  <ReviewForm
-                    onSubmit={handleSubmitReview}
-                    token={token}
-                    loading={reviewSubmitLoading}
-                    error={reviewSubmitError}
-                  />
+                  <div className="border border-slate-100/80 rounded-2xl p-5 bg-slate-50/20">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 mb-4">Viết đánh giá mới</h3>
+                    <ReviewForm
+                      onSubmit={handleSubmitReview}
+                      token={token}
+                      loading={reviewSubmitLoading}
+                      error={reviewSubmitError}
+                    />
+                  </div>
                 ) : (
-                  <div className="rounded-2xl border border-amber-100 bg-amber-50/30 px-5 py-4 text-xs font-bold text-amber-700 sm:text-sm">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/30 px-5 py-4 text-xs font-bold text-slate-400">
                     Bạn cần mua và hoàn thành đơn hàng mới được đánh giá sản phẩm này.
                   </div>
                 )}
-
-                {reviewSuccessMessage ? (
-                  <p className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-700 sm:text-sm">
-                    {reviewSuccessMessage}
-                  </p>
-                ) : null}
               </div>
 
               <div className="mt-6">
+                {reviewSuccessMessage ? (
+                  <p className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50 py-3 text-center text-xs font-bold text-emerald-700">
+                    {reviewSuccessMessage}
+                  </p>
+                ) : null}
+
                 <ReviewList
                   reviews={reviews}
                   loading={reviewsLoading}
@@ -528,15 +551,15 @@ function ProductDetailPage() {
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-black text-slate-800">
+            <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-base font-black text-slate-900 tracking-tight">
                 {isUsedProduct ? "Lưu ý trước khi mua hàng" : "Quyền lợi khi mua máy mới"}
               </h2>
-              <div className="mt-4 space-y-3 rounded-2xl border border-slate-50 bg-slate-50/50 p-5">
+              <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50/30 p-5">
                 {purchaseNotes.map((note) => (
                   <p
                     key={note}
-                    className="text-xs font-medium leading-relaxed text-slate-500 sm:text-sm"
+                    className="text-xs font-semibold leading-relaxed text-slate-500"
                   >
                     • {note}
                   </p>
@@ -545,51 +568,76 @@ function ProductDetailPage() {
             </article>
           </section>
 
-          <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
-            <article className="animate-fade-in rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm sm:p-7">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`rounded-full px-3.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm ${conditionClassName}`}
-                >
-                  {conditionLabel}
-                </span>
-                <span className="rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  {isUsedProduct ? "Điện thoại cũ" : "Máy mới chính hãng"}
-                </span>
-              </div>
+          <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">
+            <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm space-y-6">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${conditionClassName}`}
+                  >
+                    {conditionLabel}
+                  </span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {product.brand || "Mạnh Hương Mobile"}
+                  </span>
+                </div>
 
-              <h1 className="mt-4 text-2xl font-black leading-tight text-slate-850 sm:text-3xl">
-                {product.name}
-              </h1>
+                <h1 className="mt-3 text-xl font-bold leading-snug text-slate-900">
+                  {product.name}
+                </h1>
 
-              <div className="mt-5">
-                <p className="text-3xl font-black tracking-tight text-rose-500 sm:text-4xl">
-                  {product.price?.toLocaleString("vi-VN")} đ
-                </p>
-              </div>
-
-              <p className="mt-3 text-xs font-medium leading-relaxed text-slate-400">
-                {isUsedProduct
-                  ? "Mức giá đã bao gồm VAT. Ngoại hình, pin và tình trạng máy được ghi nhận theo đúng thiết bị đang bán."
-                  : "Mức giá đã bao gồm VAT và gói bảo hành đi kèm. Phù hợp cho khách cần xem nhanh cấu hình và quyền lợi khi mua máy mới."}
-              </p>
-
-              <div className="mt-6 rounded-[1.5rem] border border-slate-100 bg-slate-50/60 p-5">
-                <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                  {isUsedProduct ? "Thông tin máy đang có" : "Thông tin nhanh của sản phẩm"}
-                </h2>
-                <div className="mt-4 grid gap-2.5">
-                  {machineDetailRows.map((row) => (
-                    <DetailRow key={row.label} label={row.label} value={row.value} />
-                  ))}
+                <div className="mt-2.5 flex items-center gap-1.5 text-xs">
+                  <span className="font-extrabold text-slate-800">
+                    {reviews.length > 0 ? averageRating.toFixed(1) : "5.0"}
+                  </span>
+                  <span className="text-amber-400">★★★★★</span>
+                  <span className="text-slate-400 font-bold">({reviews.length} đánh giá)</span>
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
+              <div className="border-t border-slate-100 pt-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold text-slate-900">
+                    {product.price?.toLocaleString("vi-VN")} đ
+                  </span>
+                  {originalPrice ? (
+                    <span className="text-xs text-slate-400 line-through">
+                      {originalPrice.toLocaleString("vi-VN")} đ
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-2 flex items-center gap-1.5 text-[11px] font-bold">
+                  <span className={`h-2 w-2 rounded-full ${product.stock > 0 ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+                  <span className={product.stock > 0 ? "text-emerald-600" : "text-rose-500"}>
+                    {product.stock > 0 ? `Còn hàng - ${product.stock} sản phẩm có sẵn` : "Tạm hết hàng"}
+                  </span>
+                </div>
+              </div>
+
+              {product.stock > 0 && (
+                <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Số lượng:</span>
+                  <select
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4.5 py-1.5 text-xs font-bold text-slate-700 outline-none transition hover:border-slate-400 focus:bg-white cursor-pointer"
+                  >
+                    {Array.from({ length: Math.min(10, product.stock) }, (_, i) => i + 1).map((val) => (
+                      <option key={val} value={val}>
+                        {val}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-3">
                 <button
                   type="button"
                   onClick={handleBuyNow}
-                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 py-4 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-indigo-150 transition-all duration-300 hover:from-blue-750 hover:to-indigo-850 hover:shadow-lg active:scale-98"
+                  disabled={product.stock <= 0}
+                  className="w-full rounded-full bg-blue-600 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm hover:bg-blue-750 transition duration-300 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                 >
                   Mua ngay
                 </button>
@@ -597,15 +645,16 @@ function ProductDetailPage() {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="w-full rounded-xl border border-slate-150 bg-slate-50 py-3.5 text-xs font-black uppercase tracking-wider text-slate-650 transition-all duration-300 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 active:scale-98"
+                  disabled={product.stock <= 0}
+                  className="w-full rounded-full border border-slate-200 bg-white py-3 text-xs font-bold uppercase tracking-wider text-slate-800 transition duration-300 hover:border-slate-800 hover:bg-slate-50 disabled:border-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                 >
                   Thêm vào giỏ hàng
                 </button>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
                   <Link
                     to="/trade-in"
-                    className="flex items-center justify-center rounded-xl border border-orange-100 bg-orange-50/50 px-4 py-3 text-center text-xs font-bold text-orange-705 transition hover:border-orange-200 hover:bg-orange-50"
+                    className="flex items-center justify-center rounded-xl border border-slate-200 bg-white py-2.5 text-center text-xs font-bold text-slate-700 hover:border-slate-800 transition"
                   >
                     Thu cũ đổi mới
                   </Link>
@@ -614,47 +663,69 @@ function ProductDetailPage() {
                     href="https://zalo.me"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center rounded-xl border border-sky-100 bg-sky-50/50 px-4 py-3 text-center text-xs font-bold text-sky-705 transition hover:border-sky-200 hover:bg-sky-50"
+                    className="flex items-center justify-center rounded-xl border border-slate-200 bg-white py-2.5 text-center text-xs font-bold text-slate-700 hover:border-slate-800 transition"
                   >
-                    Chat Zalo
+                    Chat tư vấn Zalo
                   </a>
                 </div>
               </div>
 
+              {/* Machine detail rows (Thông tin máy đang có) */}
+              <div className="border-t border-slate-100 pt-5 space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {isUsedProduct ? "Thông tin máy đang có" : "Thông tin nhanh của sản phẩm"}
+                </h3>
+                <div className="grid gap-2">
+                  {machineDetailRows.map((row) => (
+                    <DetailRow key={row.label} label={row.label} value={row.value} />
+                  ))}
+                </div>
+              </div>
+
               {message ? (
-                <p className="mt-4 animate-fade-in rounded-xl border border-emerald-100 bg-emerald-50 py-3 text-center text-xs font-bold text-emerald-750 sm:text-sm">
+                <p className="animate-fade-in rounded-xl border border-emerald-100 bg-emerald-50 py-2.5 text-center text-xs font-bold text-emerald-700">
                   ✓ {message}
                 </p>
               ) : null}
 
-              <div className="mt-6 rounded-[1.5rem] border border-slate-100 bg-slate-50/60 p-5">
-                <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                  Cam kết tại cửa hàng
-                </h2>
-                <div className="mt-4 space-y-3">
-                  <BenefitRow text="Miễn phí ship nội thành đơn trên 500k" />
-                  <BenefitRow
-                    text={
-                      isUsedProduct
-                        ? "Bảo hành nguồn và màn hình trong 3 tháng"
-                        : "Bảo hành theo chính sách máy mới tại cửa hàng"
-                    }
-                  />
-                  <BenefitRow text="Hỗ trợ trả góp 0% lãi suất qua thẻ tín dụng" />
+              <div className="border-t border-slate-100 pt-5 space-y-3">
+                <div className="flex items-start gap-3 text-xs text-slate-650 leading-relaxed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-slate-500 mt-0.5 shrink-0">
+                    <rect x="1" y="3" width="15" height="13" />
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                    <circle cx="5.5" cy="18.5" r="2.5" />
+                    <circle cx="18.5" cy="18.5" r="2.5" />
+                  </svg>
+                  <span>Miễn phí vận chuyển toàn quốc cho tất cả đơn hàng trên 500.000 đ</span>
+                </div>
+
+                <div className="flex items-start gap-3 text-xs text-slate-650 leading-relaxed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-slate-500 mt-0.5 shrink-0">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                  </svg>
+                  <span>Đổi trả an tâm, hoàn tiền 100% trong 30 ngày nếu lỗi</span>
+                </div>
+
+                <div className="flex items-start gap-3 text-xs text-slate-650 leading-relaxed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-slate-500 mt-0.5 shrink-0">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <span>Bảo mật thanh toán thông tin giao dịch tuyệt đối</span>
                 </div>
               </div>
             </article>
 
-            <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+            <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50 text-indigo-650">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-700">
                   <SpecsIcon />
                 </span>
                 <div>
-                  <h2 className="text-sm font-black text-slate-800">
+                  <h2 className="text-sm font-black text-slate-900 tracking-tight">
                     {isUsedProduct ? "Cấu hình tham khảo" : "Thông số kỹ thuật"}
                   </h2>
-                  <p className="text-[11px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-slate-450">
                     {isUsedProduct
                       ? "Thông tin cấu hình để đối chiếu nhanh khi chọn máy"
                       : "Thông số cốt lõi của sản phẩm mới"}
@@ -662,7 +733,7 @@ function ProductDetailPage() {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-hidden rounded-2xl border border-slate-100">
+              <div className="mt-4 overflow-hidden rounded-xl border border-slate-100/80">
                 <SpecRow label="Màn hình" value={specs.screen} />
                 <SpecRow label="Vi xử lý (Chip)" value={specs.chip} />
                 <SpecRow label="RAM" value={specs.ram} />
@@ -673,6 +744,77 @@ function ProductDetailPage() {
             </article>
           </aside>
         </div>
+
+        {/* Explore your Interests (Similar Products) */}
+        {relatedProducts.length > 0 && (
+          <div className="border-t border-slate-100 pt-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">Khám phá sản phẩm tương tự (Explore your Interests)</h2>
+              <Link to={categoryLink} className="text-xs font-bold text-slate-500 hover:text-slate-900 transition">
+                Xem tất cả &gt;
+              </Link>
+            </div>
+            <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {relatedProducts.map((p) => (
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  isWishlisted={wishlistIds.has(String(p._id))}
+                  onToggleWishlist={handleToggleWishlist}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Explore Category Cards */}
+        <div className="border-t border-slate-100 pt-8 space-y-6">
+          <h2 className="text-lg font-black text-slate-900 tracking-tight">Khám phá thêm (Explore more)</h2>
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <Link to="/phones" className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/30 p-4 transition hover:border-slate-300">
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-slate-800">Điện thoại</span>
+                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Phones & Devices</span>
+              </div>
+              <span className="text-slate-400 font-bold">→</span>
+            </Link>
+            <Link to="/tablets" className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/30 p-4 transition hover:border-slate-300">
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-slate-800">Máy tính bảng</span>
+                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Tablets & iPads</span>
+              </div>
+              <span className="text-slate-400 font-bold">→</span>
+            </Link>
+            <Link to="/accessories" className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/30 p-4 transition hover:border-slate-300">
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-slate-800">Phụ kiện công nghệ</span>
+                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Accessories & Gear</span>
+              </div>
+              <span className="text-slate-400 font-bold">→</span>
+            </Link>
+            <Link to="/trade-in" className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/30 p-4 transition hover:border-slate-300">
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-slate-800">Thu cũ đổi mới</span>
+                <span className="text-[10px] text-slate-400 font-semibold mt-0.5">Trade-in Program</span>
+              </div>
+              <span className="text-slate-400 font-bold">→</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Partner brand logos */}
+        <div className="border-t border-slate-100 pt-8 pb-12 space-y-6">
+          <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Thương hiệu đối tác (Shop by brands)</h2>
+          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-40 hover:opacity-60 transition duration-300">
+            <span className="text-sm font-black text-slate-800 tracking-tighter">APPLE</span>
+            <span className="text-sm font-black text-slate-800 tracking-tighter">SAMSUNG</span>
+            <span className="text-sm font-black text-slate-800 tracking-tighter">XIAOMI</span>
+            <span className="text-sm font-black text-slate-800 tracking-tighter">LENOVO</span>
+            <span className="text-sm font-black text-slate-800 tracking-tighter">ANKER</span>
+            <span className="text-sm font-black text-slate-805 tracking-tighter font-serif">JBL</span>
+          </div>
+        </div>
+
       </div>
     </main>
   );

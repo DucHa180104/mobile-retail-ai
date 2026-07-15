@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import CategorySection from "../components/CategorySection.jsx";
 import HeroBanner from "../components/HeroBanner.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import TrustBadges from "../components/TrustBadges.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
 function ProductListPage() {
   const { token, isAuthenticated } = useAuth();
@@ -26,8 +26,7 @@ function ProductListPage() {
         }
 
         const data = await response.json();
-        const productList = Array.isArray(data) ? data : data.products || [];
-        setProducts(productList);
+        setProducts(Array.isArray(data) ? data : data.products || []);
       } catch (fetchError) {
         setError(fetchError.message || "Không thể tải danh sách sản phẩm");
       } finally {
@@ -67,6 +66,7 @@ function ProductListPage() {
   }, [isAuthenticated, token]);
 
   const featuredProduct = products[0];
+  const recommendedProducts = useMemo(() => products.slice(0, 5), [products]);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = searchTerm.trim().toLowerCase();
@@ -74,11 +74,13 @@ function ProductListPage() {
     return products.filter((product) => {
       const name = product.name?.toLowerCase() || "";
       const brand = product.brand?.toLowerCase() || "";
+      const category = product.category?.toLowerCase() || "";
 
       const matchesSearch =
         !normalizedQuery ||
         name.includes(normalizedQuery) ||
-        brand.includes(normalizedQuery);
+        brand.includes(normalizedQuery) ||
+        category.includes(normalizedQuery);
 
       if (!activeCategory) {
         return matchesSearch;
@@ -90,6 +92,7 @@ function ProductListPage() {
       const matchesCategory =
         name.includes(categoryQuery) ||
         brand.includes(categoryQuery) ||
+        category.includes(categoryQuery) ||
         (activeCategory === "iPhone" && name.includes("iphone"));
 
       return matchesSearch && matchesCategory;
@@ -133,45 +136,17 @@ function ProductListPage() {
 
   if (loading) {
     return (
-      <main className="px-4 py-4 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1120px] space-y-6">
-          {/* Hero skeleton */}
-          <div className="grid gap-3 lg:grid-cols-[2fr_0.95fr]">
-            <div className="skeleton h-64 rounded-3xl sm:h-72" />
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="skeleton h-32 rounded-2xl" />
-              <div className="skeleton h-32 rounded-2xl" />
-            </div>
-          </div>
-          {/* Category skeleton */}
+      <main className="px-4 py-5 sm:px-6">
+        <div className="mx-auto max-w-[1360px] space-y-6">
+          <div className="skeleton h-[420px] rounded-2xl" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-4">
-                <div className="skeleton h-12 w-12 rounded-2xl" />
-                <div className="skeleton mt-3 h-4 w-16 rounded" />
-              </div>
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="skeleton h-28 rounded-xl" />
             ))}
           </div>
-          {/* Cards skeleton */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
-                <div className="skeleton h-44 rounded-xl" />
-                <div className="mt-3 space-y-2">
-                  <div className="skeleton h-4 w-full rounded" />
-                  {/* Rating placeholder skeleton */}
-                  <div className="flex gap-1 py-1">
-                    {[...Array(5)].map((_, idx) => (
-                      <div key={idx} className="skeleton h-3 w-3 rounded-full" />
-                    ))}
-                  </div>
-                  <div className="skeleton h-5 w-1/2 rounded" />
-                  <div className="flex gap-2 pt-2">
-                    <div className="skeleton h-9.5 flex-1 rounded-xl" />
-                    <div className="skeleton h-9.5 w-10 rounded-xl" />
-                  </div>
-                </div>
-              </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {[...Array(10)].map((_, index) => (
+              <div key={index} className="skeleton h-[370px] rounded-xl" />
             ))}
           </div>
         </div>
@@ -181,84 +156,61 @@ function ProductListPage() {
 
   if (error) {
     return (
-      <main className="px-4 py-4 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1120px] rounded-2xl border border-red-100 bg-red-50 px-6 py-14 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-7 w-7 text-red-500">
-              <circle cx="12" cy="12" r="10" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 9l-6 6M9 9l6 6" />
-            </svg>
-          </div>
-          <p className="font-semibold text-red-700">{error}</p>
+      <main className="px-4 py-8 sm:px-6">
+        <div className="mx-auto max-w-[1360px] rounded-xl border border-red-200 bg-red-50 px-6 py-12 text-center">
+          <p className="font-bold text-red-700">{error}</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="px-4 py-4 sm:px-5 lg:px-6">
-      <div className="mx-auto max-w-[1120px] space-y-6">
-        <HeroBanner featuredProduct={featuredProduct} />
+    <main className="px-4 py-8 sm:px-6 bg-white">
+      <div className="mx-auto max-w-[1360px] space-y-12">
+        <HeroBanner />
 
-        <CategorySection
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
-
-        <section id="new-arrivals" className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-black text-slate-900 sm:text-[1.55rem]">
-                Điện thoại mới về
-              </h2>
-              <p className="mt-1 text-[13px] text-slate-500">
-                {activeCategory
-                  ? `Đang hiển thị sản phẩm thuộc nhóm ${activeCategory}.`
-                  : "Đang hiển thị toàn bộ danh sách điện thoại hiện có."}
-              </p>
+        {recommendedProducts.length > 0 ? (
+          <section className="space-y-6">
+            <div className="flex items-end justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-lg font-black text-slate-950 tracking-tight">Sản phẩm nổi bật</h2>
+              <Link to="/products" className="text-xs font-bold text-slate-500 hover:text-slate-900 flex items-center gap-0.5 transition">
+                Xem tất cả
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3.5 w-3.5">
+                  <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
             </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {recommendedProducts.map((product, index) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  badge={getProductBadge(product, index)}
+                  isWishlisted={wishlistIds.has(product._id)}
+                  onToggleWishlist={handleToggleWishlist}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-            <div className="flex items-center gap-3">
-              {activeCategory ? (
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory("")}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[13px] font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
-                >
-                  Xem tất cả
-                </button>
-              ) : null}
-
-              <span className="rounded-full bg-blue-50 px-4 py-2 text-[13px] font-semibold text-blue-700">
-                {filteredProducts.length} sản phẩm
-              </span>
+        <section id="new-arrivals" className="space-y-6">
+          <div className="border-b border-slate-100 pb-4">
+            <h2 className="text-lg font-black text-slate-950 tracking-tight">Khám phá theo sở thích</h2>
+            <div className="mt-4">
+              <CategorySection
+                activeCategory={activeCategory}
+                onCategoryChange={setActiveCategory}
+              />
             </div>
           </div>
 
           {products.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-slate-400">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 14h.01M12 14h.01" />
-                </svg>
-              </div>
-              <p className="font-semibold text-slate-700">Chưa có sản phẩm nào</p>
-              <p className="mt-1 text-sm text-slate-400">Sản phẩm sẽ được cập nhật sớm.</p>
-            </div>
+            <EmptyState title="Chưa có sản phẩm nào" description="Sản phẩm sẽ được cập nhật sớm." />
           ) : filteredProducts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-blue-400">
-                  <circle cx="11" cy="11" r="7" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
-                </svg>
-              </div>
-              <p className="font-semibold text-slate-700">Không tìm thấy sản phẩm</p>
-              <p className="mt-1 text-sm text-slate-400">Thử tìm kiếm với từ khóa khác.</p>
-            </div>
+            <EmptyState title="Không tìm thấy sản phẩm" description="Thử đổi từ khóa tìm kiếm hoặc chọn danh mục khác." />
           ) : (
-            <div className="grid animate-fade-in gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filteredProducts.map((product, index) => (
                 <ProductCard
                   key={product._id}
@@ -271,20 +223,59 @@ function ProductListPage() {
             </div>
           )}
         </section>
-
-        <TrustBadges />
       </div>
     </main>
   );
 }
 
+function SectionHeading({ eyebrow, title, description }) {
+  return (
+    <div>
+      <p className="text-[10px] font-black uppercase tracking-widest text-blue-650">{eyebrow}</p>
+      <h2 className="mt-1 text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
+      {description ? <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-slate-500">{description}</p> : null}
+    </div>
+  );
+}
+
+function CompactProduct({ product }) {
+  const imageUrl =
+    resolveMediaUrl(product.images?.[0]) ||
+    "https://via.placeholder.com/320x240?text=Mobile+Retail+AI";
+
+  return (
+    <Link
+      to={`/products/${product._id}`}
+      className="group grid grid-cols-[96px_1fr] gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md hover:shadow-blue-500/5"
+    >
+      <img src={imageUrl} alt={product.name} className="h-24 w-24 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 border border-slate-100" loading="lazy" />
+      <div className="min-w-0 flex flex-col justify-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">{product.brand || "Mobile"}</p>
+        <h3 className="mt-1 line-clamp-2 text-xs font-black leading-normal text-slate-800 transition-colors group-hover:text-blue-600">{product.name}</h3>
+        <p className="mt-2 text-sm font-black text-rose-600">
+          {product.price?.toLocaleString("vi-VN")} đ
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+function EmptyState({ title, description }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+      <p className="font-black text-slate-800 text-sm">{title}</p>
+      <p className="mt-1.5 text-xs text-slate-400">{description}</p>
+    </div>
+  );
+}
+
 function getProductBadge(product, index) {
-  if ((product.stock || 0) <= 5) {
-    return "Nổi bật";
+  if ((product.stock || 0) <= 5 && (product.stock || 0) > 0) {
+    return "Sắp hết";
   }
 
-  if (index % 2 === 0) {
-    return "Mới";
+  if (index < 4) {
+    return "Nổi bật";
   }
 
   return "";

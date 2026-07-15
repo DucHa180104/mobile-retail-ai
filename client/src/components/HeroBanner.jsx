@@ -1,141 +1,193 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { resolveMediaUrl } from "../lib/api.js";
 
-function HeroBanner({ featuredProduct }) {
-  const detailLink = featuredProduct ? `/products/${featuredProduct._id}` : "/";
-  const imageUrl =
-    resolveMediaUrl(featuredProduct?.images?.[0]) ||
-    "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=1200&q=80";
+const slides = [
+  {
+    image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=1200&q=80",
+    eyebrow: "IPHONE 15 PRO",
+    title: "Mạnh mẽ vượt trội. Thiết kế Titan siêu nhẹ.",
+    link: "/phones"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=1200&q=80",
+    eyebrow: "IPAD & TABLETS",
+    title: "Sáng tạo và làm việc di động không giới hạn.",
+    link: "/tablets"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
+    eyebrow: "PHỤ KIỆN XỊN",
+    title: "Tai nghe, cáp sạc, ốp lưng chính hãng giá tốt.",
+    link: "/accessories"
+  }
+];
+
+function HeroBanner() {
+  const [current, setCurrent] = useState(0);
+
+  const prevSlide = () => {
+    setCurrent((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  };
+
+  const nextSlide = () => {
+    setCurrent((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  };
 
   return (
-    <section className="grid gap-3 lg:grid-cols-[2fr_0.95fr]">
-      {/* Main hero card */}
-      <article className="relative overflow-hidden rounded-[2rem] bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-950 px-8 py-9 text-white shadow-xl shadow-indigo-950/20 sm:px-10 sm:py-12 animate-fade-in border border-slate-800">
-        {/* Background image */}
-        <img
-          src={imageUrl}
-          alt={featuredProduct?.name || "iPhone cũ"}
-          className="absolute right-0 top-0 h-full w-full object-cover opacity-20 mix-blend-screen transition-transform duration-1000 group-hover:scale-105"
-        />
-        {/* Decorative gradients */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%)]" />
-        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+    <div className="space-y-6">
+      {/* Main Slider Banner */}
+      <section className="relative h-[340px] sm:h-[420px] w-full overflow-hidden rounded-2xl bg-slate-900">
+        {/* Slides list */}
+        <div className="relative h-full w-full">
+          {slides.map((slide, index) => {
+            const isActive = index === current;
+            return (
+              <div
+                key={index}
+                className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${
+                  isActive ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
+              >
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  className="h-full w-full object-cover opacity-60"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/30 to-transparent" />
 
-        <div className="relative max-w-xl">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm animate-fade-in-up">
-            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-            Nổi bật hôm nay
-          </span>
-          <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight sm:text-[2.75rem] sm:leading-[1.1] animate-fade-in-up animation-delay-75">
-            {featuredProduct?.name || "Điện thoại cũ giá tốt"}
-          </h1>
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-300 animate-fade-in-up animation-delay-100">
-            Máy đẹp likenew, nguyên zin, kiểm định nghiêm ngặt qua 30 bước. Cam kết giá tốt nhất thị trường cùng chính sách bảo hành minh bạch.
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3.5 animate-fade-in-up animation-delay-150">
-            <a
-              href="#new-arrivals"
-              className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-md transition-all duration-300 hover:bg-slate-50 hover:scale-105 active:scale-95"
-            >
-              Xem máy ngay
-            </a>
-            <Link
-              to={detailLink}
-              className="rounded-xl border border-slate-700 bg-slate-800/40 px-6 py-3 text-sm font-bold text-white backdrop-blur-sm transition-all duration-300 hover:bg-slate-800/60 hover:scale-105 active:scale-95"
-            >
-              Xem chi tiết
-            </Link>
-          </div>
-
-          {featuredProduct?.price ? (
-            <p className="mt-6 text-sm font-bold text-slate-400 animate-fade-in-up animation-delay-200">
-              Đồng giá cực tốt chỉ từ{" "}
-              <span className="text-2xl font-black text-rose-500 ml-1">
-                {featuredProduct.price.toLocaleString("vi-VN")} đ
-              </span>
-            </p>
-          ) : null}
+                <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-16 text-white max-w-xl">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                    {slide.eyebrow}
+                  </span>
+                  <h1 className="mt-4 text-2xl sm:text-4xl font-extrabold leading-tight text-white">
+                    {slide.title}
+                  </h1>
+                  <div className="mt-6">
+                    <Link
+                      to={slide.link}
+                      className="inline-block rounded-full bg-white px-6 py-2.5 text-xs font-black text-slate-950 hover:bg-slate-100 transition duration-300"
+                    >
+                      Mua ngay
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </article>
 
-      {/* Side cards */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-        <div className="animate-slide-in-right animation-delay-100">
-          <SidePromoCard
-            title="Thu cũ đổi mới"
-            description="Định giá nhanh 5 phút, trợ giá lên đời đến 99% giá trị máy."
-            accentClass="from-indigo-600 via-indigo-700 to-blue-700"
-            icon={<TradeIcon />}
-            to="/trade-in"
-          />
-        </div>
-        <div className="animate-slide-in-right animation-delay-200">
-          <SidePromoCard
-            title="Bảo hành minh bạch"
-            description="Bao test 1 đổi 1 trong 30 ngày. Bảo hành phần cứng lên tới 12 tháng."
-            accentClass="from-white to-white"
-            textClass="text-slate-800"
-            icon={<ShieldIcon />}
-            subtle
-            to="/phones"
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SidePromoCard({
-  title,
-  description,
-  icon,
-  accentClass,
-  textClass = "text-white",
-  subtle = false,
-  to = "/"
-}) {
-  return (
-    <Link
-      to={to}
-      className={`group block overflow-hidden rounded-[1.75rem] bg-gradient-to-br ${accentClass} px-6 py-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 border ${
-        subtle ? "border-slate-100" : "border-transparent"
-      }`}
-    >
-      <div className={`flex h-full flex-col justify-between gap-5 ${textClass}`}>
-        <span
-          className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${
-            subtle ? "bg-indigo-50 text-indigo-600 shadow-sm" : "bg-white/15 text-white"
-          }`}
+        {/* Arrow Navigation */}
+        <button
+          type="button"
+          onClick={prevSlide}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/40"
+          aria-label="Slide trước"
         >
-          {icon}
-        </span>
-        <div>
-          <h2 className="text-lg font-black leading-tight">{title}</h2>
-          <p className={`mt-1.5 text-xs leading-relaxed ${subtle ? "text-slate-500" : "text-white/80"}`}>
-            {description}
-          </p>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
+            <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={nextSlide}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/40"
+          aria-label="Slide tiếp theo"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
+            <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {/* Indicator dots */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setCurrent(index)}
+              className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                index === current ? "bg-white w-4" : "bg-white/40"
+              }`}
+              aria-label={`Đi tới slide ${index + 1}`}
+            />
+          ))}
         </div>
-      </div>
-    </Link>
+      </section>
+
+      {/* Promo Row - 4 small cards below slider */}
+      <PromoRow />
+    </div>
   );
 }
 
-function TradeIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10M7 12h7M7 17h4" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m15 5 2 2-2 2M12 15l-2 2 2 2" />
-    </svg>
-  );
-}
+function PromoRow() {
+  const promos = [
+    {
+      label: "Khuyến mãi Tết",
+      icon: (
+        <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-100/50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      ),
+      to: "/phones"
+    },
+    {
+      label: "Hàng mới về",
+      icon: (
+        <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-100/50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+            <path d="M12 18h.01" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      ),
+      to: "/phones"
+    },
+    {
+      label: "AI tư vấn chọn máy",
+      icon: (
+        <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-100/50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+            <path d="M12 2a8 8 0 0 0-8 8v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H5a6 6 0 0 1 12 0h-2a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a8 8 0 0 0-8-8z" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 18v4M9 22h6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      ),
+      to: "/chatbot"
+    },
+    {
+      label: "Thu cũ đổi mới",
+      icon: (
+        <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100/50">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+            <path d="M17 1l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M3 11V9a4 4 0 0 1 4-4h14" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M7 23l-4-4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M21 13v2a4 4 0 0 1-4 4H3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      ),
+      to: "/trade-in"
+    }
+  ];
 
-function ShieldIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 5 6v6c0 4.3 2.9 7.8 7 9 4.1-1.2 7-4.7 7-9V6z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9 12 2 2 4-4" />
-    </svg>
+    <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {promos.map((promo, index) => (
+        <Link
+          key={index}
+          to={promo.to}
+          className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/30 p-2.5 hover:border-slate-300 hover:bg-white transition-all duration-300"
+        >
+          {promo.icon}
+          <span className="text-xs font-bold text-slate-800 tracking-tight leading-tight">
+            {promo.label}
+          </span>
+        </Link>
+      ))}
+    </section>
   );
 }
 
