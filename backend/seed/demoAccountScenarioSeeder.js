@@ -17,7 +17,7 @@ const adminSeed = {
   role: "admin",
   phoneNumber: "0988123456",
   shippingInfo: {
-    fullName: "Cửa hàng Mạnh Hướng",
+    fullName: "Cửa hàng Mạnh Hương",
     phoneNumber: "0988123456",
     address: "123 Lê Đại Hành",
     city: "Bắc Ninh",

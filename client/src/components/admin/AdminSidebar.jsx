@@ -20,7 +20,7 @@ function AdminSidebar() {
             MH
           </span>
           <div>
-            <p className="text-base font-black tracking-tight text-slate-900">Mạnh Hướng</p>
+            <p className="text-base font-black tracking-tight text-slate-900">Mạnh Hương</p>
             <p className="text-xs text-slate-500">Quản trị cửa hàng</p>
           </div>
         </div>

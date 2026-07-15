@@ -475,7 +475,7 @@ function buildChatPrompt({ question, products, history, currentProduct, currentP
   const productSummary = buildProductSummary(products);
 
   return `
-Bạn là chatbot tư vấn bán điện thoại cũ của shop Mạnh Hướng.
+Bạn là chatbot tư vấn bán điện thoại cũ của shop Mạnh Hương.
 
 Mục tiêu:
 - Trả lời tự nhiên, mượt, giống một trợ lý bán hàng thân thiện.

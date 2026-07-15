@@ -11,7 +11,7 @@ const initialMessages = [
   {
     id: "bot-welcome",
     role: "bot",
-    text: "Xin chào! Mình là trợ lý AI Mạnh Hường Mobile. Bạn có thể hỏi mình các câu như:\n\n- **iPhone 13 Pro Max cũ giá bao nhiêu?**\n- **Điện thoại chơi game mượt dưới 12 triệu?**\n- **Chính sách bảo hành máy cũ ra sao?**\n\nMình có thể tìm trực tiếp trong kho máy của cửa hàng để báo giá và gợi ý đúng nhu cầu cho bạn."
+    text: "Xin chào! Mình là trợ lý AI Mạnh Hương Mobile. Bạn có thể hỏi mình các câu như:\n\n- **iPhone 13 Pro Max cũ giá bao nhiêu?**\n- **Điện thoại chơi game mượt dưới 12 triệu?**\n- **Chính sách bảo hành máy cũ ra sao?**\n\nMình có thể tìm trực tiếp trong kho máy của cửa hàng để báo giá và gợi ý đúng nhu cầu cho bạn."
   }
 ];
 
@@ -399,7 +399,7 @@ function ChatbotWidget({ floating = false }) {
                 <SparkIcon className="h-6 w-6 text-white animate-pulse" />
               </div>
               <div>
-                <h3 className="text-sm font-black leading-none">Mạnh Hường AI</h3>
+                <h3 className="text-sm font-black leading-none">Mạnh Hương AI</h3>
                 <p className="mt-1.5 text-[10px] font-semibold text-blue-100">
                   Tư vấn chọn máy, so sánh & báo giá
                 </p>
@@ -534,7 +534,7 @@ function ChatbotWidget({ floating = false }) {
               <SparkIcon className="h-5 w-5 text-white animate-pulse" />
             </div>
             <div className="flex flex-col items-start leading-tight">
-              <span className="text-xs font-black tracking-wide">Mạnh Hường AI</span>
+              <span className="text-xs font-black tracking-wide">Mạnh Hương AI</span>
               <span className="text-[9px] text-white/80 font-medium">Tư vấn chọn máy</span>
             </div>
           </button>
