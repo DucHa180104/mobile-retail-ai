@@ -20,34 +20,6 @@ function Navbar({ searchValue, onSearchChange, totalItems }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white shadow-sm transition-all duration-300">
-      {/* Top micro bar links matching mockup top links */}
-      <div className="border-b border-slate-100/60 bg-slate-50/50 py-2 text-[11px] text-slate-500 hidden lg:block">
-        <div className="mx-auto max-w-[1360px] px-4 sm:px-6 flex justify-between items-center">
-          <div className="flex gap-5 items-center">
-            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-              Khuyến mãi
-            </span>
-            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-              Bán chạy nhất
-            </span>
-            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
-              Hàng mới về
-            </span>
-            <span className="flex items-center gap-1 cursor-pointer hover:text-slate-900 transition font-medium">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V5A2.5 2.5 0 0 1 6.5 2.5H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z" /></svg>
-              Tư vấn AI
-            </span>
-          </div>
-          <div className="flex gap-4 items-center">
-            <Link to="/trade-in" className="hover:text-slate-900 transition font-medium">Thu cũ đổi mới</Link>
-            <Link to="/contact" className="hover:text-slate-900 transition font-medium">Liên hệ</Link>
-          </div>
-        </div>
-      </div>
-
       <div className="mx-auto max-w-[1360px] px-4 sm:px-6">
         <div className="flex flex-wrap items-center gap-4 py-3 lg:flex-nowrap">
           <Link to="/" className="flex shrink-0 items-center gap-2.5 group">
@@ -150,17 +122,22 @@ function MiniCart({ totalItems, cartItems, onRemove }) {
   );
 
   return (
-    <details className="group relative">
-      <summary className="relative flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl text-slate-600 transition-all duration-300 hover:bg-slate-100 hover:text-indigo-600">
+    <div className="group relative">
+      <Link
+        to="/cart"
+        aria-label="Mở giỏ hàng"
+        className="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 transition-all duration-300 hover:bg-slate-100 hover:text-indigo-600"
+      >
         <CartIcon />
         {totalItems > 0 ? (
           <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-black text-white ring-2 ring-white animate-pulse">
             {totalItems}
           </span>
         ) : null}
-      </summary>
+      </Link>
 
-      <div className="absolute right-0 top-[calc(100%+0.7rem)] z-50 w-[340px] rounded-2xl border border-slate-200/60 bg-white/95 p-4 shadow-xl backdrop-blur-xl transition-all duration-300">
+      <div className="invisible absolute right-0 top-full z-50 w-[340px] pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        <div className="rounded-2xl border border-slate-200/60 bg-white/95 p-4 shadow-xl backdrop-blur-xl">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <p className="font-black text-slate-950 text-sm">Giỏ hàng</p>
@@ -201,8 +178,9 @@ function MiniCart({ totalItems, cartItems, onRemove }) {
             Thanh toán
           </Link>
         </div>
+        </div>
       </div>
-    </details>
+    </div>
   );
 }
 

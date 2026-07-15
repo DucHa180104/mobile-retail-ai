@@ -5,6 +5,8 @@
 /* ─── Global base ─────────────────────────────────────── */
 @layer base {
   html {
+    /* Thu nhỏ đồng nhất toàn bộ giao diện, tương đương mức zoom 80% của trình duyệt. */
+    zoom: 0.8;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
