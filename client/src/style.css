@@ -69,6 +69,10 @@
 
 /* ─── Animation delay utilities ─────────────────────── */
 @layer utilities {
+  /* Compensate viewport-height utilities for the global 80% UI zoom. */
+  .h-screen { height: 125vh; }
+  .min-h-screen { min-height: 125vh; }
+
   .animation-delay-75  { animation-delay: 75ms; }
   .animation-delay-100 { animation-delay: 100ms; }
   .animation-delay-150 { animation-delay: 150ms; }
