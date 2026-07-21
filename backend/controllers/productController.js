@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import Review from "../models/Review.js";
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -64,8 +65,38 @@ export const getProducts = async (req, res, next) => {
     const products = await Product.find(query).sort(sortOptions).skip(skip).limit(limitNumber);
     const totalPages = Math.max(1, Math.ceil(totalProducts / limitNumber));
 
+    // Aggregate review stats for returned products
+    const productIds = products.map((p) => p._id);
+    const reviewStats = await Review.aggregate([
+      { $match: { product: { $in: productIds } } },
+      {
+        $group: {
+          _id: "$product",
+          avgRating: { $avg: "$rating" },
+          reviewCount: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const statsMap = {};
+    reviewStats.forEach((stat) => {
+      statsMap[stat._id.toString()] = {
+        avgRating: Math.round(stat.avgRating * 10) / 10,
+        reviewCount: stat.reviewCount
+      };
+    });
+
+    const productsWithRatings = products.map((p) => {
+      const stats = statsMap[p._id.toString()] || { avgRating: 0, reviewCount: 0 };
+      return {
+        ...p.toObject(),
+        avgRating: stats.avgRating,
+        reviewCount: stats.reviewCount
+      };
+    });
+
     res.status(200).json({
-      products,
+      products: productsWithRatings,
       currentPage: pageNumber,
       totalPages,
       totalProducts,

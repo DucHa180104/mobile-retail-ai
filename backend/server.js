@@ -53,6 +53,8 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/admin/users", userAdminRoutes);
 app.use("/api/admin/chat-logs", chatAdminRoutes);
+app.use("/api/chat/ai-insights", chatAdminRoutes);
+app.use("/api/admin/ai-insights", chatAdminRoutes);
 app.use("/api/admin/notifications", adminNotificationRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/contact-settings", contactSettingsRoutes);

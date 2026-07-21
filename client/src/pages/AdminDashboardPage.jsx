@@ -12,6 +12,7 @@ function AdminDashboardPage() {
 
   const [aiInsights, setAiInsights] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
   const [timeRange, setTimeRange] = useState("30d"); // "7d", "30d", "1y"
 
   async function fetchDashboardData() {
@@ -61,15 +62,19 @@ function AdminDashboardPage() {
     if (!token) return;
     try {
       setAiLoading(true);
-      const response = await fetch(buildApiUrl("/api/chat/ai-insights"), {
+      setAiError("");
+      const response = await fetch(buildApiUrl("/api/admin/chat-logs/ai-insights"), {
         headers: { Authorization: `Bearer ${token}` }
       });
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
         setAiInsights(data);
+      } else {
+        setAiError(data.message || "Không thể tải báo cáo phân tích từ Gemini AI.");
       }
     } catch (err) {
       console.error("AI Insights fetch error:", err);
+      setAiError(err.message || "Không thể kết nối đến máy chủ.");
     } finally {
       setAiLoading(false);
     }
@@ -80,10 +85,10 @@ function AdminDashboardPage() {
   }, [token]);
 
   useEffect(() => {
-    if (!loading && orders.length > 0) {
+    if (!loading) {
       fetchAiInsights();
     }
-  }, [loading, orders.length, token]);
+  }, [loading, token]);
 
   // Derived Analytics Stats
   const totalRevenue = useMemo(
@@ -769,6 +774,17 @@ function AdminDashboardPage() {
                 <div className="h-4 w-5/6 animate-pulse rounded bg-slate-100" />
                 <div className="h-4 w-4/5 animate-pulse rounded bg-slate-100" />
               </div>
+            </div>
+          ) : aiError ? (
+            <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4.5 text-xs font-semibold text-rose-600 flex items-center justify-between">
+              <span>⚠️ {aiError}</span>
+              <button
+                type="button"
+                onClick={fetchAiInsights}
+                className="underline font-bold text-rose-700 hover:text-rose-900"
+              >
+                Thử lại
+              </button>
             </div>
           ) : aiInsights?.importRecommendation || aiInsights?.inventoryWarning || aiInsights?.revenueAnalysis ? (
             <div className="space-y-4">

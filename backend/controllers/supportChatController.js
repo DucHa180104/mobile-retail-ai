@@ -86,8 +86,22 @@ export const getAdminSupportConversations = async (req, res, next) => {
       .populate("user", "name email phoneNumber shippingInfo")
       .sort({ lastMessageAt: -1, updatedAt: -1 });
 
+    const conversationsWithUnread = await Promise.all(
+      conversations.map(async (conv) => {
+        const unreadCount = await SupportMessage.countDocuments({
+          conversation: conv._id,
+          senderType: "user",
+          isRead: false
+        });
+        return {
+          ...conv.toObject(),
+          unreadCount
+        };
+      })
+    );
+
     return res.json({
-      conversations
+      conversations: conversationsWithUnread
     });
   } catch (error) {
     return next(error);

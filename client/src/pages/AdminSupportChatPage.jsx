@@ -18,6 +18,7 @@ function AdminSupportChatPage() {
   const [replyError, setReplyError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
   const targetConversationId = searchParams.get("conversation") || "";
 
   const messageEndRef = useRef(null);
@@ -89,6 +90,16 @@ function AdminSupportChatPage() {
       return name.includes(q) || email.includes(q);
     });
   }, [conversations, searchQuery]);
+
+  const filteredFilterConversations = useMemo(() => {
+    if (activeFilter === "all") return filteredConversations;
+    if (activeFilter === "blocked") return [];
+    if (activeFilter === "spam") return [];
+    if (activeFilter === "mentions") {
+      return filteredConversations.filter(c => c.status === "open");
+    }
+    return filteredConversations;
+  }, [filteredConversations, activeFilter]);
 
   useEffect(() => {
     if (!targetConversationId || conversations.length === 0) {
@@ -256,323 +267,421 @@ function AdminSupportChatPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-2 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Cổng quản trị / <span className="text-indigo-600">Chat hỗ trợ</span>
-          </p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-            Hộp thư hỗ trợ khách hàng
-          </h1>
-          <p className="mt-1.5 text-sm font-medium text-slate-500">
-            Phản hồi thắc mắc, tư vấn sản phẩm và giải quyết khiếu nại của khách hàng theo thời gian thực.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Đang hoạt động:
-          </span>
-          <span className="text-sm font-black text-slate-800">{conversations.length}</span>
-        </div>
-      </div>
-
-      <section className="grid items-stretch gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <div className="flex h-[760px] flex-col overflow-hidden rounded-3xl border border-slate-150 bg-white shadow-md">
-          <div className="border-b border-slate-100 bg-slate-50/50 p-5">
-            <h2 className="text-sm font-black uppercase tracking-wider text-slate-900">
-              Khách hàng trực tuyến
-            </h2>
-
-            <div className="relative mt-3">
-              <input
-                type="text"
-                placeholder="Tìm khách hàng theo tên, email..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs text-slate-800 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 shadow-sm"
-              />
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-slate-400"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
+    <div className="mx-auto max-w-7xl h-[720px] bg-white border border-slate-200/60 rounded-3xl shadow-sm overflow-hidden flex animate-fade-in mt-1 font-sans">
+      {/* Left Sidebar: Inbox & Search & Threads List */}
+      <aside className="w-[320px] border-r border-slate-100 flex flex-col h-full bg-white shrink-0">
+        {/* Inbox Header */}
+        <div className="p-4 border-b border-slate-100/80 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-black text-slate-900 tracking-tight">Inbox</h1>
+            <span className="text-[10px] font-bold text-slate-400 hover:text-slate-650 cursor-pointer flex items-center gap-0.5 select-none">
+              Newest
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
-            </div>
+            </span>
           </div>
+          <button type="button" className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-50 transition">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+            </svg>
+          </button>
+        </div>
 
-          <div className="flex-1 space-y-2 overflow-y-auto bg-slate-50/20 p-3">
-            {conversationsLoading ? (
-              <div className="space-y-3 p-1">
-                {[...Array(4)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="animate-pulse rounded-2xl border border-slate-100 bg-white p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
-                      <div className="flex-1 space-y-1.5">
-                        <div className="h-3 w-24 rounded bg-slate-200" />
-                        <div className="h-3 w-16 rounded bg-slate-200" />
-                      </div>
+        {/* Search Inbox */}
+        <div className="px-4 py-2 shrink-0">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-50/50 rounded-xl border border-slate-200/50 py-2 pl-9 pr-4 text-xs font-semibold text-slate-700 placeholder-slate-400 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5"
+            />
+            <svg className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Filter Navigation */}
+        <div className="px-4 py-1.5 border-b border-slate-100/80 flex gap-1.5 overflow-x-auto scrollbar-none shrink-0 select-none">
+          {["all", "mentions", "spam", "blocked"].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveFilter(tab)}
+              className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition capitalize shrink-0 ${
+                activeFilter === tab
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-slate-450 hover:text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {tab === "all" ? "All" : tab === "mentions" ? "Mentions" : tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Scrollable Threads List */}
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100/50">
+          {conversationsLoading ? (
+            <div className="space-y-1 p-2">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="animate-pulse rounded-2xl border border-slate-50 bg-white p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-slate-100" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-20 rounded bg-slate-100" />
+                      <div className="h-2.5 w-32 rounded bg-slate-100" />
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : conversationsError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
-                {conversationsError}
-              </div>
-            ) : filteredConversations.length === 0 ? (
-              <div className="m-2 flex h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-                <p className="text-xs font-bold text-slate-400">
-                  {searchQuery ? "Không tìm thấy khách hàng" : "Chưa có cuộc trò chuyện"}
-                </p>
-              </div>
-            ) : (
-              filteredConversations.map((conversation) => {
-                const conversationId = getConversationId(conversation);
-                const isActive = conversationId === selectedConversationId;
+                </div>
+              ))}
+            </div>
+          ) : conversationsError ? (
+            <div className="p-4 text-center text-xs text-rose-500 font-semibold">{conversationsError}</div>
+          ) : filteredFilterConversations.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-400 font-semibold">
+              {searchQuery ? "No matching conversations" : "No support requests"}
+            </div>
+          ) : (
+            filteredFilterConversations.map((conversation) => {
+              const cId = getConversationId(conversation);
+              const isActive = cId === selectedConversationId;
+              const online = conversation.status === "open";
+              const initials = getUserInitials(conversation.user?.name);
+              const isUnread = conversation.unreadCount > 0 && !isActive;
 
-                return (
-                  <button
-                    key={conversationId}
-                    type="button"
-                    onClick={() => {
-                      setSelectedConversationId(conversationId);
-                      setSearchParams({ conversation: conversationId });
-                      setSuccessMessage("");
-                      setReplyError("");
-                    }}
-                    className={`relative flex w-full items-start gap-3.5 overflow-hidden rounded-2xl border p-4 text-left transition-all duration-350 ${
-                      isActive
-                        ? "border-indigo-650 bg-indigo-50/40 shadow-sm ring-1 ring-indigo-650/15"
-                        : "border-slate-100 bg-white shadow-sm hover:border-slate-200 hover:bg-slate-50/60"
-                    }`}
-                  >
-                    {isActive ? (
-                      <span className="absolute bottom-0 left-0 top-0 w-1 rounded-r-lg bg-indigo-650" />
-                    ) : null}
-
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xs font-black shadow-sm transition-transform duration-300 ${
-                        isActive
-                          ? "scale-105 bg-gradient-to-tr from-indigo-600 to-blue-600 text-white"
-                          : "bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {getUserInitials(conversation.user?.name)}
+              return (
+                <button
+                  key={cId}
+                  type="button"
+                  onClick={() => {
+                    setSelectedConversationId(cId);
+                    setSearchParams({ conversation: cId });
+                    setSuccessMessage("");
+                    setReplyError("");
+                    setConversations((prev) =>
+                      prev.map((c) => (getConversationId(c) === cId ? { ...c, unreadCount: 0 } : c))
+                    );
+                  }}
+                  className={`w-full p-4 flex gap-3 text-left transition hover:bg-slate-50/50 relative ${
+                    isActive ? "bg-slate-50/70" : ""
+                  }`}
+                >
+                  {isActive && (
+                    <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-blue-600" />
+                  )}
+                  {/* Avatar with status indicator */}
+                  <div className="relative shrink-0 select-none">
+                    <div className={`h-10 w-10 rounded-full text-[11px] font-black flex items-center justify-center border shadow-sm uppercase ${
+                      isActive ? "bg-gradient-to-tr from-blue-600 to-indigo-600 text-white border-transparent" : "bg-slate-100 text-slate-600 border-slate-200/50"
+                    }`}>
+                      {initials}
                     </div>
+                    {online && (
+                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
+                    )}
+                  </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className="truncate text-xs font-black text-slate-900">
-                          {conversation.user?.name || "Khách hàng"}
-                        </p>
-                        <span
-                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wider ${
-                            conversation.status === "open"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-slate-200 bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          {conversation.status === "open" ? "Đang mở" : "Đã đóng"}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline gap-1">
+                      <h4 className={`text-[12.5px] truncate ${isUnread ? "font-black text-slate-950" : "font-extrabold text-slate-800"}`}>
+                        {conversation.user?.name || "Khách hàng"}
+                      </h4>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {isUnread && (
+                          <span className="h-2 w-2 rounded-full bg-blue-600 block animate-pulse" />
+                        )}
+                        <span className="text-[10px] font-bold text-slate-400">
+                          {formatShortTime(conversation.lastMessageAt)}
                         </span>
                       </div>
-                      <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">
-                        {conversation.user?.email}
-                      </p>
-                      <p className="mt-2.5 truncate text-xs font-medium leading-relaxed text-slate-650">
-                        {conversation.lastSenderType === "admin" ? (
-                          <span className="font-bold text-indigo-600">Bạn: </span>
-                        ) : null}
-                        {conversation.lastMessage || "Gửi tin nhắn chào mừng..."}
-                      </p>
-                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100/60 pt-2 text-[9px] font-semibold text-slate-400">
-                        <span>⏰ {formatDateTime(conversation.lastMessageAt)}</span>
-                      </div>
                     </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
+                    <p className={`text-[11.5px] truncate mt-0.5 ${isUnread ? "text-slate-900 font-extrabold" : "text-slate-450 font-medium"}`}>
+                      {conversation.lastSenderType === "admin" && (
+                        <span className="text-blue-600 font-extrabold mr-0.5">Bạn:</span>
+                      )}
+                      {conversation.lastMessage || "Gửi tin nhắn chào mừng..."}
+                    </p>
+                  </div>
+                </button>
+              );
+            })
+          )}
         </div>
+      </aside>
 
-        <div className="flex h-[760px] flex-col overflow-hidden rounded-3xl border border-slate-150 bg-white shadow-md">
-          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-5">
-            {selectedConversation ? (
-              <div className="flex items-center gap-3.5">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-100 bg-gradient-to-tr from-indigo-100 to-blue-50 text-xs font-black text-indigo-700 shadow-sm">
+      {/* Right Column: Chat window view */}
+      <main className="flex-1 flex flex-col bg-slate-50/20 h-full relative">
+        {/* Chat Header */}
+        <div className="p-4 border-b border-slate-100 bg-white flex items-center justify-between shrink-0">
+          {selectedConversation ? (
+            <div className="flex items-center gap-3">
+              <div className="relative select-none">
+                <div className="h-10 w-10 rounded-full bg-slate-100 text-[11px] font-black text-slate-650 flex items-center justify-center border border-slate-200/50 uppercase shadow-sm">
                   {getUserInitials(selectedConversation.user?.name)}
                 </div>
-                <div>
-                  <h2 className="text-sm font-black leading-tight text-slate-900">
-                    {selectedConversation.user?.name || "Khách hàng"}
-                  </h2>
-                  <p className="mt-0.5 text-xs font-semibold text-slate-500">
-                    {selectedConversation.user?.email || "Không có thông tin email"}
-                  </p>
-                </div>
+                {selectedConversation.status === "open" && (
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
+                )}
               </div>
-            ) : (
               <div>
-                <h2 className="text-sm font-black text-slate-900">Hội thoại chi tiết</h2>
-                <p className="text-xs font-semibold text-slate-450">
-                  Chọn một cuộc trò chuyện từ danh bạ bên trái để bắt đầu chat.
-                </p>
-              </div>
-            )}
-
-            {selectedConversation ? (
-              <div className="flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800">
-                  {selectedConversation.status === "open" ? "Đang kết nối" : "Đã ngắt"}
+                <h3 className="text-sm font-black text-slate-900 leading-tight">
+                  {selectedConversation.user?.name || "Khách hàng"}
+                </h3>
+                <span className="text-[10px] font-bold text-blue-600 block mt-0.5">
+                  {selectedConversation.status === "open" ? "Online" : "Offline"}
                 </span>
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : (
+            <div>
+              <h3 className="text-sm font-black text-slate-900">Chi tiết cuộc trò chuyện</h3>
+            </div>
+          )}
 
-          <div className="flex-1 space-y-5 overflow-y-auto bg-slate-50/30 px-6 py-6">
-            {messagesLoading ? (
-              <div className="space-y-5">
-                {[...Array(3)].map((_, index) => (
-                  <div key={index} className={`flex ${index % 2 === 0 ? "justify-start" : "justify-end"}`}>
-                    <div className="w-2/3 animate-pulse rounded-2xl border border-slate-100 bg-white p-4">
-                      <div className="h-3 w-16 rounded bg-slate-200" />
-                      <div className="mt-3 h-3 w-full rounded bg-slate-200" />
-                    </div>
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <button type="button" className="p-2 hover:bg-slate-50 rounded-lg hover:text-slate-800 transition">
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a9.049 9.049 0 0 1-5.185-2.813 9.049 9.049 0 0 1-2.813-5.185l-.105-.39a.75.75 0 0 1 .536-.922L8.25 7.5a.75.75 0 0 1 .8.342l1.62 2.7a.75.75 0 0 1-.22.996l-1.025.768a12.02 12.02 0 0 0 5.4 5.4l.768-1.025a.75.75 0 0 1 .996-.22l2.7 1.62a.75.75 0 0 1 .342.8l-.272 1.09a.75.75 0 0 1-.922.536l-.39-.105Z" />
+              </svg>
+            </button>
+            <button type="button" className="p-2 hover:bg-slate-50 rounded-lg hover:text-slate-800 transition">
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a2.25 2.25 0 0 0 3.182 0l4.318-4.318a2.25 2.25 0 0 0 0-3.182L11.16 3.659A2.25 2.25 0 0 0 9.568 3Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+              </svg>
+            </button>
+            <button type="button" className="p-2 hover:bg-slate-50 rounded-lg hover:text-slate-800 transition">
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5M3.75 5.25h16.5M3.75 12h16.5m-16.5 6.75h16.5" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Messages Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          {messagesLoading ? (
+            <div className="space-y-6">
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className={`flex ${index % 2 === 0 ? "justify-start" : "justify-end"}`}>
+                  <div className="w-2/3 animate-pulse rounded-2xl border border-slate-100 bg-white p-4">
+                    <div className="h-3 w-16 bg-slate-100 rounded" />
+                    <div className="mt-3 h-3 w-full bg-slate-100 rounded" />
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+          ) : messagesError ? (
+            <div className="p-4 rounded-xl border border-rose-100 bg-rose-50/50 text-xs font-semibold text-rose-600 text-center">
+              {messagesError}
+            </div>
+          ) : !selectedConversation ? (
+            <div className="flex h-full flex-col items-center justify-center p-8 text-center text-slate-450 select-none">
+              <svg className="mb-4 h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025 10.321 10.321 0 0 1-2.164-2.077C1.654 15.26 1 13.707 1 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+              </svg>
+              <p className="text-xs font-black text-slate-800">Chọn cuộc trò chuyện</p>
+              <p className="mt-1 text-[11px] font-medium text-slate-450">Hãy chọn một khách hàng từ hộp thư để bắt đầu hỗ trợ.</p>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center p-8 text-center text-slate-450 select-none">
+              <p className="text-xs font-black text-slate-800">Chưa có tin nhắn nào</p>
+              <p className="mt-1 text-[11px] font-medium text-slate-450">Bắt đầu nhập nội dung trò chuyện ở ô phía dưới.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Daily Separator: Today */}
+              <div className="flex items-center justify-center my-4 select-none">
+                <div className="h-[1px] bg-slate-100 flex-1" />
+                <span className="mx-4 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Today</span>
+                <div className="h-[1px] bg-slate-100 flex-1" />
               </div>
-            ) : messagesError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
-                {messagesError}
-              </div>
-            ) : !selectedConversation ? (
-              <div className="flex h-full flex-col items-center justify-center p-8 text-center text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-3.5 h-12 w-12 text-slate-350">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                </svg>
-                <p className="text-xs font-black text-slate-550">Vui lòng chọn khách hàng cần hỗ trợ</p>
-                <p className="mt-1 text-[11px] font-medium text-slate-450">
-                  Tin nhắn và lịch sử trò chuyện sẽ hiển thị tại đây.
-                </p>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center p-8 text-center text-slate-400">
-                <p className="text-xs font-black text-slate-550">Chưa có nội dung trò chuyện</p>
-                <p className="mt-1 text-[11px] font-medium text-slate-450">
-                  Nhập câu phản hồi ở khung chat bên dưới để bắt đầu hội thoại.
-                </p>
-              </div>
-            ) : (
-              messages.map((message) => {
+
+              {messages.map((message) => {
                 const isAdmin = message.senderType === "admin";
+                const initials = getUserInitials(isAdmin ? "Bạn" : selectedConversation.user?.name);
 
                 return (
-                  <div
-                    key={getMessageId(message)}
-                    className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className="flex max-w-[70%] flex-col">
-                      <span
-                        className={`mb-1 px-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 ${
-                          isAdmin ? "text-right" : "text-left"
-                        }`}
-                      >
-                        {isAdmin ? "Bạn" : "Khách hàng"} •{" "}
-                        <span className="text-[9px] font-medium lowercase">{formatDateTime(message.createdAt)}</span>
+                  <div key={getMessageId(message)} className={`flex gap-3.5 ${isAdmin ? "justify-end" : "justify-start"}`}>
+                    {/* Customer Avatar on the left */}
+                    {!isAdmin && (
+                      <div className="h-9 w-9 rounded-full bg-slate-100 text-[10px] font-black text-slate-500 border border-slate-200/40 shrink-0 flex items-center justify-center uppercase select-none">
+                        {initials}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col max-w-[75%] space-y-1">
+                      <span className={`text-[10px] font-black text-slate-400 px-1 ${
+                        isAdmin ? "text-right" : "text-left"
+                      }`}>
+                        {isAdmin ? "James" : selectedConversation.user?.name || "Costa"}
                       </span>
 
-                      <div
-                        className={`break-words whitespace-pre-line rounded-2xl border px-4 py-3.5 text-[13.5px] text-sm leading-relaxed shadow-sm ${
-                          isAdmin
-                            ? "rounded-tr-none border-transparent bg-gradient-to-tr from-indigo-600 via-indigo-650 to-blue-600 text-white"
-                            : "rounded-tl-none border-slate-100 bg-white text-slate-800"
-                        }`}
-                      >
-                        {message.content}
-                      </div>
+                      {isAdmin ? (
+                        <div className="bg-[#e0f2fe]/40 border border-blue-100 text-slate-800 px-4 py-3 shadow-sm text-[13px] font-semibold rounded-2xl rounded-tr-none break-words whitespace-pre-line leading-relaxed">
+                          {message.content}
+                        </div>
+                      ) : (
+                        <div className="bg-white border border-slate-100 text-slate-800 px-4 py-3 shadow-sm text-[13px] font-semibold rounded-2xl rounded-tl-none break-words whitespace-pre-line leading-relaxed text-left">
+                          {renderMessageContent(message.content)}
+                        </div>
+                      )}
+
+                      <span className={`text-[9px] font-bold text-slate-400 px-1.5 ${
+                        isAdmin ? "text-right" : "text-left"
+                      }`}>
+                        {formatDateTime(message.createdAt).split(" ")[0]}
+                      </span>
                     </div>
                   </div>
                 );
-              })
-            )}
-            <div ref={messageEndRef} />
-          </div>
+              })}
+            </div>
+          )}
+          <div ref={messageEndRef} />
+        </div>
 
-          <div className="space-y-4 border-t border-slate-100 bg-white p-5">
-            {successMessage ? (
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-700">
-                {successMessage}
-              </div>
-            ) : null}
+        {/* Input Bar Section */}
+        <div className="p-4 border-t border-slate-100 bg-white flex flex-col gap-2 shrink-0">
+          {successMessage && (
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700">
+              {successMessage}
+            </div>
+          )}
 
-            {replyError ? (
-              <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-700">
-                {replyError}
-              </div>
-            ) : null}
+          {replyError && (
+            <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700">
+              {replyError}
+            </div>
+          )}
 
-            <form onSubmit={handleSendReply} className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-800">
-                  Nội dung phản hồi
-                </label>
-                {selectedConversation ? (
-                  <span className="text-[10.5px] font-semibold text-slate-400">
-                    Đang trả lời:{" "}
-                    <span className="font-extrabold text-indigo-600">{selectedConversation.user?.name}</span>
-                  </span>
-                ) : null}
-              </div>
-
+          <form onSubmit={handleSendReply} className="flex flex-col gap-2.5">
+            <div className="relative bg-slate-50/30 border border-slate-200/60 rounded-2xl focus-within:bg-white focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/5 transition">
               <textarea
                 value={replyInput}
-                onChange={(event) => setReplyInput(event.target.value)}
+                onChange={(e) => setReplyInput(e.target.value)}
                 placeholder={
                   selectedConversation
-                    ? "Nhập câu trả lời, hướng dẫn hoặc tư vấn giá cho khách hàng..."
-                    : "Chọn một cuộc trò chuyện để bắt đầu soạn phản hồi..."
+                    ? `Message ${selectedConversation.user?.name || "Costa"}`
+                    : "Chọn cuộc trò chuyện..."
                 }
-                rows={3}
+                rows={2}
                 disabled={!selectedConversation || replySending}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3.5 text-xs text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="w-full bg-transparent border-none outline-none resize-none px-4 py-3 text-xs text-slate-800 placeholder-slate-400 font-semibold disabled:cursor-not-allowed"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendReply(e);
+                  }
+                }}
               />
-
-              <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-[10.5px] font-medium text-slate-400">
-                  Tin nhắn của bạn sẽ hiển thị ngay lập tức trên widget chat của khách hàng.
-                </span>
-                <button
-                  type="submit"
-                  disabled={!selectedConversation || !replyInput.trim() || replySending}
-                  className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-xs font-black text-white shadow-md shadow-indigo-600/15 transition-all duration-350 hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
-                >
-                  {replySending ? (
-                    <span>Đang gửi...</span>
-                  ) : (
-                    <>
-                      <span>Gửi phản hồi</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                        <path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.925c.09.312.34.555.652.648l6.705 2.012a.25.25 0 010 .475L4.345 13.33a.75.75 0 00-.652.648l-1.414 4.925a.75.75 0 00.902.932l14.931-7.258a.75.75 0 000-1.354L3.105 2.289Z" />
-                      </svg>
-                    </>
-                  )}
-                </button>
+              
+              {/* Toolbar */}
+              <div className="flex items-center justify-between px-3 py-2 bg-slate-50/10 border-t border-slate-100/50 rounded-b-2xl">
+                <div className="flex items-center gap-1.5 text-slate-400">
+                  <button type="button" className="p-1.5 hover:bg-slate-100 hover:text-slate-700 rounded-lg transition">
+                    <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739a3.125 3.125 0 1 1-6.25 0 3.125 3.125 0 0 1 6.25 0ZM12 18.75A6.75 6.75 0 0 1 5.25 12V6.75A2.25 2.25 0 0 1 7.5 4.5h6a2.25 2.25 0 0 1 2.25 2.25V12A6.75 6.75 0 0 1 12 18.75Z" />
+                    </svg>
+                  </button>
+                  <button type="button" className="p-1.5 hover:bg-slate-100 hover:text-slate-700 rounded-lg transition">
+                    <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button type="button" className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-lg transition">
+                    <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 0 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!selectedConversation || !replyInput.trim() || replySending}
+                    className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition shadow-md shadow-blue-500/10 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-      </section>
+      </main>
+    </div>
+  );
+}
+
+function formatShortTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.round(diffMs / 60000);
+  if (diffMin < 1) return "1M";
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHrs = Math.round(diffMin / 60);
+  if (diffHrs < 24) return `${diffHrs}h`;
+  const diffDays = Math.round(diffHrs / 24);
+  if (diffDays < 7) return `${diffDays}d`;
+  return date.toLocaleDateString("vi-VN", { day: "numeric", month: "numeric" });
+}
+
+function renderMessageContent(content) {
+  if (!content) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = content.match(urlRegex);
+
+  if (!urls) {
+    return <p className="text-[13px] leading-relaxed text-slate-800 font-semibold">{content}</p>;
+  }
+
+  const parts = content.split(urlRegex);
+  return (
+    <div className="space-y-3.5">
+      <p className="text-[13px] leading-relaxed text-slate-800 font-semibold">
+        {parts.map((part, i) => {
+          if (urlRegex.test(part) || part.startsWith("http://") || part.startsWith("https://")) {
+            return (
+              <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all font-bold">
+                {part}
+              </a>
+            );
+          }
+          return part;
+        })}
+      </p>
+
+      {urls.slice(0, 1).map((url, i) => {
+        const isPreline = url.includes("preline.co");
+        return (
+          <div key={i} className="rounded-xl border border-slate-100 bg-slate-50/50 p-4.5 space-y-2 mt-2 max-w-sm hover:bg-slate-50 transition text-left">
+            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">
+              {isPreline ? "Preline" : "Liên kết chia sẻ"}
+            </span>
+            <h4 className="text-xs font-black text-slate-900 leading-tight">
+              {isPreline ? "Preline UI, crafted with Tailwind CSS" : "Xem thông tin liên kết"}
+            </h4>
+            <p className="text-[10.5px] leading-normal text-slate-500 font-medium">
+              {isPreline
+                ? "Preline UI is an open-source set of prebuilt UI components based on the utility-first Tailwind CSS framework."
+                : "Truy cập liên kết này để xem nội dung chi tiết do khách hàng chia sẻ."}
+            </p>
+            {isPreline && (
+              <div className="h-28 w-full rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider shadow-sm mt-3.5 border border-slate-100">
+                Preline UI Layout Preview
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
