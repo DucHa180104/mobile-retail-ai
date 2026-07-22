@@ -707,3 +707,11 @@ RAG là hướng nâng cấp tốt nhưng không bắt buộc nếu thời gian 
 RAG là điểm cộng sau.
 Không đánh đổi một chatbot đang chạy ổn lấy một RAG làm vội và khó bảo vệ.
 ```
+
+---
+
+> [!NOTE]
+> **Tình trạng nâng cấp RAG thực tế:**
+> - Hệ thống đã nâng cấp thành công lên **Hybrid Vector RAG (In-memory Cosine Similarity)**.
+> - Hướng dẫn khắc phục lỗi kết nối MongoDB Atlas (`MongooseServerSelectionError / connect EACCES`): Xem chi tiết tại phần cuối tài liệu [C4_RAG_IMPLEMENTATION_REPORT.md](file:///c:/Users/Admin/Desktop/mobile-retail-ai/docs/tasks/C4_RAG_IMPLEMENTATION_REPORT.md).
+

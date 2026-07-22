@@ -571,3 +571,24 @@ Thêm RAG như một lớp nâng cấp.
 Luôn có fallback.
 Test kỹ trước khi đưa vào demo chính.
 ```
+
+## 10. Trạng thái Triển khai Thực tế & Xử lý sự cố mạng
+
+> [!IMPORTANT]
+> **Hiện trạng kỹ thuật của RAG:**
+> - Chatbot RAG đã được triển khai hoàn chỉnh ở mức **RAG Demo / Hybrid search in-memory**: Hệ thống sử dụng Gemini API (`gemini-embedding-001`) để tạo vector 768 chiều cho câu hỏi, lưu trữ vector sản phẩm trong bộ sưu tập `ProductEmbedding` của MongoDB, và so khớp độ tương đồng ngữ nghĩa bằng thuật toán **Cosine Similarity chạy trực tiếp trên Backend Node.js** (sau khi đã lọc thô qua điều kiện cứng).
+> - Giao diện Frontend và router `/api/chat` được giữ nguyên, giúp giảm rủi ro ảnh hưởng đến luồng chatbot hiện tại.
+
+### Hướng dẫn sửa lỗi kết nối MongoDB Atlas (`MongooseServerSelectionError / EACCES`)
+Nếu khi chạy lệnh `npm run build:embeddings` hoặc khởi động Server trên máy cục bộ của bạn mà gặp lỗi kết nối đến cụm Atlas (cổng 27017 bị chặn hoặc lỗi quyền truy cập):
+1. **Kiểm tra IP Access List trên MongoDB Atlas:**
+   - Truy cập vào trang quản trị MongoDB Atlas.
+   - Đi tới mục **Network Access** -> Chọn **IP Access List**.
+   - Bấm **Add IP Address** và thêm địa chỉ `0.0.0.0/0` (Cho phép kết nối từ mọi IP - phù hợp cho môi trường đồ án học tập/demo) hoặc bấm **Add Current IP Address** để cấp quyền riêng cho IP mạng nhà bạn.
+2. **Kiểm tra tường lửa hoặc proxy mạng:**
+   - Một số mạng công ty, trường học hoặc quán cafe chặn cổng gửi ra ngoài `27017` (cổng mặc định của MongoDB). Trong trường hợp này, hãy thử đổi sang mạng khác (ví dụ: phát 4G từ điện thoại) và chạy lại lệnh:
+     ```bash
+     npm run build:embeddings
+     ```
+   - Khi chạy lệnh thành công, terminal sẽ in ra số lượng sản phẩm tạo embedding thành công/thất bại. Ví dụ: Thành công: 137/137 nếu toàn bộ sản phẩm được xử lý đầy đủ. Giao diện Chatbot sẽ tự động nhận diện và kích hoạt RAG.
+

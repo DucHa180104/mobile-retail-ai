@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import { searchSemanticProducts } from "./productSemanticSearchService.js";
 
 const CHATBOT_PRODUCT_LIMIT = 6;
 const CHATBOT_CANDIDATE_LIMIT = 18;
@@ -29,7 +30,21 @@ export async function generateChatReply({
   const normalizedHistory = normalizeChatHistory(history);
   const filters = extractChatFilters(trimmedMessage);
   const currentProduct = await findCurrentProduct(currentProductId);
-  const products = await findRelevantProducts(filters, currentProduct);
+
+  let products = [];
+  try {
+    products = await searchSemanticProducts({ message: trimmedMessage, filters });
+    console.log(`🤖 [RAG] Tìm thấy ${products.length} sản phẩm theo vector ngữ nghĩa.`);
+  } catch (err) {
+    console.error("🤖 [RAG-Fallback] Lỗi truy vấn ngữ nghĩa, sử dụng logic tìm kiếm cũ:", err.message);
+  }
+
+  if (!products || products.length === 0) {
+    products = await findRelevantProducts(filters, currentProduct);
+  } else {
+    products = rankCandidateProducts(products, filters, currentProduct);
+    products = mergeCurrentProductIfNeeded(products, filters, currentProduct);
+  }
 
   const prompt = buildChatPrompt({
     question: trimmedMessage,

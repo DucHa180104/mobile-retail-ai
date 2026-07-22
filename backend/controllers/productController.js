@@ -1,5 +1,7 @@
 import Product from "../models/Product.js";
 import Review from "../models/Review.js";
+import ProductEmbedding from "../models/ProductEmbedding.js";
+import { generateEmbedding } from "../services/embeddingService.js";
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -125,6 +127,10 @@ export const createProduct = async (req, res, next) => {
   try {
     const productData = buildProductPayload(req.body);
     const product = await Product.create(productData);
+    
+    // Async background vector sync
+    syncProductEmbedding(product);
+    
     res.status(201).json(product);
   } catch (error) {
     if (error.name === "ValidationError" || error.name === "CastError") {
@@ -147,6 +153,9 @@ export const updateProduct = async (req, res, next) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Async background vector sync
+    syncProductEmbedding(product);
+
     res.status(200).json(product);
   } catch (error) {
     if (error.name === "ValidationError" || error.name === "CastError") {
@@ -165,11 +174,65 @@ export const deleteProduct = async (req, res, next) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Async background vector removal
+    removeProductEmbedding(req.params.id);
+
     res.status(200).json({ message: "Product deleted" });
   } catch (error) {
     next(error);
   }
 };
+
+async function syncProductEmbedding(product) {
+  try {
+    const buildSearchText = (p) => {
+      const getConditionLabel = (condition) => {
+        if (condition === "used_99") return "Cũ 99%";
+        if (condition === "used_good") return "Cũ đẹp";
+        if (condition === "used_fair") return "Cũ dùng tốt";
+        return "Máy mới";
+      };
+      const parts = [
+        `Tên: ${p.name || ""}`,
+        `Hãng: ${p.brand || ""}`,
+        `Danh mục: ${p.category || ""}`,
+        `Giá: ${Number(p.price || 0).toLocaleString("vi-VN")} đ`,
+        `Tình trạng: ${getConditionLabel(p.condition)}`,
+        `Màu sắc: ${p.usedDetails?.color || "Chưa rõ"}`,
+        `Dung lượng: ${p.specs?.storage || "Chưa rõ"}`,
+        `Pin: ${p.usedDetails?.batteryHealth || p.specs?.battery || "Chưa rõ"}`,
+        `Màn hình: ${p.specs?.screen || p.usedDetails?.screenStatus || "Chưa rõ"}`,
+        `Camera: ${p.specs?.camera || "Chưa rõ"}`,
+        `Face ID / Touch ID: ${p.usedDetails?.faceIdStatus || "Chưa rõ"}`,
+        `Bảo hành: ${p.usedDetails?.warranty || "Chưa rõ"}`,
+        `Lịch sử sửa chữa: ${p.usedDetails?.repairHistory || "Chưa rõ"}`,
+        `Ghi chú: ${p.usedDetails?.note || p.description || "Không có"}`
+      ];
+      return parts.join(". ").replace(/\s+/g, " ");
+    };
+
+    const searchText = buildSearchText(product);
+    const embedding = await generateEmbedding(searchText);
+
+    await ProductEmbedding.findOneAndUpdate(
+      { product: product._id },
+      { searchText, embedding, embeddingModel: "gemini-embedding-001" },
+      { upsert: true }
+    );
+    console.log(`🤖 [VectorSync] Tự động đồng bộ vector cho sản phẩm: "${product.name}"`);
+  } catch (err) {
+    console.error(`🤖 [VectorSync-Error] Đồng bộ vector thất bại cho "${product.name}":`, err.message);
+  }
+}
+
+async function removeProductEmbedding(productId) {
+  try {
+    await ProductEmbedding.deleteOne({ product: productId });
+    console.log(`🤖 [VectorSync] Tự động xóa vector cho sản phẩm ID: ${productId}`);
+  } catch (err) {
+    console.error(`🤖 [VectorSync-Error] Xóa vector thất bại cho ID ${productId}:`, err.message);
+  }
+}
 
 function getProductSort(sort) {
   if (sort === "price_asc") {

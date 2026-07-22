@@ -10,6 +10,8 @@
     "seed:tradein-pricing": "node seed/tradeInPricingSeeder.js",
     "seed:review-test": "node seed/reviewTestSeeder.js",
     "seed:demo-scenario": "node seed/demoAccountScenarioSeeder.js",
+    "build:embeddings": "node scripts/buildProductEmbeddings.js",
+    "seed:embeddings": "node scripts/buildProductEmbeddings.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
