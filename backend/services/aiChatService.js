@@ -57,9 +57,10 @@ export async function generateChatReply({
   const data = await callGemini(endpoint, prompt);
   const reply = extractGeminiReply(data);
 
+  const formattedReply = formatChatReply(reply);
   return {
-    reply: formatChatReply(reply),
-    suggestedProducts: buildSuggestedProducts(products, currentProduct)
+    reply: formattedReply,
+    suggestedProducts: buildSuggestedProducts(products, currentProduct, formattedReply)
   };
 }
 
@@ -218,7 +219,8 @@ function extractStructuredFilters(normalizedMessage, semanticNeeds) {
   const filters = {
     brand: "",
     condition: "",
-    storage: ""
+    storage: "",
+    category: ""
   };
 
   if (semanticNeeds.prefersIOS) {
@@ -245,6 +247,15 @@ function extractStructuredFilters(normalizedMessage, semanticNeeds) {
 
   if (storageMatch) {
     filters.storage = storageMatch[1].toUpperCase();
+  }
+
+  // Extract category based on keyword references
+  if (containsAny(normalizedMessage, ["dien thoai", "dt", "phone", "iphone", "samsung", "oppo", "xiaomi"])) {
+    filters.category = "phone";
+  } else if (containsAny(normalizedMessage, ["ipad", "tablet", "may tinh bang", "tab"])) {
+    filters.category = "tablet";
+  } else if (containsAny(normalizedMessage, ["tai nghe", "airpods", "buds", "sac", "cap", "op", "bao da", "phu kien", "pencil"])) {
+    filters.category = "accessory";
   }
 
   return filters;
@@ -286,6 +297,10 @@ function buildProductQuery(filters) {
 
   if (filters.brand) {
     query.brand = new RegExp(`^${escapeRegex(filters.brand)}$`, "i");
+  }
+
+  if (filters.category) {
+    query.category = filters.category;
   }
 
   if (filters.condition) {
@@ -605,33 +620,55 @@ function formatProductForPrompt(product, index) {
   return parts.join(" | ");
 }
 
-function buildSuggestedProducts(products, currentProduct) {
-  const mergedProducts = [];
+function buildSuggestedProducts(products, currentProduct, replyText) {
+  const allCandidates = [];
 
   if (currentProduct) {
-    mergedProducts.push(currentProduct);
+    allCandidates.push(currentProduct);
   }
 
   for (const product of products) {
-    if (!mergedProducts.some((item) => String(item._id) === String(product._id))) {
-      mergedProducts.push(product);
+    if (!allCandidates.some((item) => String(item._id) === String(product._id))) {
+      allCandidates.push(product);
     }
   }
 
-  return mergedProducts.slice(0, CHATBOT_SUGGESTION_LIMIT).map((product) => ({
-    id: String(product._id),
-    name: product.name,
-    price: product.price,
-    priceText: formatPrice(product.price),
-    condition: product.condition,
-    conditionLabel: getConditionLabel(product.condition),
-    stock: Number(product.stock || 0),
-    stockText: Number(product.stock || 0) > 0 ? `Còn ${product.stock} máy` : "Tạm hết hàng",
-    storage: product.specs?.storage || "",
-    batteryHealth: product.usedDetails?.batteryHealth || product.specs?.battery || "",
-    image: product.images?.[0] || "",
-    path: `/products/${product._id}`
-  }));
+  const normalizedReply = normalizeVietnameseText(replyText);
+  const mentionedProducts = [];
+
+  for (const product of allCandidates) {
+    // Strip capacity, specs, conditions to get the core product name
+    const coreName = normalizeVietnameseText(product.name)
+      .replace(/\b(64gb|128gb|256gb|512gb|1tb)\b/gi, "")
+      .replace(/\b(cu 99%|cu dep|cu dung tot|moi|may moi|chinh hang)\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (coreName.length > 2 && normalizedReply.includes(coreName)) {
+      mentionedProducts.push(product);
+    }
+  }
+
+  // If chatbot mentioned specific products, display exactly those products!
+  if (mentionedProducts.length > 0) {
+    return mentionedProducts.slice(0, CHATBOT_SUGGESTION_LIMIT).map((product) => ({
+      id: String(product._id),
+      name: product.name,
+      price: product.price,
+      priceText: formatPrice(product.price),
+      condition: product.condition,
+      conditionLabel: getConditionLabel(product.condition),
+      stock: Number(product.stock || 0),
+      stockText: Number(product.stock || 0) > 0 ? `Còn ${product.stock} máy` : "Tạm hết hàng",
+      storage: product.specs?.storage || "",
+      batteryHealth: product.usedDetails?.batteryHealth || product.specs?.battery || "",
+      image: product.images?.[0] || "",
+      path: `/products/${product._id}`
+    }));
+  }
+
+  // If chatbot didn't mention any product (greeting, general question), return empty list (no cards displayed)
+  return [];
 }
 
 async function callGemini(endpoint, prompt) {

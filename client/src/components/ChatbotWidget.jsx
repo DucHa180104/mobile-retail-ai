@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { buildApiUrl } from "../lib/api.js";
+import { buildApiUrl, resolveMediaUrl } from "../lib/api.js";
 
 const CHATBOT_MESSAGES_STORAGE_KEY = "mobile-retail-ai-chatbot-messages";
 const CHATBOT_RECENT_QUESTIONS_STORAGE_KEY = "mobile-retail-ai-chatbot-recent-questions";
@@ -879,7 +879,11 @@ function ChatMessage({ message }) {
               <div className="flex gap-3.5 p-3.5">
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                   {product.image ? (
-                    <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                    <img
+                      src={resolveMediaUrl(product.image)}
+                      alt={product.name}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <span className="text-[10px] font-bold text-slate-400">Không ảnh</span>
                   )}
