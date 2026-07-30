@@ -95,6 +95,50 @@ export async function sendOrderConfirmationEmail(order, recipientEmail) {
   });
 }
 
+export async function sendWelcomeEmail(user, recipientEmail) {
+  if (!recipientEmail) {
+    throw new Error("Recipient email is missing");
+  }
+
+  const transporter = getTransporter();
+  const userName = user.name || "Khách hàng";
+
+  await transporter.sendMail({
+    from: process.env.MAIL_FROM,
+    to: recipientEmail,
+    subject: "Chào mừng thành viên mới - Mạnh Hương Mobile",
+    text: [
+      `Chào ${userName},`,
+      "",
+      "Cảm ơn bạn đã đăng ký tài khoản thành viên tại Mạnh Hương Mobile.",
+      "Tài khoản của bạn đã được kích hoạt thành công.",
+      `Email đăng nhập: ${recipientEmail}`,
+      `Số điện thoại: ${user.phoneNumber || "Chưa cập nhật"}`,
+      "",
+      "Bây giờ bạn có thể trải nghiệm mua sắm, tích lũy điểm thưởng và theo dõi đơn hàng của mình dễ dàng hơn.",
+      "",
+      "Trân trọng,",
+      "Đội ngũ Mạnh Hương Mobile"
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #2563eb; margin-bottom: 16px;">Chào mừng bạn đến với Mạnh Hương Mobile!</h2>
+        <p>Chào <strong>${escapeHtml(userName)}</strong>,</p>
+        <p>Cảm ơn bạn đã đăng ký tài khoản thành viên tại hệ thống của chúng tôi.</p>
+        <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="margin: 0 0 8px 0; color: #334155;">Thông tin tài khoản:</h4>
+          <p style="margin: 4px 0;"><strong>Email đăng nhập:</strong> ${escapeHtml(recipientEmail)}</p>
+          <p style="margin: 4px 0;"><strong>Số điện thoại:</strong> ${escapeHtml(user.phoneNumber || "Chưa cập nhật")}</p>
+        </div>
+        <p>Bây giờ bạn có thể trải nghiệm mua sắm trực tuyến, theo dõi trạng thái đơn hàng và tham gia các chương trình khuyến mãi đặc quyền dành cho thành viên.</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+        <p style="font-size: 12px; color: #64748b; text-align: center;">Đây là email tự động từ hệ thống. Vui lòng không trả lời trực tiếp email này.</p>
+      </div>
+    `
+  });
+}
+
+
 function formatCurrency(value) {
   return `${(Number(value) || 0).toLocaleString("vi-VN")}đ`;
 }

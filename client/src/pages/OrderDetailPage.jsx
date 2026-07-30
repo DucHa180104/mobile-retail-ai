@@ -16,7 +16,33 @@ function OrderDetailPage() {
     }
 
     fetchOrderDetail();
+
+    const handleFocus = () => {
+      fetchOrderDetailSilent();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [id, isAuthenticated, token]);
+
+  async function fetchOrderDetailSilent() {
+    try {
+      const response = await fetch(buildApiUrl(`/api/orders/${id}`), {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setOrder(data);
+      }
+    } catch (error) {
+      console.error("Silent refetch error:", error);
+    }
+  }
 
   async function fetchOrderDetail() {
     try {

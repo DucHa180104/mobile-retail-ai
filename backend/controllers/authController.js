@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { sendWelcomeEmail } from "../services/emailService.js";
+
 
 const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCK_TIME_MS = 10 * 60 * 1000;
@@ -32,11 +34,11 @@ function formatUserResponse(user) {
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phoneNumber } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
-        message: "Name, email and password are required"
+        message: "Họ tên, email và mật khẩu là bắt buộc"
       });
     }
 
@@ -47,21 +49,68 @@ export const registerUser = async (req, res, next) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    
+    // Mật khẩu có ít nhất 8 ký tự
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Mật khẩu phải chứa ít nhất 8 ký tự" });
+    }
+    // Có chữ hoa
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({ message: "Mật khẩu phải chứa ít nhất 1 chữ hoa" });
+    }
+    // Có chữ thường
+    if (!/[a-z]/.test(password)) {
+      return res.status(400).json({ message: "Mật khẩu phải chứa ít nhất 1 chữ thường" });
+    }
+    // Có số
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({ message: "Mật khẩu phải chứa ít nhất 1 chữ số" });
+    }
+    // Có ký tự đặc biệt
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return res.status(400).json({ message: "Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt" });
+    }
+    // Không chứa thông tin cá nhân
+    const lowerName = name.toLowerCase().trim();
+    const emailPrefix = normalizedEmail.split("@")[0].toLowerCase();
+    const cleanPhone = phoneNumber ? phoneNumber.replace(/\D/g, "") : "";
+    const lowerPassword = password.toLowerCase();
+    
+    if (
+      lowerPassword.includes(lowerName) ||
+      lowerPassword.includes(emailPrefix) ||
+      (cleanPhone && lowerPassword.includes(cleanPhone))
+    ) {
+      return res.status(400).json({
+        message: "Mật khẩu không được chứa thông tin cá nhân (tên, email hoặc số điện thoại)"
+      });
+    }
+
     const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(400).json({
-        message: "Email already exists"
+        message: "Email đã tồn tại trên hệ thống"
       });
     }
 
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
-      password: password.trim()
+      password: password.trim(),
+      phoneNumber: phoneNumber ? phoneNumber.trim() : ""
     });
 
     const token = generateToken(user._id);
+
+    // Gửi email chào mừng thành viên mới (chạy bất đồng bộ, không chặn API phản hồi)
+    try {
+      sendWelcomeEmail(user, user.email).catch((emailError) => {
+        console.error("Welcome email async error:", emailError.message);
+      });
+    } catch (emailError) {
+      console.error("Welcome email error:", emailError.message);
+    }
 
     res.status(201).json({
       token,

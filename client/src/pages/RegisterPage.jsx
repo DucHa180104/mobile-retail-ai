@@ -8,6 +8,7 @@ function RegisterPage() {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
+    phoneNumber: "",
     email: "",
     password: ""
   });
@@ -27,6 +28,48 @@ function RegisterPage() {
     setLoading(true);
     setError("");
 
+    // Front-end validation before sending to back-end
+    if (formData.password.length < 8) {
+      setError("Mật khẩu phải chứa ít nhất 8 ký tự");
+      setLoading(false);
+      return;
+    }
+    if (!/[A-Z]/.test(formData.password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 chữ hoa");
+      setLoading(false);
+      return;
+    }
+    if (!/[a-z]/.test(formData.password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 chữ thường");
+      setLoading(false);
+      return;
+    }
+    if (!/[0-9]/.test(formData.password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 chữ số");
+      setLoading(false);
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt");
+      setLoading(false);
+      return;
+    }
+    
+    // Check personal info
+    const lowerPassword = formData.password.toLowerCase();
+    const lowerName = formData.name.toLowerCase().trim();
+    const emailPrefix = formData.email.split("@")[0].toLowerCase();
+    const cleanPhone = formData.phoneNumber ? formData.phoneNumber.replace(/\D/g, "") : "";
+    if (
+      lowerPassword.includes(lowerName) ||
+      lowerPassword.includes(emailPrefix) ||
+      (cleanPhone && lowerPassword.includes(cleanPhone))
+    ) {
+      setError("Mật khẩu không được chứa thông tin cá nhân (tên, email hoặc số điện thoại)");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(buildApiUrl("/api/auth/register"), {
         method: "POST",
@@ -35,6 +78,7 @@ function RegisterPage() {
         },
         body: JSON.stringify({
           name: formData.name.trim(),
+          phoneNumber: formData.phoneNumber.trim(),
           email: formData.email.trim(),
           password: formData.password
         })
@@ -55,6 +99,67 @@ function RegisterPage() {
     }
   }
 
+  // Calculate password strength criteria
+  const password = formData.password;
+  const name = formData.name;
+  const email = formData.email;
+  const phoneNumber = formData.phoneNumber;
+
+  const criteria = {
+    length: password.length >= 8,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    noPersonalInfo: true
+  };
+
+  if (password) {
+    const lowerPassword = password.toLowerCase();
+    const lowerName = name ? name.trim().toLowerCase() : "";
+    const lowerEmail = email ? email.split("@")[0].toLowerCase() : "";
+    const cleanPhone = phoneNumber ? phoneNumber.replace(/\D/g, "") : "";
+
+    if (
+      (lowerName && lowerPassword.includes(lowerName)) ||
+      (lowerEmail && lowerPassword.includes(lowerEmail)) ||
+      (cleanPhone && lowerPassword.includes(cleanPhone))
+    ) {
+      criteria.noPersonalInfo = false;
+    }
+  } else {
+    criteria.noPersonalInfo = false;
+  }
+
+  const metCount = Object.values(criteria).filter(Boolean).length;
+  let strengthLabel = "Yếu";
+  let strengthColor = "text-red-500";
+  let barColor = "bg-slate-100";
+  let barFillColor = "bg-red-500";
+  let barWidth = "w-0";
+
+  if (password.length > 0) {
+    if (metCount === 6) {
+      strengthLabel = "Mạnh";
+      strengthColor = "text-emerald-500";
+      barColor = "bg-emerald-100";
+      barFillColor = "bg-emerald-500";
+      barWidth = "w-full";
+    } else if (metCount >= 4) {
+      strengthLabel = "Trung bình";
+      strengthColor = "text-amber-500";
+      barColor = "bg-amber-100";
+      barFillColor = "bg-amber-500";
+      barWidth = "w-2/3";
+    } else {
+      strengthLabel = "Yếu";
+      strengthColor = "text-red-500";
+      barColor = "bg-red-100";
+      barFillColor = "bg-red-500";
+      barWidth = "w-1/3";
+    }
+  }
+
   return (
     <div className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-4xl items-center px-4 py-10">
       <div className="w-full animate-fade-in overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg lg:grid lg:grid-cols-12">
@@ -62,16 +167,10 @@ function RegisterPage() {
         <div className="w-full p-7 sm:p-9 lg:col-span-7 flex flex-col justify-center">
           {/* Logo */}
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-md shadow-blue-200">
-              <span className="text-xl font-black text-white">M</span>
-            </div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
-              Mạnh Hương Mobile
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-500">
+              TẠO TÀI KHOẢN THÀNH VIÊN
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Đăng ký</h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Tạo tài khoản mới để theo dõi đơn hàng và đăng nhập nhanh hơn.
-            </p>
           </div>
 
           {error ? (
@@ -85,14 +184,26 @@ function RegisterPage() {
           ) : null}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <FormField label="Họ và tên">
+            <FormField label="Họ tên">
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                placeholder="Nguyễn Văn A"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                placeholder="Nhập họ và tên"
+                required
+              />
+            </FormField>
+
+            <FormField label="Số điện thoại">
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                placeholder="Nhập số điện thoại"
                 required
               />
             </FormField>
@@ -103,8 +214,8 @@ function RegisterPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                placeholder="admin@example.com"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                placeholder="Nhập địa chỉ email"
                 required
               />
             </FormField>
@@ -115,16 +226,128 @@ function RegisterPage() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                 placeholder="Nhập mật khẩu"
                 required
               />
             </FormField>
 
+            {/* Password Strength Indicator Box */}
+            <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Độ mạnh mật khẩu</span>
+                <span className={`text-xs font-bold ${strengthColor}`}>{strengthLabel}</span>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className={`mt-2.5 h-1.5 w-full rounded-full ${barColor} overflow-hidden`}>
+                <div className={`h-full ${barFillColor} transition-all duration-300 ${barWidth}`} />
+              </div>
+              
+              {/* Criteria Grid */}
+              <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                {/* 1. length */}
+                <div className="flex items-center gap-2">
+                  {criteria.length ? (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    </div>
+                  )}
+                  <span className={`text-xs font-semibold leading-none ${criteria.length ? 'text-slate-700' : 'text-slate-400'}`}>Ít nhất 8 ký tự</span>
+                </div>
+
+                {/* 2. uppercase */}
+                <div className="flex items-center gap-2">
+                  {criteria.uppercase ? (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    </div>
+                  )}
+                  <span className={`text-xs font-semibold leading-none ${criteria.uppercase ? 'text-slate-700' : 'text-slate-400'}`}>Có chữ hoa</span>
+                </div>
+
+                {/* 3. lowercase */}
+                <div className="flex items-center gap-2">
+                  {criteria.lowercase ? (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    </div>
+                  )}
+                  <span className={`text-xs font-semibold leading-none ${criteria.lowercase ? 'text-slate-700' : 'text-slate-400'}`}>Có chữ thường</span>
+                </div>
+
+                {/* 4. number */}
+                <div className="flex items-center gap-2">
+                  {criteria.number ? (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    </div>
+                  )}
+                  <span className={`text-xs font-semibold leading-none ${criteria.number ? 'text-slate-700' : 'text-slate-400'}`}>Có số</span>
+                </div>
+
+                {/* 5. specialChar */}
+                <div className="flex items-center gap-2">
+                  {criteria.specialChar ? (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    </div>
+                  )}
+                  <span className={`text-xs font-semibold leading-none ${criteria.specialChar ? 'text-slate-700' : 'text-slate-400'}`}>Có ký tự đặc biệt</span>
+                </div>
+
+                {/* 6. noPersonalInfo */}
+                <div className="flex items-center gap-2">
+                  {criteria.noPersonalInfo ? (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex h-4.5 w-4.5 items-center justify-center shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    </div>
+                  )}
+                  <span className={`text-xs font-semibold leading-none ${criteria.noPersonalInfo ? 'text-slate-700' : 'text-slate-400'}`}>Không chứa thông tin cá nhân</span>
+                </div>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3.5 text-sm font-bold text-white shadow-sm shadow-blue-200 transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-gradient-to-r from-sky-400 to-sky-500 px-4 py-3.5 text-sm font-bold text-white shadow-sm shadow-sky-100 transition-all duration-200 hover:from-sky-500 hover:to-sky-600 hover:shadow-sky-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -132,11 +355,12 @@ function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Đang đăng ký...
+                  Đang tạo tài khoản...
                 </span>
-              ) : "Đăng ký"}
+              ) : "Tạo tài khoản"}
             </button>
           </form>
+
 
           <p className="mt-6 text-center text-sm text-slate-500">
             Đã có tài khoản?{" "}

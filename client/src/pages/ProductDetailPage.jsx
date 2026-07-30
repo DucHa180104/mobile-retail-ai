@@ -69,7 +69,29 @@ function ProductDetailPage() {
       }
     }
 
+    async function fetchProductSilent() {
+      try {
+        const response = await fetch(buildApiUrl(`/api/products/${id}`));
+        const data = await response.json();
+
+        if (response.ok) {
+          setProduct(data);
+        }
+      } catch (err) {
+        console.error("Silent product refetch failed:", err);
+      }
+    }
+
     fetchProduct();
+
+    const handleFocus = () => {
+      fetchProductSilent();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [id]);
 
   useEffect(() => {

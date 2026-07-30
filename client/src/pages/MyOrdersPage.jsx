@@ -23,7 +23,45 @@ function MyOrdersPage() {
     }
 
     fetchMyOrders(activeTab);
+
+    const handleFocus = () => {
+      fetchMyOrdersSilent(activeTab);
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [activeTab, isAuthenticated, token]);
+
+  async function fetchMyOrdersSilent(status) {
+    try {
+      const params = new URLSearchParams();
+
+      if (status && status !== "all") {
+        params.set("status", status);
+      }
+
+      const queryString = params.toString();
+      const url = queryString
+        ? buildApiUrl(`/api/orders/my-orders?${queryString}`)
+        : buildApiUrl("/api/orders/my-orders");
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setOrders(data);
+      }
+    } catch (error) {
+      console.error("Silent orders refetch error:", error);
+    }
+  }
 
   async function fetchMyOrders(status) {
     try {
