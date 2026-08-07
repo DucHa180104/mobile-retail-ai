@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import { createOrderCreatedNotification } from "../services/adminNotificationService.js";
-import { sendOrderConfirmationEmail } from "../services/emailService.js";
+import {
+  sendOrderConfirmationEmail,
+  sendOrderCancelledCustomerEmail,
+  sendOrderCancelledAdminAlert
+} from "../services/emailService.js";
 
 const allowedOrderStatuses = ["pending", "confirmed", "cancelled"];
 const VALID_ORDER_STATUS_TRANSITIONS = {
@@ -185,12 +189,23 @@ export const getOrders = async (req, res, next) => {
 
 export const getMyOrders = async (req, res, next) => {
   try {
-    const filters = {
-      user: req.user._id,
-      ...buildStatusFilter(req.query.status)
+    const userOrEmailOrPhone = [{ user: req.user._id }];
+
+    if (req.user?.email) {
+      userOrEmailOrPhone.push({ contactEmail: req.user.email.toLowerCase().trim() });
+    }
+
+    if (req.user?.phoneNumber) {
+      userOrEmailOrPhone.push({ phoneNumber: req.user.phoneNumber.trim() });
+    }
+
+    const statusFilter = buildStatusFilter(req.query.status);
+    const query = {
+      $or: userOrEmailOrPhone,
+      ...statusFilter
     };
 
-    const orders = await Order.find(filters).sort({ createdAt: -1 });
+    const orders = await Order.find(query).sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
     next(error);
@@ -261,6 +276,9 @@ export const updateOrderStatus = async (req, res, next) => {
               { session }
             );
           }
+          if (order.paymentStatus === "paid") {
+            order.paymentStatus = "refunded";
+          }
         }
 
         order.status = status;
@@ -269,6 +287,84 @@ export const updateOrderStatus = async (req, res, next) => {
       });
     } finally {
       await session.endSession();
+    }
+
+    if (status === "cancelled" && updatedOrder) {
+      try {
+        await sendOrderCancelledCustomerEmail(updatedOrder, updatedOrder.contactEmail);
+        await sendOrderCancelledAdminAlert(updatedOrder);
+      } catch (emailError) {
+        console.error("Order cancellation email alert error:", emailError.message);
+      }
+    }
+
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+
+    next(error);
+  }
+};
+
+export const cancelMyOrder = async (req, res, next) => {
+  try {
+    const orderId = req.params.id;
+    const session = await mongoose.startSession();
+    let updatedOrder = null;
+
+    try {
+      await session.withTransaction(async () => {
+        const order = await Order.findById(orderId).session(session);
+
+        if (!order) {
+          throw createHttpError(404, "Đơn hàng không tồn tại");
+        }
+
+        const isOwner = order.user && String(order.user) === String(req.user?._id);
+        const isGuestEmailOwner =
+          !order.user && order.contactEmail === req.user?.email?.toLowerCase();
+
+        if (!isOwner && !isGuestEmailOwner) {
+          throw createHttpError(403, "Bạn không có quyền hủy đơn hàng này");
+        }
+
+        if (order.status !== "pending") {
+          throw createHttpError(
+            400,
+            "Chỉ có thể hủy đơn hàng khi đơn hàng đang ở trạng thái Chờ xác nhận"
+          );
+        }
+
+        for (const item of order.items) {
+          await Product.findByIdAndUpdate(
+            item.productId,
+            {
+              $inc: { stock: item.quantity }
+            },
+            { session }
+          );
+        }
+
+        order.status = "cancelled";
+        if (order.paymentStatus === "paid") {
+          order.paymentStatus = "refunded";
+        }
+        await order.save({ session });
+        updatedOrder = order;
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    if (updatedOrder) {
+      try {
+        await sendOrderCancelledCustomerEmail(updatedOrder, updatedOrder.contactEmail);
+        await sendOrderCancelledAdminAlert(updatedOrder);
+      } catch (emailError) {
+        console.error("Order cancellation email alert error:", emailError.message);
+      }
     }
 
     res.status(200).json(updatedOrder);

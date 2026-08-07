@@ -551,6 +551,10 @@ function PaymentBadge({ paymentStatus }) {
       label: "Đã thanh toán",
       className: "bg-emerald-100 text-emerald-700"
     },
+    refunded: {
+      label: "Đã hoàn tiền",
+      className: "bg-sky-100 text-sky-700"
+    },
     failed: {
       label: "Thanh toán thất bại",
       className: "bg-rose-100 text-rose-700"
@@ -654,6 +658,10 @@ function formatPaymentMethod(paymentMethod) {
 function formatPaymentStatus(paymentStatus) {
   if (paymentStatus === "paid") {
     return "Đã thanh toán";
+  }
+
+  if (paymentStatus === "refunded") {
+    return "Đã hoàn tiền";
   }
 
   if (paymentStatus === "pending") {

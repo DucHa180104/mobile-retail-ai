@@ -49,10 +49,53 @@ function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user?.email) {
-      setContactEmail(user.email);
+    async function fetchAndFillUserProfile() {
+      if (!token) {
+        if (user) {
+          setContactEmail(user.email || "");
+          setShippingInfo({
+            fullName: user.shippingInfo?.fullName || user.name || "",
+            phoneNumber: user.shippingInfo?.phoneNumber || user.phoneNumber || "",
+            address: user.shippingInfo?.address || "",
+            city: user.shippingInfo?.city || "",
+            district: user.shippingInfo?.district || "",
+            ward: user.shippingInfo?.ward || "",
+            note: user.shippingInfo?.note || ""
+          });
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch(buildApiUrl("/api/auth/me"), {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const profileUser = data.user || user;
+          if (profileUser) {
+            setContactEmail(profileUser.email || "");
+            setShippingInfo({
+              fullName: profileUser.shippingInfo?.fullName || profileUser.name || "",
+              phoneNumber: profileUser.shippingInfo?.phoneNumber || profileUser.phoneNumber || "",
+              address: profileUser.shippingInfo?.address || "",
+              city: profileUser.shippingInfo?.city || "",
+              district: profileUser.shippingInfo?.district || "",
+              ward: profileUser.shippingInfo?.ward || "",
+              note: profileUser.shippingInfo?.note || ""
+            });
+          }
+        }
+      } catch (profileError) {
+        console.error("Auto-fill profile error:", profileError);
+      }
     }
-  }, [user?.email]);
+
+    fetchAndFillUserProfile();
+  }, [token, user]);
 
   const totalPrice = cartItems.reduce(
     (total, item) => total + Number(item.price || 0) * Number(item.quantity || 0),
@@ -238,9 +281,16 @@ function CheckoutPage() {
                 <UserIcon />
               </span>
               <div>
-                <h2 className="text-base sm:text-lg font-black text-slate-800">Thông tin người nhận máy</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black text-slate-800">Thông tin người nhận máy</h2>
+                  {token && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      ✨ Tự động điền từ Hồ sơ
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-slate-400 font-bold">
-                  Vui lòng điền đúng số điện thoại để nhân viên gọi xác nhận trạng thái máy trước khi gửi.
+                  Vui lòng kiểm tra lại đúng thông tin nhận hàng trước khi đặt.
                 </p>
               </div>
             </div>

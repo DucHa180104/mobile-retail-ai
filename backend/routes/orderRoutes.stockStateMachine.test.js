@@ -84,6 +84,54 @@ describe("P0 - Order stock rollback and state machine", () => {
     expect(productAfterCancel.stock).toBe(5);
   });
 
+  it("should allow customer to cancel their own pending order and restore stock", async () => {
+    const customer = await createUser({
+      name: "Khach Hang Test",
+      email: "customer-cancel@example.com",
+      role: "user"
+    });
+    const product = await Product.create({
+      name: "Samsung Galaxy S23 256GB",
+      brand: "Samsung",
+      price: 18000000,
+      stock: 10
+    });
+
+    const order = await Order.create({
+      user: customer._id,
+      customerName: customer.name,
+      contactEmail: customer.email,
+      phoneNumber: "0912345678",
+      address: "456 Duong Nguyen Van Cu",
+      items: [
+        {
+          productId: product._id,
+          name: product.name,
+          price: product.price,
+          quantity: 2,
+          image: ""
+        }
+      ],
+      totalAmount: 36000000,
+      status: "pending"
+    });
+
+    // Stock deduction simulate
+    await Product.findByIdAndUpdate(product._id, { $inc: { stock: -2 } });
+    const productBeforeCancel = await Product.findById(product._id);
+    expect(productBeforeCancel.stock).toBe(8);
+
+    const cancelResponse = await request(app)
+      .patch(`/api/orders/${order._id}/cancel`)
+      .set("Authorization", `Bearer ${generateToken(customer._id)}`);
+
+    expect(cancelResponse.status).toBe(200);
+    expect(cancelResponse.body.status).toBe("cancelled");
+
+    const productAfterCancel = await Product.findById(product._id);
+    expect(productAfterCancel.stock).toBe(10);
+  });
+
   it("should block invalid transition from cancelled back to confirmed", async () => {
     const admin = await createUser({
       name: "Admin Demo",

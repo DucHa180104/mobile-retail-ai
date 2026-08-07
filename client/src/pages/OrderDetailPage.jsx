@@ -10,6 +10,40 @@ function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [cancelling, setCancelling] = useState(false);
+
+  async function handleCancelOrder() {
+    if (!order) return;
+    const confirmCancel = window.confirm(
+      "Bạn có chắc chắn muốn hủy đơn hàng này không?\nSản phẩm sẽ được tự động hoàn trả lại kho hàng."
+    );
+    if (!confirmCancel) return;
+
+    try {
+      setCancelling(true);
+      setError("");
+
+      const response = await fetch(buildApiUrl(`/api/orders/${order._id}/cancel`), {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể hủy đơn hàng");
+      }
+
+      setOrder(data);
+    } catch (err) {
+      alert(err.message || "Không thể hủy đơn hàng");
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   useEffect(() => {
     if (!isAuthenticated || !token) {
       return;
@@ -152,10 +186,22 @@ function OrderDetailPage() {
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Mã giao dịch chi tiết</p>
               <p className="text-sm font-extrabold text-slate-800">{order._id}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-450 font-bold">Trạng thái:</span>
-              <StatusBadge status={order.status} />
-              <PaymentBadge paymentStatus={order.paymentStatus} />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-450 font-bold">Trạng thái:</span>
+                <StatusBadge status={order.status} />
+                <PaymentBadge paymentStatus={order.paymentStatus} />
+              </div>
+              {order.status === "pending" && (
+                <button
+                  type="button"
+                  onClick={handleCancelOrder}
+                  disabled={cancelling}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 px-4 py-2 text-xs font-bold text-rose-700 shadow-sm transition disabled:opacity-50"
+                >
+                  {cancelling ? "Đang hủy..." : "🚫 Hủy đơn hàng này"}
+                </button>
+              )}
             </div>
           </div>
         </section>
@@ -353,6 +399,7 @@ function PaymentBadge({ paymentStatus }) {
     unpaid: { label: "Chưa thanh toán", className: "bg-slate-50 text-slate-600 border-slate-200" },
     pending: { label: "Chờ xác nhận thanh toán", className: "bg-amber-50 text-amber-700 border-amber-200" },
     paid: { label: "Đã thanh toán", className: "bg-emerald-50 text-emerald-700 border-emerald-250" },
+    refunded: { label: "Đã hoàn tiền", className: "bg-sky-50 text-sky-700 border-sky-200" },
     failed: { label: "Thanh toán lỗi", className: "bg-rose-50 text-rose-700 border-rose-200" }
   };
 
@@ -410,6 +457,9 @@ function formatPaymentMethod(paymentMethod) {
 function formatPaymentStatus(paymentStatus) {
   if (paymentStatus === "paid") {
     return "Đã thanh toán thành công";
+  }
+  if (paymentStatus === "refunded") {
+    return "Đã hoàn tiền lại cho khách hàng";
   }
   if (paymentStatus === "pending") {
     return "Chờ nhân viên check giao dịch";

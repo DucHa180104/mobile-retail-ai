@@ -17,6 +17,41 @@ function MyOrdersPage() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
+  const [cancellingId, setCancellingId] = useState("");
+
+  async function handleCancelOrder(orderId) {
+    const confirmCancel = window.confirm(
+      "Bạn có chắc chắn muốn hủy đơn hàng này không?\nSản phẩm sẽ được tự động hoàn trả lại kho hàng."
+    );
+    if (!confirmCancel) return;
+
+    try {
+      setCancellingId(orderId);
+      setError("");
+
+      const response = await fetch(buildApiUrl(`/api/orders/${orderId}/cancel`), {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Không thể hủy đơn hàng");
+      }
+
+      setOrders((current) =>
+        current.map((order) => (order._id === orderId ? { ...order, status: "cancelled" } : order))
+      );
+    } catch (err) {
+      alert(err.message || "Không thể hủy đơn hàng");
+    } finally {
+      setCancellingId("");
+    }
+  }
+
   useEffect(() => {
     if (!isAuthenticated || !token) {
       return;
@@ -271,12 +306,25 @@ function MyOrdersPage() {
                         </span>
                       </div>
 
-                      <Link
-                        to={`/my-orders/${order._id}`}
-                        className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 px-4 py-2.5 text-xs font-bold text-indigo-700 transition"
-                      >
-                        Chi tiết đơn →
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {order.status === "pending" && (
+                          <button
+                            type="button"
+                            onClick={() => handleCancelOrder(order._id)}
+                            disabled={cancellingId === order._id}
+                            className="inline-flex items-center gap-1 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-2.5 text-xs font-bold text-rose-700 transition disabled:opacity-50"
+                          >
+                            {cancellingId === order._id ? "Đang hủy..." : "🚫 Hủy đơn"}
+                          </button>
+                        )}
+
+                        <Link
+                          to={`/my-orders/${order._id}`}
+                          className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 px-4 py-2.5 text-xs font-bold text-indigo-700 transition"
+                        >
+                          Chi tiết đơn →
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -308,9 +356,10 @@ function StatusBadge({ status }) {
 
 function PaymentBadge({ paymentStatus }) {
   const badgeMap = {
-    unpaid: { label: "Chưa trả tiền", className: "bg-slate-50 text-slate-600 border-slate-200" },
+    unpaid: { label: "Chưa thanh toán", className: "bg-slate-50 text-slate-600 border-slate-200" },
     pending: { label: "Chờ duyệt tiền", className: "bg-amber-50 text-amber-700 border-amber-200" },
     paid: { label: "Đã thanh toán", className: "bg-emerald-50 text-emerald-700 border-emerald-250" },
+    refunded: { label: "Đã hoàn tiền", className: "bg-sky-50 text-sky-700 border-sky-200" },
     failed: { label: "Lỗi GD", className: "bg-rose-50 text-rose-700 border-rose-200" }
   };
 
