@@ -43,10 +43,12 @@ export async function sendChatReply(req, res) {
       suggestedProducts: result.suggestedProducts || []
     });
   } catch (error) {
-    const friendlyError = mapChatbotError(error);
+    console.error("⚠️ Lỗi xử lý Chatbot:", error.message);
+    const friendlyResponse = mapChatbotError(error);
 
-    return res.status(friendlyError.status).json({
-      message: friendlyError.message
+    return res.status(200).json({
+      reply: friendlyResponse.reply,
+      suggestedProducts: friendlyResponse.suggestedProducts
     });
   }
 }
@@ -64,40 +66,54 @@ export async function getMyChatHistory(req, res, next) {
 }
 
 function mapChatbotError(error) {
-  const errorMessage = String(error?.message || "");
-  const normalizedMessage = errorMessage.toLowerCase();
+  const rawErrorMessage = String(error?.message || "");
+  const normalizedMessage = rawErrorMessage.toLowerCase();
 
-  if (normalizedMessage.includes("quota")) {
-    return {
-      status: 503,
-      message: "AI dang qua tai hoac da cham gioi han luot goi. Ban thu lai sau it phut nhe."
-    };
-  }
-
+  // 1. Lỗi chạm giới hạn lượt gọi (Rate Limit 429 Quota Exceeded)
   if (
-    normalizedMessage.includes("timed out") ||
-    normalizedMessage.includes("fetch failed")
+    normalizedMessage.includes("quota") ||
+    normalizedMessage.includes("rate limit") ||
+    normalizedMessage.includes("429") ||
+    normalizedMessage.includes("exceeded")
   ) {
+    const retryMatch = rawErrorMessage.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
+    const retrySeconds = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 10;
+
     return {
-      status: 503,
-      message: "Khong the ket noi toi Gemini API luc nay. Ban kiem tra mang roi thu lai nhe."
+      reply: `⚠️ **[AI tạm thời bận]**: Bạn vừa gửi liên tục câu hỏi nên hệ thống đã chạm giới hạn 20 lượt/phút của gói Google AI miễn phí.\n\n👉 **Cách khắc phục**: Vui lòng đợi khoảng **${retrySeconds} giây** rồi thử bấm gửi lại nhé! 😊`,
+      suggestedProducts: []
     };
   }
 
+  // 2. Lỗi bị từ chối quyền truy cập (Permission Denied / Invalid API Key 403 / 401)
   if (
+    normalizedMessage.includes("denied access") ||
+    normalizedMessage.includes("permission_denied") ||
     normalizedMessage.includes("api key") ||
-    normalizedMessage.includes("gemini_api_key") ||
     normalizedMessage.includes("unauthorized")
   ) {
     return {
-      status: 500,
-      message: "Cau hinh Gemini API chua hop le. Ban kiem tra lai API key trong file .env."
+      reply: `⚠️ **[Lỗi cấu hình API Key]**: Khóa Google Gemini API Key trong file \`backend/.env\` bị Google từ chối truy cập hoặc chưa hợp lệ.\n\n👉 **Cách khắc phục**: Vui lòng tạo mã API Key mới tại trang [Google AI Studio](https://aistudio.google.com/app/apikey) và dán lại vào dòng \`GEMINI_API_KEY=\` trong file \`backend/.env\` nhé!`,
+      suggestedProducts: []
     };
   }
 
+  // 3. Lỗi kết nối mạng (Timeout / Fetch failed)
+  if (
+    normalizedMessage.includes("timed out") ||
+    normalizedMessage.includes("fetch failed") ||
+    normalizedMessage.includes("network")
+  ) {
+    return {
+      reply: `⚠️ **[Lỗi kết nối mạng]**: Máy chủ không thể kết nối tới Google AI API lúc này.\n\n👉 **Cách khắc phục**: Vui lòng kiểm tra lại đường truyền Internet của bạn và thử lại nhé!`,
+      suggestedProducts: []
+    };
+  }
+
+  // 4. Các lỗi hệ thống khác
   return {
-    status: 500,
-    message: "Chatbot dang gap loi tam thoi. Ban thu lai sau nhe."
+    reply: `⚠️ **[Lỗi hệ thống Chatbot]**: Hệ thống gặp sự cố: \`${rawErrorMessage || "Lỗi không xác định"}\`.\n\n👉 Vui lòng thử lại sau ít phút nhé!`,
+    suggestedProducts: []
   };
 }
 

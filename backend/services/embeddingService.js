@@ -1,9 +1,9 @@
 const EMBEDDING_MODEL = "gemini-embedding-001";
 
 /**
- * Generate vector embedding array from text using Gemini REST API.
- * @param {string} text Input text to represent as vector.
- * @returns {Promise<number[]>} Array of float numbers representing the vector (768 dimensions).
+ * Tạo mảng vector embedding từ văn bản truyền vào bằng Gemini REST API.
+ * @param {string} text Văn bản câu hỏi hoặc mô tả sản phẩm cần biểu diễn dưới dạng vector.
+ * @returns {Promise<number[]>} Mảng các số thực biểu diễn tọa độ vector (768 chiều).
  */
 export async function generateEmbedding(text) {
   const trimmedText = String(text || "").trim();

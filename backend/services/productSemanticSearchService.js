@@ -1,48 +1,79 @@
+import Product from "../models/Product.js";
 import ProductEmbedding from "../models/ProductEmbedding.js";
 import { generateEmbedding } from "./embeddingService.js";
 
 /**
- * Perform hybrid semantic search on products.
- * Combines structured MongoDB pre-filtering with vector similarity comparison in memory.
- * @param {object} params Parameter payload containing user query and extracted filters.
- * @param {string} params.message The user's query string.
- * @param {object} params.filters Extracted structured filters (brand, maxPrice, needsGaming, etc.).
- * @returns {Promise<object[]>} Array of matching Product objects from the database.
+ * Thực hiện tìm kiếm ngữ nghĩa kết hợp (Hybrid Semantic Search) trên danh sách sản phẩm.
+ * Kết hợp giữa Tiền lọc điều kiện cứng trong MongoDB với So sánh độ tương đồng Vector trong bộ nhớ RAM.
+ * @param {object} params Đối tượng tham số chứa câu hỏi người dùng và bộ lọc bóc tách.
+ * @param {string} params.message Chuỗi câu hỏi của khách hàng.
+ * @param {object} params.filters Các bộ lọc điều kiện bóc tách (hãng, giá tối đa, nhu cầu chơi game...).
+ * @returns {Promise<object[]>} Mảng danh sách các sản phẩm phù hợp lấy từ Database.
  */
+let cachedEmbeddings = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 3 * 60 * 1000; // Cache 3 phút trong bộ nhớ RAM
+
+async function getCachedEmbeddings() {
+  const now = Date.now();
+  if (cachedEmbeddings && (now - lastCacheTime < CACHE_TTL_MS)) {
+    return cachedEmbeddings;
+  }
+
+  const embeddings = await ProductEmbedding.find().populate("product").lean();
+
+  // Do not cache an empty result. Embeddings may be generated immediately
+  // afterwards, and the chatbot should see them on the next request.
+  if (Array.isArray(embeddings) && embeddings.length > 0) {
+    cachedEmbeddings = embeddings;
+    lastCacheTime = now;
+  } else {
+    cachedEmbeddings = null;
+    lastCacheTime = 0;
+  }
+
+  return embeddings;
+}
+
 export async function searchSemanticProducts({ message, filters = {} }) {
   const queryText = String(message || "").trim();
   if (!queryText) {
     return [];
   }
 
-  // 1. Get query embedding
+  // Bỏ qua Vector Search với câu chào xã giao đơn giản để tăng tốc độ phản hồi tối đa
+  const cleanMsg = queryText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const isPureGreeting = ["xin chao", "chao shop", "hi", "hello", "shop oi"].includes(cleanMsg);
+  if (isPureGreeting) {
+    return [];
+  }
+
+  // 1. Chuyển câu hỏi của khách thành vector 768 chiều
   let queryVector;
   try {
     queryVector = await generateEmbedding(queryText);
   } catch (err) {
     console.error("Lỗi tạo vector cho câu hỏi của khách:", err.message);
-    throw err; // Throw to let caller trigger fallback
+    throw err;
   }
 
-  // 2. Fetch all embeddings populated with product info
-  const embeddings = await ProductEmbedding.find()
-    .populate("product")
-    .lean();
+  // 2. Lấy danh sách vector từ RAM Cache (Không tốn 1.5s gọi lại MongoDB Atlas)
+  const embeddings = await getCachedEmbeddings();
 
-  if (!embeddings.length) {
+  if (!embeddings || !embeddings.length) {
     return [];
   }
 
-  // 3. Pre-filter candidate products based on hard structured constraints
+  // 3. Tiền lọc các ứng viên sản phẩm dựa trên các điều kiện cứng
   let candidates = embeddings
-    .filter((emb) => emb.product && Number(emb.product.stock || 0) > 0) // Only in-stock
+    .filter((emb) => emb.product && Number(emb.product.stock || 0) > 0) // Chỉ lấy sản phẩm còn hàng
     .map((emb) => ({
       product: emb.product,
       vector: emb.embedding,
       searchText: emb.searchText
     }));
 
-  // Filter by Brand (if user specified a particular brand)
+  // Lọc theo Hãng sản xuất (nếu người dùng chỉ định rõ hãng)
   if (filters.brand) {
     const brandLower = String(filters.brand).toLowerCase().trim();
     candidates = candidates.filter(
@@ -50,7 +81,7 @@ export async function searchSemanticProducts({ message, filters = {} }) {
     );
   }
 
-  // Filter by Category
+  // Lọc theo Danh mục
   if (filters.category) {
     const categoryLower = String(filters.category).toLowerCase().trim();
     candidates = candidates.filter(
@@ -58,7 +89,7 @@ export async function searchSemanticProducts({ message, filters = {} }) {
     );
   }
 
-  // Filter by Price range
+  // Lọc theo Khoảng giá
   if (filters.maxPrice) {
     candidates = candidates.filter((c) => Number(c.product.price || 0) <= filters.maxPrice);
   }
@@ -66,7 +97,7 @@ export async function searchSemanticProducts({ message, filters = {} }) {
     candidates = candidates.filter((c) => Number(c.product.price || 0) >= filters.minPrice);
   }
 
-  // Filter by Condition
+  // Lọc theo Tình trạng máy (Mới, Cũ 99%, Cũ đẹp...)
   if (filters.condition) {
     candidates = candidates.filter((c) => c.product.condition === filters.condition);
   }
@@ -75,14 +106,14 @@ export async function searchSemanticProducts({ message, filters = {} }) {
     return [];
   }
 
-  // 4. Calculate similarity scores and sort in memory
+  // 4. Tính toán điểm số tương đồng Cosine và sắp xếp trong bộ nhớ RAM
   const scoredCandidates = candidates.map((c) => {
     const similarity = calculateCosineSimilarity(queryVector, c.vector);
     
-    // Apply a light rerank boost based on stock and price
+    // Áp dụng cơ chế cộng điểm ưu tiên nhẹ (Rerank)
     let finalScore = similarity;
     
-    // Slight priority boost for popular brands or low-stock items (rerank nudge)
+    // Ưu tiên cộng thêm 0.05 điểm cho máy có chip khủng nếu khách có nhu cầu chơi game
     if (filters.needsGaming && String(c.product.specs?.chip || "").toLowerCase().match(/(bionic|snapdragon 8|pro|max)/)) {
       finalScore += 0.05;
     }
@@ -93,15 +124,15 @@ export async function searchSemanticProducts({ message, filters = {} }) {
     };
   });
 
-  // Sort descending by score
+  // Sắp xếp danh sách điểm giảm dần (điểm cao nhất lên đầu)
   scoredCandidates.sort((a, b) => b.score - a.score);
 
-  // Return the raw Product documents, limited to top 6 candidates
+  // Trả về danh sách Top 6 sản phẩm phù hợp nhất
   return scoredCandidates.slice(0, 6).map((c) => c.product);
 }
 
 /**
- * Calculates cosine similarity between two vectors.
+ * Tính toán độ tương đồng Cosine Similarity giữa 2 mảng vector.
  */
 function calculateCosineSimilarity(vecA, vecB) {
   if (!Array.isArray(vecA) || !Array.isArray(vecB) || vecA.length !== vecB.length) {

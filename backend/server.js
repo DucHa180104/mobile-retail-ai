@@ -1,3 +1,5 @@
+import dns from "dns";
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -74,7 +76,7 @@ async function startServer() {
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 10000
     });
-    console.log("MongoDB Connected");
+    console.log(`MongoDB Connected to database: "${mongoose.connection.name}"`);
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
