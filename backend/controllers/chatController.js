@@ -44,11 +44,10 @@ export async function sendChatReply(req, res) {
     });
   } catch (error) {
     console.error("⚠️ Lỗi xử lý Chatbot:", error.message);
-    const friendlyResponse = mapChatbotError(error);
+    const friendlyError = mapChatbotError(error);
 
-    return res.status(200).json({
-      reply: friendlyResponse.reply,
-      suggestedProducts: friendlyResponse.suggestedProducts
+    return res.status(friendlyError.status).json({
+      message: friendlyError.message
     });
   }
 }
@@ -76,12 +75,9 @@ function mapChatbotError(error) {
     normalizedMessage.includes("429") ||
     normalizedMessage.includes("exceeded")
   ) {
-    const retryMatch = rawErrorMessage.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
-    const retrySeconds = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 10;
-
     return {
-      reply: `⚠️ **[AI tạm thời bận]**: Bạn vừa gửi liên tục câu hỏi nên hệ thống đã chạm giới hạn 20 lượt/phút của gói Google AI miễn phí.\n\n👉 **Cách khắc phục**: Vui lòng đợi khoảng **${retrySeconds} giây** rồi thử bấm gửi lại nhé! 😊`,
-      suggestedProducts: []
+      status: 503,
+      message: "AI đang bận hoặc đã đạt giới hạn lượt gọi. Bạn vui lòng thử lại sau ít phút."
     };
   }
 
@@ -93,8 +89,8 @@ function mapChatbotError(error) {
     normalizedMessage.includes("unauthorized")
   ) {
     return {
-      reply: `⚠️ **[Lỗi cấu hình API Key]**: Khóa Google Gemini API Key trong file \`backend/.env\` bị Google từ chối truy cập hoặc chưa hợp lệ.\n\n👉 **Cách khắc phục**: Vui lòng tạo mã API Key mới tại trang [Google AI Studio](https://aistudio.google.com/app/apikey) và dán lại vào dòng \`GEMINI_API_KEY=\` trong file \`backend/.env\` nhé!`,
-      suggestedProducts: []
+      status: 503,
+      message: "Dịch vụ AI hiện chưa sẵn sàng. Bạn vui lòng thử lại sau."
     };
   }
 
@@ -105,15 +101,15 @@ function mapChatbotError(error) {
     normalizedMessage.includes("network")
   ) {
     return {
-      reply: `⚠️ **[Lỗi kết nối mạng]**: Máy chủ không thể kết nối tới Google AI API lúc này.\n\n👉 **Cách khắc phục**: Vui lòng kiểm tra lại đường truyền Internet của bạn và thử lại nhé!`,
-      suggestedProducts: []
+      status: 503,
+      message: "Không thể kết nối tới dịch vụ AI lúc này. Bạn vui lòng thử lại sau."
     };
   }
 
   // 4. Các lỗi hệ thống khác
   return {
-    reply: `⚠️ **[Lỗi hệ thống Chatbot]**: Hệ thống gặp sự cố: \`${rawErrorMessage || "Lỗi không xác định"}\`.\n\n👉 Vui lòng thử lại sau ít phút nhé!`,
-    suggestedProducts: []
+    status: 500,
+    message: "Chatbot đang gặp lỗi tạm thời. Bạn vui lòng thử lại sau."
   };
 }
 

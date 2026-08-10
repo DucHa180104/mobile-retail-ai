@@ -90,8 +90,11 @@ describe("P1.1 - Backend error handling standardization", () => {
       .send({ message: "xin chao" });
 
     expect(response.status).toBe(500);
-    expect(response.body.message).toBe("Chatbot dang gap loi tam thoi. Ban thu lai sau nhe.");
+    expect(response.body).toEqual({
+      message: "Chatbot đang gặp lỗi tạm thời. Bạn vui lòng thử lại sau."
+    });
     expect(JSON.stringify(response.body)).not.toContain("Gemini stack trace");
     expect(JSON.stringify(response.body)).not.toContain("Unexpected low-level");
+    expect(response.body).not.toHaveProperty("stack");
   });
 });

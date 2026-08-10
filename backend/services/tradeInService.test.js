@@ -1,163 +1,197 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import TradeInPricingRule from "../models/TradeInPricingRule.js";
 import { calculateTradeInEstimate, getBasePrice } from "./tradeInService.js";
 
+vi.mock("../models/TradeInPricingRule.js", () => ({
+  default: {
+    findOne: vi.fn()
+  }
+}));
+
+const defaultDeductionRules = {
+  battery80To85: 400000,
+  batteryBelow80: 700000,
+  displayReplaced: 1000000,
+  displayUnknown: 500000,
+  bodyLightScratches: 300000,
+  bodyHeavyScratches: 800000,
+  faceIdBroken: 1200000,
+  missingBoxOrCable: 300000
+};
+
+function createPricingRule(overrides = {}) {
+  return {
+    _id: "pricing-rule-1",
+    brand: "Apple",
+    modelName: "iPhone 12",
+    storage: "128GB",
+    basePrice: 7000000,
+    deductionRules: { ...defaultDeductionRules },
+    isActive: true,
+    ...overrides
+  };
+}
+
+function createEstimateInput(overrides = {}) {
+  return {
+    brand: "Apple",
+    modelName: "iPhone 12",
+    storage: "128GB",
+    batteryHealth: 90,
+    displayStatus: "original",
+    bodyCondition: "clean",
+    faceIdStatus: "working",
+    accessoryStatus: "full",
+    ...overrides
+  };
+}
+
 describe("tradeInService", () => {
-  it("should return correct base price for a supported model", () => {
-    expect(getBasePrice("iphone 12")).toBe(7000000);
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("should normalize uppercase letters and extra spaces in model name", () => {
-    expect(getBasePrice("  IPHONE 14  ")).toBe(12000000);
-  });
+  it("returns the base price from an active MongoDB pricing rule", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(createPricingRule());
 
-  it("should return 0 for an unsupported model", () => {
-    expect(getBasePrice("iphone 99")).toBe(0);
-  });
-
-  it("should deduct 700000 when battery health is below 80 percent", () => {
-    const result = calculateTradeInEstimate({
-      modelName: "iphone 13",
-      batteryHealth: 79,
-      displayStatus: "original",
-      bodyCondition: "good",
-      faceIdStatus: "working",
-      accessoryStatus: "full"
+    const basePrice = await getBasePrice({
+      brand: "Apple",
+      modelName: "iPhone 12",
+      storage: "128GB"
     });
 
-    expect(result.basePrice).toBe(9000000);
-    expect(result.deductions).toEqual([
-      {
-        reason: "Pin duoi 80%",
-        amount: 700000
-      }
-    ]);
-    expect(result.estimatedPrice).toBe(8300000);
+    expect(basePrice).toBe(7000000);
   });
 
-  it("should combine multiple deductions and never return a negative estimated price", () => {
-    const result = calculateTradeInEstimate({
-      modelName: "iphone 11",
-      batteryHealth: 70,
-      displayStatus: "replaced",
-      bodyCondition: "heavy_scratches",
-      faceIdStatus: "broken",
-      accessoryStatus: "missing_box_or_cable"
+  it("normalizes surrounding spaces and performs case-insensitive matching", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(createPricingRule());
+
+    await getBasePrice({
+      brand: "  APPLE  ",
+      modelName: "  IPHONE 12  ",
+      storage: "  128gb  "
     });
 
-    expect(result.basePrice).toBe(5000000);
-    expect(result.deductions).toEqual([
-      {
-        reason: "Pin duoi 80%",
-        amount: 700000
-      },
-      {
-        reason: "Man hinh da thay",
-        amount: 1000000
-      },
-      {
-        reason: "Than may xuoc nhieu",
-        amount: 800000
-      },
-      {
-        reason: "Face ID hong",
-        amount: 1200000
-      },
-      {
-        reason: "Thieu hop hoac cap sac",
-        amount: 300000
-      }
-    ]);
-    expect(result.estimatedPrice).toBe(1000000);
-    expect(result.estimatedPrice).toBeGreaterThanOrEqual(0);
+    const query = TradeInPricingRule.findOne.mock.calls[0][0];
+    expect(query.isActive).toBe(true);
+    expect(query.brand.test("Apple")).toBe(true);
+    expect(query.modelName.test("iPhone 12")).toBe(true);
+    expect(query.storage.test("128GB")).toBe(true);
   });
 
-  it("should deduct 400000 when battery health is between 80 and 85 percent", () => {
-    const result = calculateTradeInEstimate({
-      modelName: "iphone 12",
-      batteryHealth: 85,
-      displayStatus: "original",
-      bodyCondition: "good",
-      faceIdStatus: "working",
-      accessoryStatus: "full"
+  it("returns 0 when no active pricing rule is found", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(null);
+
+    const basePrice = await getBasePrice({
+      brand: "Apple",
+      modelName: "iPhone 99",
+      storage: "128GB"
     });
+
+    expect(basePrice).toBe(0);
+  });
+
+  it("applies the pricing rule deduction when battery health is below 80 percent", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(createPricingRule());
+
+    const result = await calculateTradeInEstimate(
+      createEstimateInput({ batteryHealth: 79 })
+    );
 
     expect(result.basePrice).toBe(7000000);
     expect(result.deductions).toEqual([
-      {
-        reason: "Pin tu 80% den 85%",
-        amount: 400000
-      }
+      { reason: "Pin dưới 80%", amount: 700000 }
+    ]);
+    expect(result.estimatedPrice).toBe(6300000);
+    expect(result.pricingRuleId).toBe("pricing-rule-1");
+  });
+
+  it("combines deductions from the rule and never returns a negative price", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(
+      createPricingRule({
+        basePrice: 1000000,
+        deductionRules: {
+          ...defaultDeductionRules,
+          batteryBelow80: 700000,
+          displayReplaced: 1000000,
+          bodyHeavyScratches: 800000,
+          faceIdBroken: 1200000,
+          missingBoxOrCable: 300000
+        }
+      })
+    );
+
+    const result = await calculateTradeInEstimate(
+      createEstimateInput({
+        batteryHealth: 70,
+        displayStatus: "replaced",
+        bodyCondition: "heavy_scratches",
+        faceIdStatus: "broken",
+        accessoryStatus: "missing_box_or_cable"
+      })
+    );
+
+    expect(result.deductions.map((item) => item.amount)).toEqual([
+      700000,
+      1000000,
+      800000,
+      1200000,
+      300000
+    ]);
+    expect(result.estimatedPrice).toBe(0);
+  });
+
+  it("applies the 80-to-85 battery deduction configured by the rule", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(createPricingRule());
+
+    const result = await calculateTradeInEstimate(
+      createEstimateInput({ batteryHealth: 85 })
+    );
+
+    expect(result.deductions).toEqual([
+      { reason: "Pin từ 80% đến 85%", amount: 400000 }
     ]);
     expect(result.estimatedPrice).toBe(6600000);
   });
 
-  it("should not deduct battery cost when battery health is above 85 percent", () => {
-    const result = calculateTradeInEstimate({
-      modelName: "iphone 14",
-      batteryHealth: 90,
-      displayStatus: "original",
-      bodyCondition: "good",
-      faceIdStatus: "working",
-      accessoryStatus: "full"
-    });
+  it("does not deduct battery cost when battery health is above 85 percent", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(createPricingRule());
 
-    expect(result.basePrice).toBe(12000000);
+    const result = await calculateTradeInEstimate(createEstimateInput());
+
     expect(result.deductions).toEqual([]);
-    expect(result.estimatedPrice).toBe(12000000);
+    expect(result.estimatedPrice).toBe(7000000);
   });
 
-  it("should deduct 500000 when display status is unknown", () => {
-    const result = calculateTradeInEstimate({
-      modelName: "iphone 12",
-      batteryHealth: 90,
-      displayStatus: "unknown",
-      bodyCondition: "good",
-      faceIdStatus: "working",
-      accessoryStatus: "full"
-    });
+  it("applies the display-unknown deduction configured by the rule", async () => {
+    TradeInPricingRule.findOne.mockResolvedValue(createPricingRule());
+
+    const result = await calculateTradeInEstimate(
+      createEstimateInput({ displayStatus: "unknown" })
+    );
 
     expect(result.deductions).toEqual([
-      {
-        reason: "Khong ro tinh trang man hinh",
-        amount: 500000
-      }
+      { reason: "Không rõ tình trạng màn hình", amount: 500000 }
     ]);
     expect(result.estimatedPrice).toBe(6500000);
   });
 
-  it("should return estimated price 0 for unsupported model even if many deductions exist", () => {
-    const result = calculateTradeInEstimate({
-      modelName: "iphone 99",
-      batteryHealth: 60,
-      displayStatus: "replaced",
-      bodyCondition: "heavy_scratches",
-      faceIdStatus: "broken",
-      accessoryStatus: "missing_box_or_cable"
+  it("handles incomplete input without querying MongoDB", async () => {
+    const basePrice = await getBasePrice({ modelName: "", storage: "" });
+    const estimate = await calculateTradeInEstimate({
+      modelName: "",
+      storage: "",
+      batteryHealth: 70,
+      displayStatus: "replaced"
     });
 
-    expect(result.basePrice).toBe(0);
-    expect(result.deductions).toEqual([
-      {
-        reason: "Pin duoi 80%",
-        amount: 700000
-      },
-      {
-        reason: "Man hinh da thay",
-        amount: 1000000
-      },
-      {
-        reason: "Than may xuoc nhieu",
-        amount: 800000
-      },
-      {
-        reason: "Face ID hong",
-        amount: 1200000
-      },
-      {
-        reason: "Thieu hop hoac cap sac",
-        amount: 300000
-      }
-    ]);
-    expect(result.estimatedPrice).toBe(0);
+    expect(basePrice).toBe(0);
+    expect(estimate).toEqual({
+      basePrice: 0,
+      deductions: [],
+      estimatedPrice: 0,
+      pricingRuleId: null
+    });
+    expect(TradeInPricingRule.findOne).not.toHaveBeenCalled();
   });
 });

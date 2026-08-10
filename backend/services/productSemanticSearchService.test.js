@@ -52,16 +52,20 @@ describe("productSemanticSearchService", () => {
       populate: vi.fn().mockReturnValue({
         lean: vi.fn().mockResolvedValue([
           {
-            product: { _id: "p1", name: "iPhone 15", stock: 2, price: 20000000, brand: "Apple", category: "phones", condition: "new" },
+            product: { _id: "p1", name: "iPhone 15", stock: 2, price: 20000000, brand: "Apple", category: "phone", condition: "new" },
             embedding: [1.0, 0.0, 0.0]
           },
           {
-            product: { _id: "p2", name: "iPhone 12", stock: 3, price: 9000000, brand: "Apple", category: "phones", condition: "used_good" },
+            product: { _id: "p2", name: "iPhone 12", stock: 3, price: 9000000, brand: "Apple", category: "phone", condition: "used_good" },
             embedding: [0.9, 0.1, 0.0]
           },
           {
-            product: { _id: "p3", name: "Samsung S24", stock: 4, price: 18000000, brand: "Samsung", category: "phones", condition: "new" },
+            product: { _id: "p3", name: "Samsung S24", stock: 4, price: 18000000, brand: "Samsung", category: "phone", condition: "new" },
             embedding: [0.1, 0.9, 0.0]
+          },
+          {
+            product: { _id: "p4", name: "iPhone hết hàng", stock: 0, price: 8000000, brand: "Apple", category: "phone", condition: "new" },
+            embedding: [1.0, 0.0, 0.0]
           }
         ])
       })
@@ -78,11 +82,10 @@ describe("productSemanticSearchService", () => {
     // Case B: Filter condition
     const resultsCondition = await searchSemanticProducts({
       message: "máy mới",
-      filters: { condition: "new" }
+      filters: { category: "phone", condition: "new" }
     });
     expect(resultsCondition.length).toBe(2);
     expect(resultsCondition[0].name).toBe("iPhone 15"); // higher score
     expect(resultsCondition[1].name).toBe("Samsung S24");
   });
 });
-
